@@ -1,0 +1,26 @@
+{
+  "game": "Violence District",
+  "version": "1.0",
+  "killers": [
+    {
+      "id": "the_hidden",
+      "name": "The Hidden",
+      "abilities": [
+        {
+          "id": "leap",
+          "name": "Leap",
+          "cooldown_seconds": 25,
+          "detection_method": "template_matching",
+          "enabled": true
+        },
+        {
+          "id": "mark",
+          "name": "Mark",
+          "cooldown_seconds": 30,
+          "detection_method": "template_matching",
+          "enabled": true
+        }
+      ]
+    }
+  ]
+}

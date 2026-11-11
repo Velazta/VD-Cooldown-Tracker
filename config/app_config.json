@@ -1,0 +1,25 @@
+{
+    "app": {
+        "name": "Violence District Cooldwon Tracker",
+        "version": "0.1.0-alpha",
+        "debug_mode": true
+    },
+    "capture": {
+        "target_title": "Roblox",
+        "backend": "windows_capture",
+        "target_fps": 30,
+        "roi": {
+            "x": 0,
+            "y": 0,
+            "width": 450,
+            "height": 250,
+            "enable": true
+        }
+    },
+    "overlay": {
+        "always_on_top": true,
+        "click_through": true,
+        "opacity": 0.9,
+        "fps_display": true
+  }
+}
