@@ -56,17 +56,17 @@
 **Deliverable:** continuous capture prototype with preview and FPS.
 
 ## Day 4 — ROI and OpenCV Processing
-- [ ] Define ROI configuration model.
-- [ ] Implement ROI validation.
-- [ ] Implement ROI cropping.
-- [ ] Display ROI preview.
-- [ ] Save and load ROI configuration.
-- [ ] Implement grayscale experiment.
-- [ ] Evaluate optional thresholding.
-- [ ] Evaluate optional edge detection only if useful.
-- [ ] Test `TM_CCOEFF_NORMED` on sample templates.
-- [ ] Save representative ROI samples for later annotation.
-- [ ] Record preprocessing findings.
+- [x] Define ROI configuration model.
+- [x] Implement ROI validation.
+- [x] Implement ROI cropping.
+- [x] Display ROI preview.
+- [x] Save and load ROI configuration.
+- [x] Implement grayscale experiment.
+- [x] Evaluate optional thresholding.
+- [x] Evaluate optional edge detection only if useful.
+- [x] Test `TM_CCOEFF_NORMED` on sample templates.
+- [x] Save representative ROI samples for later annotation.
+- [x] Record preprocessing findings.
 
 **Deliverable:** ROI processor and initial OpenCV experiment.
 
