@@ -1,25 +1,31 @@
 {
-    "app": {
-        "name": "Violence District Cooldwon Tracker",
-        "version": "0.1.0-alpha",
-        "debug_mode": true
-    },
-    "capture": {
-        "target_title": "Roblox",
-        "backend": "windows_capture",
-        "target_fps": 30,
-        "roi": {
-            "x": 320,
-            "y": 150,
-            "width": 1280,
-            "height": 780,
-            "enabled": true
-        }
-    },
-    "overlay": {
-        "always_on_top": true,
-        "click_through": true,
-        "opacity": 0.9,
-        "fps_display": true
+  "schema_version": 1,
+  "app": {
+    "name": "Violence District Cooldown Tracker",
+    "version": "0.1.0-alpha",
+    "debug_mode": true
+  },
+  "capture": {
+    "target_title": "Roblox",
+    "backend": "windows_capture",
+    "target_fps": 30,
+    "roi": {
+      "x": 320,
+      "y": 150,
+      "width": 1280,
+      "height": 780,
+      "enabled": true
     }
+  },
+  "overlay": {
+    "always_on_top": true,
+    "click_through": true,
+    "opacity": 0.9,
+    "fps_display": true,
+    "position": {
+      "x": 100,
+      "y": 100
+    }
+  },
+  "active_killer_id": "the_hidden"
 }

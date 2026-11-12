@@ -137,13 +137,16 @@ The application shall provide an overlay that is:
 The overlay must not intercept mouse or keyboard input during normal gameplay when click-through is enabled. Test this behavior explicitly; do not assume a Qt flag guarantees correct behavior in every Windows/game mode.
 
 ### FR-04 — Local Skill Database
-The application shall store:
-- Killer ID and display name.
+The application shall store killer ability and cooldown configuration in `database/killerDatabase.json`:
+- Schema version and metadata (`schema_version: 1`, `last_updated`).
+- Killer ID, display name, and optional description.
 - Ability ID and display name.
-- Cooldown duration in seconds.
-- Detection method/template references where applicable.
-- Enabled/disabled state.
-- Optional data version and notes.
+- Cooldown duration in numeric seconds (`cooldown_seconds: float`).
+- Cooldown verification state (`cooldown_verified: bool`).
+- Trigger timing behavior (`trigger_type: "on_cast_start" | "on_release"`).
+- Interaction input reference (`interact_input`).
+- Detection method reference (`detection_method`).
+- Enabled/disabled state (`enabled: bool`).
 
 JSON is the default MVP format because the dataset is small, human-readable, and easy to edit. SQLite may be considered later if history or more complex persistence becomes necessary.
 

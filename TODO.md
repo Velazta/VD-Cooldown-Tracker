@@ -86,16 +86,16 @@
 **Deliverable:** performance and stability report.
 
 ## Day 6 — Configuration and Architecture Foundation
-- [ ] Define `app_config.json` schema.
-- [ ] Define `killer_database.json` schema.
-- [ ] Add schema version.
-- [ ] Implement JSON loading.
-- [ ] Implement validation and readable error handling.
-- [ ] Add The Hidden as the initial example record.
-- [ ] Keep cooldown values editable and mark unverified values clearly.
-- [ ] Confirm schema supports multiple killers.
-- [ ] Document module boundaries.
-- [ ] Create Week 2 UI/overlay backlog.
+- [x] Define `app_config.json` schema.
+- [x] Define `killerDatabase.json` schema.
+- [x] Add schema version.
+- [x] Implement JSON loading.
+- [x] Implement validation and readable error handling.
+- [x] Add The Hidden as the initial example record.
+- [x] Keep cooldown values editable and mark unverified values clearly.
+- [x] Confirm schema supports multiple killers.
+- [x] Document module boundaries.
+- [x] Create Week 2 UI/overlay backlog.
 
 **Deliverable:** local configuration and extensible data model.
 

@@ -77,18 +77,17 @@ Week 1 validates the path through capture, buffering, ROI, preprocessing, previe
 
 A candidate detection must not directly create repeated cooldown timers without event validation.
 
-## 5. Module Responsibilities
+## 5. Module Responsibilities and Boundaries
 
-| Module | Responsibility | Must not do |
-|---|---|---|
-| `capture` | Acquire frames, source lifecycle, timestamps | Perform killer/ability inference |
-| `processing` | ROI crop and image preprocessing | Manage cooldown state |
-| `detection` | Return visual candidates and confidence | Render UI or own timers |
-| `cooldown` | Manage ability cooldown state and timer lifecycle | Capture screen |
-| `overlay` | Render transparent UI and receive display state | Run expensive CV |
-| `database` | Load, validate, and save local data | Contain detection algorithms |
-| `monitoring` | Log events and measure performance | Mutate game state |
-| `app` | Compose components and application lifecycle | Become a monolithic implementation |
+| Module | Core Responsibility | Concrete Implementation (Week 1 Verified) | Boundary Constraints (Must Not Do) |
+|---|---|---|---|
+| `capture` | Frame acquisition, target HWND tracking, timestamps, drop-oldest ring buffer | `BaseCaptureEngine`, `MSSWindowsCapture`, `LatestFrameBuffer`, `window_helper.py` | Must not perform CV inference, killer selection, or UI rendering |
+| `processing` | ROI cropping, image preprocessing pipelines, normalized template matching | `ROIProcessor`, `ImagePreprocessor`, `TemplateMatcher` | Must not retain frame queues, mutate capture settings, or own timers |
+| `database` | Strongly-typed killer/ability persistence, schema validation, cooldown values | `DatabaseManager`, `KillerDatabase`, `KillerConfig`, `AbilityConfig` | Must not import UI libraries, CV modules, or hard-code detection logic |
+| `monitoring` | Non-blocking process telemetry, CPU/RAM sampling, rolling FPS & latency | `PerformanceMonitor`, `PerformanceSnapshot` | Must not block capture/UI loops or modify system state |
+| `app` | Application composition, runtime configuration loading, PySide6 main window | `SettingsManager`, `AppConfig`, `CapturePreviewWindow` (`main.py`) | Must not perform monolithic CV calculations in Qt UI thread |
+| `cooldown` *(Week 2)* | Timer lifecycle, ability state machine (READY, ACTIVE, COOLDOWN), manual hotkeys | To be implemented in Day 8-10 | Must not perform screen capture or render UI directly |
+| `overlay` *(Week 2)* | Transparent, frameless, click-through HUD overlay, radial progress widget | To be implemented in Day 10-12 | Must not run heavy image processing or block game input |
 
 ## 6. Proposed Project Structure
 
@@ -132,7 +131,7 @@ ViolenceDistrictTracker/
 ├── database/
 │   ├── __init__.py
 │   ├── database_manager.py
-│   └── killer_database.json
+│   └── killerDatabase.json
 ├── config/
 │   └── app_config.json
 ├── monitoring/

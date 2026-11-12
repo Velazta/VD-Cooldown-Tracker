@@ -1,24 +1,52 @@
 {
+  "schema_version": 1,
   "game": "Violence District",
-  "version": "1.0",
+  "last_updated": "2026-11-12",
   "killers": [
     {
       "id": "the_hidden",
       "name": "The Hidden",
+      "description": "Killer bertipe stalker/stealth dengan mobilitas lompatan cepat dan serangan tusukan mendadak.",
       "abilities": [
         {
           "id": "leap",
           "name": "Leap",
-          "cooldown_seconds": 25,
-          "detection_method": "template_matching",
-          "enabled": true
+          "cooldown_seconds": 25.0,
+          "cooldown_verified": false,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "E Button",
+          "detection_method": "pose_sequence",
+          "description": "Melompat tinggi ke atas dan ke depan. Cooldown langsung berjalan saat animasi lompat dimulai."
         },
         {
           "id": "mark",
           "name": "Mark",
-          "cooldown_seconds": 30,
-          "detection_method": "template_matching",
-          "enabled": true
+          "cooldown_seconds": 30.0,
+          "cooldown_verified": false,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Right Click Mouse",
+          "detection_method": "pose_sequence",
+          "description": "Menusuk ke arah depan. Cooldown langsung dihitung mundur saat animasi berjalan tanpa menunggu selesai."
+        }
+      ]
+    },
+    {
+      "id": "veil",
+      "name": "Veil",
+      "description": "Killer proyektil/jarak menengah yang mengandalkan lemparan tombak beraura gelap.",
+      "abilities": [
+        {
+          "id": "through_the_veil",
+          "name": "Through The Veil",
+          "cooldown_seconds": 20.0,
+          "cooldown_verified": false,
+          "enabled": true,
+          "trigger_type": "on_release",
+          "interact_input": "Aim & Throw Spear",
+          "detection_method": "pose_release",
+          "description": "Mengangkat tombak dengan aura halus (stance pasif aktif). Cooldown baru mulai dihitung mundur ketika tombak dilepaskan/dilempar."
         }
       ]
     }
