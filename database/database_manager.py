@@ -7,6 +7,10 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 import json
 
+from app.logger import get_logger
+
+logger = get_logger("database")
+
 
 class DatabaseError(Exception):
     """Base exception untuk seluruh error pada modul database."""
@@ -220,20 +224,29 @@ class DatabaseManager:
         """
         target_path = path or self.path
         if not target_path.exists():
+            logger.error("Database file not found at: %s", target_path)
             raise DatabaseNotFoundError(f"File database tidak ditemukan di: {target_path}")
 
         try:
             with open(target_path, "r", encoding="utf-8") as f:
                 raw_data = json.load(f)
         except json.JSONDecodeError as err:
+            logger.error("Database JSON decode error at %s: %s", target_path, err)
             raise DatabaseValidationError(
                 f"Sintaks JSON rusak pada {target_path} (Baris {err.lineno}, Kolom {err.colno}): {err.msg}"
             ) from err
         except Exception as exc:
+            logger.error("Failed to read database file %s: %s", target_path, exc)
             raise DatabaseError(f"Gagal membaca file {target_path}: {exc}") from exc
 
         self._database = KillerDatabase.from_dict(raw_data)
         self.path = target_path
+        logger.info(
+            "Successfully loaded killer database from %s (schema_version: %d, killers: %d)",
+            target_path,
+            self._database.schema_version,
+            len(self._database.killers),
+        )
         return self._database
 
     def save(self, path: Optional[Path] = None) -> None:
@@ -249,7 +262,9 @@ class DatabaseManager:
         try:
             with open(target_path, "w", encoding="utf-8") as f:
                 json.dump(self._database.to_dict(), f, indent=2, ensure_ascii=False)
+            logger.info("Saved database to %s", target_path)
         except Exception as exc:
+            logger.error("Failed to save database to %s: %s", target_path, exc)
             raise DatabaseError(f"Gagal menyimpan database ke {target_path}: {exc}") from exc
 
     def get_killer(self, killer_id: str) -> Optional[KillerConfig]:

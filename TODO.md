@@ -100,32 +100,32 @@
 **Deliverable:** local configuration and extensible data model.
 
 ## Day 7 — Integration and Review
-- [ ] Run capture-to-ROI pipeline end-to-end.
-- [ ] Verify preview remains responsive.
-- [ ] Verify stop/close behavior.
-- [ ] Verify JSON load and invalid JSON handling.
-- [ ] Review logs for errors.
-- [ ] Review CPU/RAM/FPS results against targets.
-- [ ] Record unresolved limitations.
-- [ ] Update `PRD.md` if scope decisions changed.
-- [ ] Update `ARCHITECTURE.md` if technical decisions changed.
-- [ ] Prepare Week 1 demonstration.
-- [ ] Create Week 2 tasks based on evidence.
+- [x] Run capture-to-ROI pipeline end-to-end.
+- [x] Verify preview remains responsive.
+- [x] Verify stop/close behavior.
+- [x] Verify JSON load and invalid JSON handling.
+- [x] Review logs for errors.
+- [x] Review CPU/RAM/FPS results against targets.
+- [x] Record unresolved limitations.
+- [x] Update `PRD.md` if scope decisions changed.
+- [x] Update `ARCHITECTURE.md` if technical decisions changed.
+- [x] Prepare Week 1 demonstration.
+- [x] Create Week 2 tasks based on evidence.
 
 **Deliverable:** Week 1 prototype, report, and review.
 
 # Week 1 Acceptance Checklist
-- [ ] Python environment can be recreated from documented steps.
-- [ ] Capture obtains frames from intended Roblox configuration, or a blocker and fallback are documented.
-- [ ] Preview updates continuously.
-- [ ] ROI can be changed and previewed.
-- [ ] OpenCV preprocessing runs on ROI frames.
-- [ ] Capture FPS and processing FPS are measured separately.
-- [ ] CPU and RAM are measured.
-- [ ] Application shuts down cleanly.
-- [ ] JSON configuration loads and validates.
-- [ ] No injection, hooking, memory reading, or client modification exists.
-- [ ] Test evidence and limitations are documented.
+- [x] Python environment can be recreated from documented steps.
+- [x] Capture obtains frames from intended Roblox configuration, or a blocker and fallback are documented.
+- [x] Preview updates continuously.
+- [x] ROI can be changed and previewed.
+- [x] OpenCV preprocessing runs on ROI frames.
+- [x] Capture FPS and processing FPS are measured separately.
+- [x] CPU and RAM are measured.
+- [x] Application shuts down cleanly.
+- [x] JSON configuration loads and validates.
+- [x] No injection, hooking, memory reading, or client modification exists.
+- [x] Test evidence and limitations are documented.
 
 # Week 2 — Desktop Application and Overlay (Preview)
 - [ ] Build main PySide6 application window.

@@ -1,9 +1,19 @@
-"""
-Main Application Entry Point — Day 4 ROI Calibration & Visual Preview
+"""Main Application Entry Point — Day 7 End-to-End Pipeline Integration.
+
 Violence District Cooldown Tracker
+Integrates:
+- Logging: Structured dual console + file logging (logs/app.log)
+- SettingsManager: Runtime application configuration (config/app_config.json)
+- DatabaseManager: Strongly-typed killer & ability database (database/killerDatabase.json)
+- MSSWindowsCapture: Background producer thread screen capture
+- ROIProcessor: Centered gameplay viewport cropping and coordinate clamping
+- ImagePreprocessor: OpenCV computer vision filters (Raw, Gray, CLAHE, Threshold, Canny)
+- PerformanceMonitor: Non-blocking resource and latency telemetry
 """
+
+from __future__ import annotations
+
 import sys
-import json
 import time
 from pathlib import Path
 from typing import Optional
@@ -19,6 +29,9 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QImage, QPixmap, QFont
 
+from app.logger import setup_logging, get_logger
+from app.settings import SettingsManager, AppConfig
+from database.database_manager import DatabaseManager, KillerConfig
 from capture.windows_capture import MSSWindowsCapture
 from capture.capture_interface import CaptureStatus
 from capture.window_helper import set_window_capture_invisible
@@ -26,42 +39,69 @@ from processing.roi_processor import ROIConfig, ROIProcessor
 from processing.preprocessing import ImagePreprocessor, PreprocessingConfig, PreprocessorMode
 from monitoring.performance_monitor import PerformanceMonitor
 
+logger = get_logger("gui")
+
 
 class CapturePreviewWindow(QMainWindow):
-    """
-    Jendela GUI Utama untuk Prototype Capture Engine & Kalibrasi Visual ROI (Day 4).
-    Mendukung penyesuaian bounding box interaktif dan preview 1:1 area HUD.
-    """
+    """Jendela GUI Utama Terintegrasi untuk Violence District Cooldown Tracker."""
 
-    def __init__(self, config: dict):
+    def __init__(
+        self,
+        settings_manager: Optional[SettingsManager] = None,
+        db_manager: Optional[DatabaseManager] = None,
+    ) -> None:
         super().__init__()
-        self.config = config
-        self.config_path = Path("config/app_config.json")
 
-        # Inisialisasi ROI Configuration dari file config
-        roi_dict = self.config.get("capture", {}).get("roi", {})
-        self.roi_config = ROIConfig(
-            x=roi_dict.get("x", 0),
-            y=roi_dict.get("y", 0),
-            width=roi_dict.get("width", 450),
-            height=roi_dict.get("height", 250),
-            enabled=roi_dict.get("enabled", roi_dict.get("enable", True))
-        )
+        # 1. Manajer Konfigurasi & Database
+        self.settings_manager = settings_manager or SettingsManager()
+        self.config: AppConfig = self.settings_manager.config
+
+        self.db_manager = db_manager or DatabaseManager()
+        try:
+            self.database = self.db_manager.database
+        except Exception as exc:
+            logger.error("Failed to initialize database: %s", exc)
+            self.database = None
+
+        # 2. Inisialisasi ROI Configuration dari Settings
+        self.roi_config: ROIConfig = self.config.capture.roi
         self.roi_processor = ROIProcessor(self.roi_config)
 
-        # Inisialisasi OpenCV Preprocessor (Step 4.3)
+        # 3. Inisialisasi OpenCV Preprocessor
         self.preprocessor = ImagePreprocessor(PreprocessingConfig(mode=PreprocessorMode.RAW))
 
-        # Inisialisasi Capture Engine
+        # 4. Inisialisasi Capture Engine & Performance Telemetry
         self.capture_engine = MSSWindowsCapture(buffer_size=1)
-
-        # Inisialisasi Performance Monitor Telemetry (Day 5)
-        self.monitor = PerformanceMonitor(history_size=60, target_process_name="Roblox")
+        self.monitor = PerformanceMonitor(
+            history_size=60,
+            target_process_name=self.config.capture.target_title,
+        )
         self._telemetry_tick_counter = 0
 
-        self.setWindowTitle("Violence District Tracker — HUD ROI Calibration (Day 4)")
-        self.resize(1020, 640)
-        self.setMinimumSize(850, 500)
+        # Setup Tampilan Jendela
+        self.setWindowTitle(
+            f"{self.config.app.name} v{self.config.app.version} — Day 7 Integrated Pipeline"
+        )
+        self.resize(1100, 680)
+        self.setMinimumSize(920, 560)
+        self._apply_stylesheet()
+        self.setup_ui()
+
+        # Proteksi OS: Cegah efek rekursif Hall of Mirrors
+        set_window_capture_invisible(int(self.winId()))
+
+        # Timer untuk polling UI (Consumer Loop) ~30 FPS (33 ms)
+        self.render_timer = QTimer(self)
+        self.render_timer.timeout.connect(self.update_frame_preview)
+        self.render_timer.start(33)
+
+        logger.info("Main GUI window initialized successfully.")
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        set_window_capture_invisible(int(self.winId()))
+
+    def _apply_stylesheet(self) -> None:
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #121214;
@@ -93,38 +133,28 @@ class CapturePreviewWindow(QMainWindow):
             QPushButton:hover {
                 background-color: #34343C;
             }
-            QLineEdit, QSpinBox {
+            QLineEdit, QSpinBox, QComboBox {
                 background-color: #1A1A1E;
                 color: #FFFFFF;
                 border: 1px solid #3E3E46;
                 border-radius: 5px;
                 padding: 4px 8px;
             }
+            QComboBox QAbstractItemView {
+                background-color: #1A1A1E;
+                color: #FFFFFF;
+                selection-background-color: #2B6CB0;
+            }
         """)
 
-        self.setup_ui()
-
-        # Proteksi OS: Buat jendela tracker ini tidak terlihat oleh screen capture
-        # (Mencegah efek rekursif hall of mirrors saat tracker ditaruh di atas Roblox)
-        set_window_capture_invisible(int(self.winId()))
-
-        # Timer untuk polling UI (Consumer Loop) ~30 FPS
-        self.render_timer = QTimer(self)
-        self.render_timer.timeout.connect(self.update_frame_preview)
-        self.render_timer.start(33)
-
-    def showEvent(self, event):
-        super().showEvent(event)
-        set_window_capture_invisible(int(self.winId()))
-
-    def setup_ui(self):
+    def setup_ui(self) -> None:
         central_widget = QWidget(self)
         root_layout = QHBoxLayout(central_widget)
         root_layout.setContentsMargins(14, 14, 14, 14)
         root_layout.setSpacing(14)
 
         # ==========================================
-        # KOLOM KIRI: Full Capture Viewport & Metrics
+        # KOLOM KIRI: Capture Viewport & Metrics
         # ==========================================
         left_col = QVBoxLayout()
         left_col.setSpacing(10)
@@ -137,7 +167,7 @@ class CapturePreviewWindow(QMainWindow):
 
         top_bar.addSpacing(15)
         top_bar.addWidget(QLabel("Target:"))
-        self.target_input = QLineEdit(self.config.get("capture", {}).get("target_title", "Roblox"))
+        self.target_input = QLineEdit(self.config.capture.target_title)
         self.target_input.setFixedWidth(120)
         top_bar.addWidget(self.target_input)
 
@@ -155,7 +185,7 @@ class CapturePreviewWindow(QMainWindow):
         left_col.addLayout(top_bar)
 
         # Full Viewport Preview Label
-        self.preview_label = QLabel("Capture belum aktif.\nKlik 'Start Capture' untuk memulai.")
+        self.preview_label = QLabel("Capture belum aktif.\nKlik 'Start Capture' untuk memulai pemantauan.")
         self.preview_label.setAlignment(Qt.AlignCenter)
         self.preview_label.setStyleSheet("""
             background-color: #0A0A0C;
@@ -167,7 +197,7 @@ class CapturePreviewWindow(QMainWindow):
         self.preview_label.setMinimumHeight(380)
         left_col.addWidget(self.preview_label, stretch=1)
 
-        # Metrics Panel (2 Baris: Frame Telemetry & Hardware Telemetry)
+        # Metrics Panel (Frame Telemetry & Hardware Telemetry)
         metrics_frame = QFrame()
         metrics_frame.setStyleSheet("""
             background-color: #1A1A1E;
@@ -237,14 +267,48 @@ class CapturePreviewWindow(QMainWindow):
         root_layout.addLayout(left_col, stretch=7)
 
         # ==========================================
-        # KOLOM KANAN: Visual ROI Calibration Panel
+        # KOLOM KANAN: Database & Visual ROI Controls
         # ==========================================
         right_col = QVBoxLayout()
         right_col.setSpacing(10)
 
+        # Panel 1: Active Killer & Abilities (Day 6 Database Integration)
+        killer_group = QGroupBox("Active Killer & Cooldowns")
+        killer_layout = QVBoxLayout(killer_group)
+        killer_layout.setSpacing(8)
+
+        killer_select_row = QHBoxLayout()
+        killer_select_row.addWidget(QLabel("Killer:"))
+        self.combo_killer = QComboBox()
+        self._populate_killer_combobox()
+        self.combo_killer.currentIndexChanged.connect(self.on_killer_selection_changed)
+        killer_select_row.addWidget(self.combo_killer, stretch=1)
+        killer_layout.addLayout(killer_select_row)
+
+        self.killer_desc_label = QLabel()
+        self.killer_desc_label.setWordWrap(True)
+        self.killer_desc_label.setStyleSheet("color: #9E9EB0; font-size: 11px;")
+        killer_layout.addWidget(self.killer_desc_label)
+
+        self.abilities_container = QLabel()
+        self.abilities_container.setWordWrap(True)
+        self.abilities_container.setStyleSheet("""
+            background-color: #16161A;
+            border: 1px solid #282830;
+            border-radius: 4px;
+            padding: 6px;
+            font-size: 11px;
+            color: #E2E8F0;
+        """)
+        killer_layout.addWidget(self.abilities_container)
+
+        self._update_killer_display()
+        right_col.addWidget(killer_group)
+
+        # Panel 2: HUD Region of Interest (ROI)
         roi_group = QGroupBox("HUD Region of Interest (ROI)")
         roi_layout = QVBoxLayout(roi_group)
-        roi_layout.setSpacing(10)
+        roi_layout.setSpacing(8)
 
         # Dedicated Cropped ROI Viewport
         self.roi_preview_label = QLabel("Area ROI")
@@ -255,7 +319,7 @@ class CapturePreviewWindow(QMainWindow):
             border-radius: 6px;
             color: #4ADE80;
         """)
-        self.roi_preview_label.setFixedHeight(180)
+        self.roi_preview_label.setFixedHeight(160)
         roi_layout.addWidget(self.roi_preview_label)
 
         self.roi_size_label = QLabel("Ukuran: 0 x 0 px")
@@ -300,13 +364,13 @@ class CapturePreviewWindow(QMainWindow):
         self.check_roi_enable.toggled.connect(self.on_roi_toggle_changed)
         form_layout.addRow("", self.check_roi_enable)
 
-        # Dropdown OpenCV Preprocessor Mode (Step 4.3)
+        # Dropdown OpenCV Preprocessor Mode
         self.combo_filter = QComboBox()
         self.combo_filter.addItem("Raw BGR (No Filter)", PreprocessorMode.RAW)
         self.combo_filter.addItem("Grayscale (Luminance)", PreprocessorMode.GRAYSCALE)
-        self.combo_filter.addItem("CLAHE (Night Contrast Boost)", PreprocessorMode.CLAHE)
-        self.combo_filter.addItem("Threshold (Binary Shapes)", PreprocessorMode.THRESHOLD)
-        self.combo_filter.addItem("Canny (Edge Contours)", PreprocessorMode.CANNY)
+        self.combo_filter.addItem("CLAHE (Night Boost)", PreprocessorMode.CLAHE)
+        self.combo_filter.addItem("Threshold (Binary)", PreprocessorMode.THRESHOLD)
+        self.combo_filter.addItem("Canny (Edges)", PreprocessorMode.CANNY)
         self.combo_filter.currentIndexChanged.connect(self.on_filter_mode_changed)
         form_layout.addRow("Filter CV:", self.combo_filter)
 
@@ -329,7 +393,58 @@ class CapturePreviewWindow(QMainWindow):
 
         self.setCentralWidget(central_widget)
 
-    def on_roi_spin_changed(self):
+    def _populate_killer_combobox(self) -> None:
+        """Mengisi pilihan dropdown killer dari DatabaseManager."""
+        self.combo_killer.clear()
+        if not self.database or not self.database.killers:
+            self.combo_killer.addItem("Database Kosong", None)
+            return
+
+        selected_idx = 0
+        for idx, killer in enumerate(self.database.killers):
+            self.combo_killer.addItem(killer.name, killer.id)
+            if killer.id == self.config.active_killer_id:
+                selected_idx = idx
+
+        self.combo_killer.setCurrentIndex(selected_idx)
+
+    def _update_killer_display(self) -> None:
+        """Memperbarui label rincian kemampuan killer sesuai pilihan aktif."""
+        killer_id = self.combo_killer.currentData()
+        if not killer_id or not self.database:
+            self.killer_desc_label.setText("Tidak ada killer yang dipilih.")
+            self.abilities_container.setText("Data kemampuan tidak tersedia.")
+            return
+
+        killer = self.database.get_killer(killer_id)
+        if killer is None:
+            return
+
+        self.killer_desc_label.setText(killer.description)
+
+        ability_lines = []
+        for ab in killer.abilities:
+            status_symbol = "⚡" if ab.enabled else "⏸️"
+            verified_tag = "✓ Verified" if ab.cooldown_verified else "⚠️ Unverified"
+            line = (
+                f"<b>{status_symbol} {ab.name}</b>: <b>{ab.cooldown_seconds:.1f}s</b> "
+                f"<span style='color:#A0AEC0;'>({verified_tag})</span><br>"
+                f"&nbsp;&nbsp;↳ Trigger: <code>{ab.trigger_type}</code> | Input: <i>{ab.interact_input}</i>"
+            )
+            ability_lines.append(line)
+
+        self.abilities_container.setText("<br>".join(ability_lines))
+
+    def on_killer_selection_changed(self, index: int) -> None:
+        """Event listener saat pengguna mengganti killer aktif di GUI."""
+        killer_id = self.combo_killer.currentData()
+        if killer_id and killer_id != self.config.active_killer_id:
+            self.config.active_killer_id = killer_id
+            self.settings_manager.save(self.config)
+            self._update_killer_display()
+            logger.info("Active killer changed to '%s'. Updated app config.", killer_id)
+
+    def on_roi_spin_changed(self) -> None:
         """Memperbarui model ROI saat nilai spinbox digeser pengguna."""
         self.roi_config.x = self.spin_x.value()
         self.roi_config.y = self.spin_y.value()
@@ -337,49 +452,38 @@ class CapturePreviewWindow(QMainWindow):
         self.roi_config.height = self.spin_h.value()
         self.roi_processor.update_config(self.roi_config)
 
-    def on_roi_toggle_changed(self, checked: bool):
+    def on_roi_toggle_changed(self, checked: bool) -> None:
         self.roi_config.enabled = checked
         self.roi_processor.update_config(self.roi_config)
 
-    def on_filter_mode_changed(self, index: int):
-        """Memperbarui filter OpenCV saat dropdown diubah."""
+    def on_filter_mode_changed(self, index: int) -> None:
         mode = self.combo_filter.currentData()
         self.preprocessor.config.mode = mode
+        logger.debug("OpenCV preprocessor mode changed to: %s", mode.value)
 
-    def on_save_roi_config(self):
-        """Menyimpan konfigurasi ROI terkini ke config/app_config.json."""
+    def on_save_roi_config(self) -> None:
+        """Menyimpan konfigurasi ROI terkini melalui SettingsManager."""
         try:
-            if self.config_path.exists():
-                with open(self.config_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-            else:
-                data = {}
-
-            if "capture" not in data:
-                data["capture"] = {}
-
-            data["capture"]["roi"] = self.roi_config.to_dict()
-
-            with open(self.config_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4)
-
+            self.config.capture.roi = self.roi_config
+            self.settings_manager.save(self.config)
+            logger.info("ROI configuration saved to %s", self.settings_manager.path)
             QMessageBox.information(
                 self,
                 "Konfigurasi Tersimpan",
-                f"Koordinat ROI berhasil disimpan ke {self.config_path}:\n"
+                f"Koordinat ROI berhasil disimpan ke {self.settings_manager.path}:\n"
                 f"X: {self.roi_config.x}, Y: {self.roi_config.y}\n"
                 f"Ukuran: {self.roi_config.width} x {self.roi_config.height}"
             )
         except Exception as exc:
+            logger.error("Failed to save ROI configuration: %s", exc)
             QMessageBox.critical(self, "Gagal Menyimpan", f"Error menyimpan file: {exc}")
 
-    def on_save_roi_sample(self):
-        """Menyimpan potongan frame ROI terkini ke dataset/ sesuai filter yang sedang aktif."""
+    def on_save_roi_sample(self) -> None:
+        """Menyimpan potongan frame ROI terkini ke dataset/roi_samples/."""
         frame_data = self.capture_engine.get_latest_frame()
         if frame_data is not None:
             cropped = self.roi_processor.crop(frame_data.image)
             if cropped is not None:
-                # Terapkan filter yang sedang aktif pada dropdown
                 processed, _ = self.preprocessor.process(cropped)
                 mode_name = self.preprocessor.config.mode.value
 
@@ -388,15 +492,17 @@ class CapturePreviewWindow(QMainWindow):
                 timestamp_str = time.strftime("%Y%m%d_%H%M%S")
                 file_path = output_dir / f"roi_crop_{timestamp_str}_{mode_name}.png"
                 cv2.imwrite(str(file_path), processed)
+                logger.info("ROI crop sample saved to: %s", file_path)
                 QMessageBox.information(
                     self,
                     "Crop Tersimpan",
                     f"Sampel ROI ({mode_name.upper()}) berhasil disimpan ke:\n{file_path}"
                 )
 
-    def on_start_capture(self):
+    def on_start_capture(self) -> None:
         target = self.target_input.text().strip() or "Roblox"
-        fps_target = self.config.get("capture", {}).get("target_fps", 30)
+        fps_target = self.config.capture.target_fps
+        logger.info("User initiated capture start on target '%s' (%d FPS)", target, fps_target)
         self.capture_engine.start(target_title=target, target_fps=fps_target)
 
         self.btn_start.setEnabled(False)
@@ -405,7 +511,8 @@ class CapturePreviewWindow(QMainWindow):
         self.btn_save_roi_sample.setEnabled(True)
         self.target_input.setEnabled(False)
 
-    def on_stop_capture(self):
+    def on_stop_capture(self) -> None:
+        logger.info("User initiated capture stop.")
         self.capture_engine.stop()
 
         self.btn_start.setEnabled(True)
@@ -415,11 +522,13 @@ class CapturePreviewWindow(QMainWindow):
         self.target_input.setEnabled(True)
 
         self.status_badge.setText("STOPPED")
-        self.status_badge.setStyleSheet("background-color: #3E1E24; color: #FF6B6B; border-radius: 4px; padding: 3px 8px; font-weight: bold;")
+        self.status_badge.setStyleSheet(
+            "background-color: #3E1E24; color: #FF6B6B; border-radius: 4px; padding: 3px 8px; font-weight: bold;"
+        )
         self.preview_label.setText("Capture dihentikan.")
         self.roi_preview_label.setText("Area ROI")
 
-    def on_save_snapshot(self):
+    def on_save_snapshot(self) -> None:
         frame_data = self.capture_engine.get_latest_frame()
         if frame_data is not None:
             output_dir = Path("dataset")
@@ -427,22 +536,29 @@ class CapturePreviewWindow(QMainWindow):
             timestamp_str = time.strftime("%Y%m%d_%H%M%S")
             file_path = output_dir / f"snapshot_{timestamp_str}.png"
             cv2.imwrite(str(file_path), frame_data.image)
+            logger.info("Full viewport snapshot saved to: %s", file_path)
             QMessageBox.information(self, "Snapshot Tersimpan", f"Frame berhasil disimpan ke:\n{file_path}")
 
-    def update_frame_preview(self):
+    def update_frame_preview(self) -> None:
         """Polling frame dari buffer capture engine dan render ke viewport & panel ROI."""
         status = self.capture_engine.status
 
         # Update Status Badge
         if status == CaptureStatus.RUNNING:
             self.status_badge.setText("RUNNING")
-            self.status_badge.setStyleSheet("background-color: #14381C; color: #4ADE80; border-radius: 4px; padding: 3px 8px; font-weight: bold;")
+            self.status_badge.setStyleSheet(
+                "background-color: #14381C; color: #4ADE80; border-radius: 4px; padding: 3px 8px; font-weight: bold;"
+            )
         elif status == CaptureStatus.TARGET_LOST:
             self.status_badge.setText("TARGET LOST")
-            self.status_badge.setStyleSheet("background-color: #4A3A10; color: #FBBF24; border-radius: 4px; padding: 3px 8px; font-weight: bold;")
+            self.status_badge.setStyleSheet(
+                "background-color: #4A3A10; color: #FBBF24; border-radius: 4px; padding: 3px 8px; font-weight: bold;"
+            )
         elif status == CaptureStatus.ERROR:
             self.status_badge.setText("ERROR")
-            self.status_badge.setStyleSheet("background-color: #4A1E24; color: #F87171; border-radius: 4px; padding: 3px 8px; font-weight: bold;")
+            self.status_badge.setStyleSheet(
+                "background-color: #4A1E24; color: #F87171; border-radius: 4px; padding: 3px 8px; font-weight: bold;"
+            )
 
         # Update Metrik Frame
         self.fps_metric.setText(f"FPS: <b>{self.capture_engine.current_fps:.1f}</b>")
@@ -468,7 +584,10 @@ class CapturePreviewWindow(QMainWindow):
         frame_data = self.capture_engine.get_latest_frame()
         if frame_data is None or status == CaptureStatus.TARGET_LOST:
             self.preview_label.clear()
-            self.preview_label.setText(f"Target '{self.target_input.text()}' tidak terdeteksi atau sedang diminimalkan.\nSilakan buka / aktifkan jendela Roblox.")
+            self.preview_label.setText(
+                f"Target '{self.target_input.text()}' tidak terdeteksi atau sedang diminimalkan.\n"
+                "Silakan buka / aktifkan jendela Roblox."
+            )
             self.roi_preview_label.clear()
             self.roi_preview_label.setText("Target Lost")
             self.fps_metric.setText("FPS: <b>0.0</b>")
@@ -480,23 +599,19 @@ class CapturePreviewWindow(QMainWindow):
         self.res_metric.setText(f"Resolution: <b>{frame_data.width}x{frame_data.height}</b>")
         self.frame_num_metric.setText(f"Frames: <b>{frame_data.frame_index}</b>")
 
-        # 1. Proses Pemotongan ROI (Step 4.1) & OpenCV Preprocessing (Step 4.3)
+        # 1. Pemotongan ROI & Preprocessing
         cropped_roi = self.roi_processor.crop(frame_data.image)
         if cropped_roi is not None and cropped_roi.size > 0:
             roi_h, roi_w = cropped_roi.shape[:2]
             self.roi_size_label.setText(f"Ukuran: {roi_w} x {roi_h} px")
 
-            # Jalankan Pipeline Preprocessing OpenCV terukur
             processed_roi, proc_time_ms = self.preprocessor.process(cropped_roi)
             self.monitor.record_processing_frame(proc_time_ms)
             self.cv_proc_metric.setText(f"CV Proc: <b>{proc_time_ms:.1f} ms</b>")
 
-            # Konversi format citra ke RGB untuk render Qt
             if len(processed_roi.shape) == 2:
-                # 1-Channel (Grayscale, Threshold, Canny) -> Konversi ke RGB untuk display
                 roi_rgb = cv2.cvtColor(processed_roi, cv2.COLOR_GRAY2RGB)
             else:
-                # 3-Channel (Raw, CLAHE) -> Konversi BGR ke RGB
                 roi_rgb = cv2.cvtColor(processed_roi, cv2.COLOR_BGR2RGB)
 
             ph, pw = roi_rgb.shape[:2]
@@ -529,23 +644,29 @@ class CapturePreviewWindow(QMainWindow):
         q_img = QImage(rgb.data, new_w, new_h, 3 * new_w, QImage.Format_RGB888)
         self.preview_label.setPixmap(QPixmap.fromImage(q_img))
 
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:
         """Memastikan clean shutdown worker thread saat window ditutup."""
+        logger.info("Closing application window. Cleaning up timers and capture engine...")
         self.render_timer.stop()
         if self.capture_engine.is_running:
             self.capture_engine.stop()
+        logger.info("Application cleanly closed.")
         event.accept()
 
 
-def main():
-    config_path = Path("config/app_config.json")
-    config = {}
-    if config_path.exists():
-        with open(config_path, "r", encoding="utf-8") as f:
-            config = json.load(f)
+def main() -> None:
+    settings_mgr = SettingsManager()
+    db_mgr = DatabaseManager()
+
+    # Inisialisasi logging terpusat sesuai preferensi debug_mode di config
+    setup_logging(debug_mode=settings_mgr.config.app.debug_mode)
+    logger.info("==================================================")
+    logger.info(" Starting %s v%s", settings_mgr.config.app.name, settings_mgr.config.app.version)
+    logger.info(" Target Game: %s | Active Killer: %s", settings_mgr.config.capture.target_title, settings_mgr.config.active_killer_id)
+    logger.info("==================================================")
 
     app = QApplication(sys.argv)
-    window = CapturePreviewWindow(config)
+    window = CapturePreviewWindow(settings_manager=settings_mgr, db_manager=db_mgr)
     window.show()
     sys.exit(app.exec())
 

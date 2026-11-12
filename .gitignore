@@ -12,9 +12,11 @@ __pycache__/
 .idea/
 *.swp
 # Testing & Dataset
+.pytest_cache/
 dataset/*.mp4
 dataset/*.png
 tests/temp/
+logs/
 *.log
 # Windows thumbnail cache
 Thumbs.db

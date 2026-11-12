@@ -8,6 +8,9 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 from processing.roi_processor import ROIConfig
+from app.logger import get_logger
+
+logger = get_logger("settings")
 
 
 @dataclass
@@ -112,6 +115,7 @@ class SettingsManager:
         target_path = path or self.path
         if not target_path.exists():
             # Jika file belum ada, gunakan konfigurasi default dan simpan
+            logger.info("Configuration file not found at %s. Creating default.", target_path)
             self._config = AppConfig()
             self.save(self._config, target_path)
             return self._config
@@ -120,8 +124,10 @@ class SettingsManager:
             with open(target_path, "r", encoding="utf-8") as f:
                 raw_data = json.load(f)
             self._config = AppConfig.from_dict(raw_data)
-        except Exception:
+            logger.info("Successfully loaded application config from %s", target_path)
+        except Exception as exc:
             # Fallback aman jika JSON corrupt
+            logger.warning("Failed to parse config at %s (%s). Falling back to defaults.", target_path, exc)
             self._config = AppConfig()
 
         self.path = target_path
@@ -135,3 +141,4 @@ class SettingsManager:
         with open(target_path, "w", encoding="utf-8") as f:
             json.dump(target_config.to_dict(), f, indent=2, ensure_ascii=False)
         self._config = target_config
+        logger.info("Saved application config to %s", target_path)

@@ -13,6 +13,9 @@ import mss
 from capture.capture_interface import BaseCaptureEngine, CapturedFrame, CaptureStatus
 from capture.frame_buffer import LatestFrameBuffer
 from capture.window_helper import find_target_window, get_window_bounds
+from app.logger import get_logger
+
+logger = get_logger("capture")
 
 
 class MSSWindowsCapture(BaseCaptureEngine):
@@ -49,6 +52,7 @@ class MSSWindowsCapture(BaseCaptureEngine):
             self._stop_event.clear()
             self._status = CaptureStatus.STARTING
 
+            logger.info("Starting capture worker thread for '%s' at target %d FPS", target_title, target_fps)
             self._worker_thread = threading.Thread(
                 target=self._capture_worker,
                 name="CaptureEngineThread",
@@ -59,6 +63,7 @@ class MSSWindowsCapture(BaseCaptureEngine):
 
     def stop(self) -> None:
         """Menghentikan thread capture dengan aman (clean shutdown)."""
+        logger.info("Stopping capture engine...")
         self._stop_event.set()
         if self._worker_thread and self._worker_thread.is_alive():
             self._worker_thread.join(timeout=2.0)
@@ -67,6 +72,7 @@ class MSSWindowsCapture(BaseCaptureEngine):
         with self._lock:
             self._status = CaptureStatus.STOPPED
             self._buffer.clear()
+        logger.info("Capture engine stopped and buffer cleared.")
 
     def get_latest_frame(self) -> Optional[CapturedFrame]:
         """Mengambil frame terbaru dari buffer (Consumer)."""
@@ -111,8 +117,11 @@ class MSSWindowsCapture(BaseCaptureEngine):
                     if win_info:
                         self._target_hwnd = win_info["hwnd"]
                         bounds = win_info["bounds"]
+                        logger.info("Bound to target window '%s' (HWND: %s, Bounds: %s)", win_info["title"], win_info["hwnd"], bounds)
                     else:
                         with self._lock:
+                            if self._status != CaptureStatus.TARGET_LOST:
+                                logger.warning("Target window '%s' not found or minimized -> TARGET_LOST", self._target_title)
                             self._status = CaptureStatus.TARGET_LOST
                             self._target_hwnd = None
                             self._buffer.clear()
@@ -130,6 +139,7 @@ class MSSWindowsCapture(BaseCaptureEngine):
                     raw_np = np.asarray(raw, dtype=np.uint8)  # BGRA
                     bgr_frame = cv2.cvtColor(raw_np, cv2.COLOR_BGRA2BGR)
                 except Exception as exc:
+                    logger.error("Capture grab failed: %s", exc)
                     with self._lock:
                         self._status = CaptureStatus.ERROR
                     time.sleep(0.1)
