@@ -30,11 +30,82 @@ class CaptureSettings:
 
 @dataclass
 class OverlaySettings:
+    x: int = 100
+    y: int = 100
+    width: int = 220
+    height: int = 220
+    opacity: float = 0.95
+    visible: bool = True
     always_on_top: bool = True
     click_through: bool = True
-    opacity: float = 0.9
     fps_display: bool = True
     position: Dict[str, int] = field(default_factory=lambda: {"x": 100, "y": 100})
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialisasi model OverlaySettings ke dictionary terstruktur."""
+        return {
+            "x": int(self.x),
+            "y": int(self.y),
+            "width": int(self.width),
+            "height": int(self.height),
+            "opacity": round(float(self.opacity), 2),
+            "visible": bool(self.visible),
+            "always_on_top": bool(self.always_on_top),
+            "click_through": bool(self.click_through),
+            "fps_display": bool(self.fps_display),
+            "position": {"x": int(self.x), "y": int(self.y)},
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "OverlaySettings":
+        """Membuat instance OverlaySettings dari dictionary dengan validasi dan batas aman."""
+        if not isinstance(data, dict):
+            return cls()
+
+        pos = data.get("position", {})
+        if not isinstance(pos, dict):
+            pos = {}
+
+        # Mendukung koordinat flat (x, y) dan struktur position dict ({"x": ..., "y": ...})
+        x_val = data.get("x", pos.get("x", 100))
+        y_val = data.get("y", pos.get("y", 100))
+        width_val = data.get("width", 220)
+        height_val = data.get("height", 220)
+        opacity_val = data.get("opacity", 0.95)
+        visible_val = data.get("visible", True)
+        always_on_top_val = data.get("always_on_top", True)
+        click_through_val = data.get("click_through", True)
+        fps_display_val = data.get("fps_display", True)
+
+        try:
+            x_int = max(0, int(x_val))
+            y_int = max(0, int(y_val))
+        except (ValueError, TypeError):
+            x_int, y_int = 100, 100
+
+        try:
+            w_int = max(60, min(1920, int(width_val)))
+            h_int = max(60, min(1080, int(height_val)))
+        except (ValueError, TypeError):
+            w_int, h_int = 220, 220
+
+        try:
+            op_flt = max(0.2, min(1.0, float(opacity_val)))
+        except (ValueError, TypeError):
+            op_flt = 0.95
+
+        return cls(
+            x=x_int,
+            y=y_int,
+            width=w_int,
+            height=h_int,
+            opacity=op_flt,
+            visible=bool(visible_val),
+            always_on_top=bool(always_on_top_val),
+            click_through=bool(click_through_val),
+            fps_display=bool(fps_display_val),
+            position={"x": x_int, "y": y_int},
+        )
 
 
 @dataclass
@@ -47,8 +118,9 @@ class AppConfig:
 
     def to_dict(self) -> Dict[str, Any]:
         d = asdict(self)
-        # Pastikan ROIConfig terserialisasi dengan benar
+        # Pastikan ROIConfig dan OverlaySettings terserialisasi dengan benar
         d["capture"]["roi"] = self.capture.roi.to_dict()
+        d["overlay"] = self.overlay.to_dict()
         return d
 
     @classmethod
@@ -76,13 +148,7 @@ class AppConfig:
         )
 
         ovl_raw = data.get("overlay", {})
-        overlay_settings = OverlaySettings(
-            always_on_top=bool(ovl_raw.get("always_on_top", True)),
-            click_through=bool(ovl_raw.get("click_through", True)),
-            opacity=float(ovl_raw.get("opacity", 0.9)),
-            fps_display=bool(ovl_raw.get("fps_display", True)),
-            position=dict(ovl_raw.get("position", {"x": 100, "y": 100}))
-        )
+        overlay_settings = OverlaySettings.from_dict(ovl_raw)
 
         return cls(
             schema_version=int(data.get("schema_version", 1)),

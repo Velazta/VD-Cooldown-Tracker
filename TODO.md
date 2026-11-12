@@ -127,19 +127,67 @@
 - [x] No injection, hooking, memory reading, or client modification exists.
 - [x] Test evidence and limitations are documented.
 
-# Week 2 — Desktop Application and Overlay (Preview)
-- [ ] Build main PySide6 application window.
-- [ ] Add capture source/status panel.
-- [ ] Add ROI calibration controls.
-- [ ] Build transparent overlay window.
-- [ ] Test always-on-top behavior.
-- [ ] Test click-through behavior.
-- [ ] Build circular cooldown indicator.
-- [ ] Implement cooldown manager.
-- [ ] Add manual timer start/reset.
-- [ ] Connect JSON database to UI.
-- [ ] Add overlay position and size settings.
-- [ ] Integrate capture prototype with application lifecycle.
+# Week 2 — Cooldown State Machine & Transparent Overlay
+
+## Day 8 — Handover Week 1 & Desain Kontrak Cooldown (16 Nov)
+- [x] Run existing Week 1 regression test suite (42 tests pass).
+- [x] Create `cooldown/` package and export module skeleton.
+- [x] Implement normalized `AbilityEvent` contract with strict validation in `cooldown/ability_event.py`.
+- [x] Implement `CooldownState` enum and immutable `CooldownSnapshot` in `cooldown/cooldown_state.py`.
+- [x] Add automated unit tests in `tests/test_ability_event.py` and `tests/test_cooldown_state.py`.
+- [x] Verify zero dependencies on PySide6 and OpenCV in the cooldown package.
+
+**Deliverable:** Documented ability event and cooldown state models, passing baseline.
+
+## Day 9 — Cooldown State Machine (17 Nov)
+- [x] Implement `cooldown/cooldown_manager.py` (READY, WAITING_FOR_RELEASE, COOLDOWN).
+- [x] Implement monotonic elapsed-time deadline calculations (`time.monotonic()`).
+- [x] Implement trigger semantics (`on_cast_start` vs `on_release`).
+- [x] Implement duplicate event suppression and active timer protection.
+- [x] Implement reset, cancel, and expiration handlers.
+- [x] Write unit tests for event sequences, triggers, and invalid ability data.
+
+**Deliverable:** Standalone tested cooldown state machine.
+
+## Day 10 — Transparent Overlay Window (18 Nov)
+- [x] Create `overlay/overlay_window.py` with frameless and transparent background.
+- [x] Implement always-on-top window behavior (`WindowStaysOnTopHint`).
+- [x] Implement independent show/hide, position $(x, y)$, size, and opacity controls.
+- [x] Test click-through pass-through on desktop and actual Roblox window.
+
+**Deliverable:** Transparent overlay window prototype.
+
+## Day 11 — Cooldown Widget (19 Nov)
+- [x] Build circular progress ring indicator in `overlay/cooldown_widget.py` using `QPainter`.
+- [x] Display ability name, formatted remaining seconds, and READY state.
+- [x] Connect widget through `overlay/overlay_controller.py` to `CooldownManager`.
+- [x] Ensure painting operations are lightweight and execute zero CV/capture work.
+
+**Deliverable:** Overlay circular cooldown indicator widget.
+
+## Day 12 — Main Application Integration & Manual Events (20 Nov)
+- [x] Add manual test controls (*Simulate Cast Start*, *Simulate Release*, *Reset*) to `main.py`.
+- [x] Connect active Killer/ability dropdown to `AbilityEvent` creation.
+- [x] Add manual hotkey listener (`F1` / `F2` / `F3` / `F4`) for Survivor off-screen fallback.
+- [x] Verify end-to-end flow: Manual Event $\rightarrow$ Cooldown State Machine $\rightarrow$ Overlay.
+
+**Deliverable:** End-to-end integrated manual trigger and overlay flow.
+
+## Day 13 — Settings Persistence & Reliability (21 Nov)
+- [x] Extend `app/settings.py` with `OverlaySettings` (position, size, opacity, visibility).
+- [x] Persist overlay preferences to `config/app_config.json` without damaging ROI settings.
+- [x] Test application lifecycle, restart persistence, and clean shutdown under active cooldown.
+
+**Deliverable:** Persisted overlay settings and robust lifecycle.
+
+## Day 14 — Integration, QA & Week 2 Review (22 Nov)
+- [ ] Run full test suite (Week 1 regression + Week 2 tests).
+- [ ] Test overlay stacking, click-through, and mouse-look lock in Roblox.
+- [ ] Measure CPU/RAM and game FPS impact with overlay visible vs hidden.
+- [ ] Update documentation (`TODO.md`, `ARCHITECTURE.md`, `RISK.md`, `dataset/WEEK2_FINAL_REPORT.md`).
+- [ ] Tag release `v0.2.0-week2` and prepare Week 3 detection backlog.
+
+**Deliverable:** Integrated manual cooldown overlay prototype and Week 2 report.
 
 # Week 3 — Dataset and Initial Detection (Preview)
 - [ ] Record representative The Hidden gameplay using OBS.

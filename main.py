@@ -1,10 +1,12 @@
-"""Main Application Entry Point — Day 7 End-to-End Pipeline Integration.
+"""Main Application Entry Point — Day 12 Integrated Application & Manual Events.
 
 Violence District Cooldown Tracker
 Integrates:
 - Logging: Structured dual console + file logging (logs/app.log)
 - SettingsManager: Runtime application configuration (config/app_config.json)
 - DatabaseManager: Strongly-typed killer & ability database (database/killerDatabase.json)
+- CooldownManager: Deterministic monotonic cooldown state machine (cooldown/)
+- OverlayController: Frameless always-on-top transparent cooldown ring overlay (overlay/)
 - MSSWindowsCapture: Background producer thread screen capture
 - ROIProcessor: Centered gameplay viewport cropping and coordinate clamping
 - ImagePreprocessor: OpenCV computer vision filters (Raw, Gray, CLAHE, Threshold, Canny)
@@ -26,12 +28,17 @@ from PySide6.QtWidgets import (
     QWidget, QPushButton, QFrame, QLineEdit, QMessageBox,
     QSpinBox, QFormLayout, QGroupBox, QCheckBox, QComboBox
 )
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QEvent
 from PySide6.QtGui import QImage, QPixmap, QFont
 
 from app.logger import setup_logging, get_logger
 from app.settings import SettingsManager, AppConfig
 from database.database_manager import DatabaseManager, KillerConfig
+from cooldown.ability_event import AbilityEvent
+from cooldown.cooldown_manager import CooldownManager
+from cooldown.cooldown_state import CooldownState
+from overlay.overlay_window import OverlayWindow
+from overlay.overlay_controller import OverlayController
 from capture.windows_capture import MSSWindowsCapture
 from capture.capture_interface import CaptureStatus
 from capture.window_helper import set_window_capture_invisible
@@ -78,17 +85,42 @@ class CapturePreviewWindow(QMainWindow):
         )
         self._telemetry_tick_counter = 0
 
+        # 5. Inisialisasi Cooldown Manager & Overlay Controller (Week 2 Integration)
+        self.cooldown_manager = CooldownManager()
+        ovl_cfg = self.config.overlay
+        self.overlay_window = OverlayWindow(
+            x=ovl_cfg.x,
+            y=ovl_cfg.y,
+            width=ovl_cfg.width,
+            height=ovl_cfg.height,
+            opacity=ovl_cfg.opacity,
+            click_through=ovl_cfg.click_through,
+            always_on_top=ovl_cfg.always_on_top,
+        )
+        self.overlay_controller = OverlayController(
+            cooldown_manager=self.cooldown_manager,
+            overlay_window=self.overlay_window,
+            refresh_fps=30,
+            parent=self,
+        )
+        self.overlay_controller.overlay_moved.connect(self.on_overlay_moved)
+
         # Setup Tampilan Jendela
         self.setWindowTitle(
-            f"{self.config.app.name} v{self.config.app.version} — Day 7 Integrated Pipeline"
+            f"{self.config.app.name} v{self.config.app.version} — Day 7 / Day 13 Integrated Pipeline"
         )
-        self.resize(1100, 680)
-        self.setMinimumSize(920, 560)
+        self.resize(1160, 720)
+        self.setMinimumSize(960, 600)
         self._apply_stylesheet()
         self.setup_ui()
 
         # Proteksi OS: Cegah efek rekursif Hall of Mirrors
         set_window_capture_invisible(int(self.winId()))
+
+        # Pasang event filter global agar hotkey F1-F4 tidak direbut QComboBox / widget anak
+        app_inst = QApplication.instance()
+        if app_inst is not None:
+            app_inst.installEventFilter(self)
 
         # Timer untuk polling UI (Consumer Loop) ~30 FPS (33 ms)
         self.render_timer = QTimer(self)
@@ -280,10 +312,14 @@ class CapturePreviewWindow(QMainWindow):
         killer_select_row = QHBoxLayout()
         killer_select_row.addWidget(QLabel("Killer:"))
         self.combo_killer = QComboBox()
-        self._populate_killer_combobox()
-        self.combo_killer.currentIndexChanged.connect(self.on_killer_selection_changed)
         killer_select_row.addWidget(self.combo_killer, stretch=1)
         killer_layout.addLayout(killer_select_row)
+
+        ability_select_row = QHBoxLayout()
+        ability_select_row.addWidget(QLabel("Ability:"))
+        self.combo_ability = QComboBox()
+        ability_select_row.addWidget(self.combo_ability, stretch=1)
+        killer_layout.addLayout(ability_select_row)
 
         self.killer_desc_label = QLabel()
         self.killer_desc_label.setWordWrap(True)
@@ -302,10 +338,63 @@ class CapturePreviewWindow(QMainWindow):
         """)
         killer_layout.addWidget(self.abilities_container)
 
+        self._populate_killer_combobox()
+        self.combo_killer.currentIndexChanged.connect(self.on_killer_selection_changed)
+
+        self._populate_ability_combobox()
+        self.combo_ability.currentIndexChanged.connect(self.on_ability_selection_changed)
+
         self._update_killer_display()
         right_col.addWidget(killer_group)
 
-        # Panel 2: HUD Region of Interest (ROI)
+        # Panel 2: Overlay & Event Simulation Controls (Day 12 Integration)
+        overlay_group = QGroupBox("Overlay & Event Simulation")
+        overlay_layout = QVBoxLayout(overlay_group)
+        overlay_layout.setSpacing(8)
+
+        # Baris Checkbox: Visibilitas & Kalibrasi
+        overlay_check_row = QHBoxLayout()
+        self.check_overlay_visible = QCheckBox("👁️ Overlay (F4)")
+        self.check_overlay_visible.toggled.connect(self.on_toggle_overlay_checked)
+        self.check_overlay_visible.setChecked(self.config.overlay.visible)
+        overlay_check_row.addWidget(self.check_overlay_visible)
+
+        self.check_calibration_mode = QCheckBox("⚙️ Mode Kalibrasi")
+        self.check_calibration_mode.setToolTip("Nonaktifkan click-through agar posisi overlay dapat diklik dan digeser mouse.")
+        self.check_calibration_mode.toggled.connect(self.on_toggle_calibration_mode)
+        overlay_check_row.addWidget(self.check_calibration_mode)
+        overlay_layout.addLayout(overlay_check_row)
+
+        # Baris Tombol: Simulasi Manual
+        sim_btn_row = QHBoxLayout()
+        self.btn_simulate_cast = QPushButton("⚡ Cast (F1)")
+        self.btn_simulate_cast.setToolTip("Kirim event 'cast_start'. Leap langsung cooldown; Veil masuk stance aiming.")
+        self.btn_simulate_cast.setStyleSheet("background-color: #854D0E; color: #FDE047; border: 1px solid #CA8A04;")
+        self.btn_simulate_cast.clicked.connect(lambda: self.simulate_cast_start(source="manual"))
+        sim_btn_row.addWidget(self.btn_simulate_cast)
+
+        self.btn_simulate_release = QPushButton("🚀 Release (F2)")
+        self.btn_simulate_release.setToolTip("Kirim event 'release'. Memicu cooldown untuk kemampuan bertipe on_release (Veil).")
+        self.btn_simulate_release.setStyleSheet("background-color: #075985; color: #7DD3FC; border: 1px solid #0284C7;")
+        self.btn_simulate_release.clicked.connect(lambda: self.simulate_release(source="manual"))
+        sim_btn_row.addWidget(self.btn_simulate_release)
+
+        self.btn_reset_cd = QPushButton("🔄 Reset (F3)")
+        self.btn_reset_cd.setToolTip("Reset status cooldown kemampuan aktif kembali ke READY.")
+        self.btn_reset_cd.setStyleSheet("background-color: #374151; color: #D1D5DB; border: 1px solid #4B5563;")
+        self.btn_reset_cd.clicked.connect(self.reset_cooldown)
+        sim_btn_row.addWidget(self.btn_reset_cd)
+        overlay_layout.addLayout(sim_btn_row)
+
+        hotkey_help = QLabel(
+            "<small style='color:#718096;'>Hotkey: <b>F1</b>=Cast | <b>F2</b>=Release | <b>F3</b>=Reset | <b>F4</b>=Overlay</small>"
+        )
+        hotkey_help.setAlignment(Qt.AlignCenter)
+        overlay_layout.addWidget(hotkey_help)
+
+        right_col.addWidget(overlay_group)
+
+        # Panel 3: HUD Region of Interest (ROI)
         roi_group = QGroupBox("HUD Region of Interest (ROI)")
         roi_layout = QVBoxLayout(roi_group)
         roi_layout.setSpacing(8)
@@ -319,7 +408,7 @@ class CapturePreviewWindow(QMainWindow):
             border-radius: 6px;
             color: #4ADE80;
         """)
-        self.roi_preview_label.setFixedHeight(160)
+        self.roi_preview_label.setFixedHeight(120)
         roi_layout.addWidget(self.roi_preview_label)
 
         self.roi_size_label = QLabel("Ukuran: 0 x 0 px")
@@ -391,13 +480,24 @@ class CapturePreviewWindow(QMainWindow):
         right_col.addWidget(roi_group)
         root_layout.addLayout(right_col, stretch=3)
 
+        # Cegah tombol dan checkbox mencuri fokus keyboard dari jendela utama
+        for widget in (
+            self.btn_start, self.btn_stop, self.btn_snapshot,
+            self.btn_simulate_cast, self.btn_simulate_release, self.btn_reset_cd,
+            self.btn_save_roi, self.btn_save_roi_sample,
+            self.check_overlay_visible, self.check_calibration_mode, self.check_roi_enable
+        ):
+            widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
         self.setCentralWidget(central_widget)
 
     def _populate_killer_combobox(self) -> None:
         """Mengisi pilihan dropdown killer dari DatabaseManager."""
+        self.combo_killer.blockSignals(True)
         self.combo_killer.clear()
         if not self.database or not self.database.killers:
             self.combo_killer.addItem("Database Kosong", None)
+            self.combo_killer.blockSignals(False)
             return
 
         selected_idx = 0
@@ -407,6 +507,57 @@ class CapturePreviewWindow(QMainWindow):
                 selected_idx = idx
 
         self.combo_killer.setCurrentIndex(selected_idx)
+        self.combo_killer.blockSignals(False)
+
+    def _populate_ability_combobox(self) -> None:
+        """Mengisi pilihan dropdown kemampuan sesuai killer yang dipilih."""
+        self.combo_ability.blockSignals(True)
+        self.combo_ability.clear()
+
+        killer_id = self.combo_killer.currentData()
+        if not killer_id or not self.database:
+            self.combo_ability.addItem("Tidak Ada Kemampuan", None)
+            self.combo_ability.blockSignals(False)
+            return
+
+        killer = self.database.get_killer(killer_id)
+        if not killer or not killer.abilities:
+            self.combo_ability.addItem("Tidak Ada Kemampuan", None)
+            self.combo_ability.blockSignals(False)
+            return
+
+        for ab in killer.abilities:
+            label = f"{ab.name} ({ab.cooldown_seconds:.1f}s - {ab.trigger_type})"
+            self.combo_ability.addItem(label, ab.id)
+
+        self.combo_ability.blockSignals(False)
+        if self.combo_ability.count() > 0:
+            self.combo_ability.setCurrentIndex(0)
+            self._sync_active_ability()
+
+    def _sync_active_ability(self) -> None:
+        """Sinkronisasi kemampuan aktif ke CooldownManager dan overlay."""
+        killer_id = self.combo_killer.currentData()
+        ability_id = self.combo_ability.currentData()
+        if not killer_id or not ability_id or not self.database:
+            return
+
+        killer = self.database.get_killer(killer_id)
+        if not killer:
+            return
+
+        ability = killer.get_ability(ability_id)
+        if not ability:
+            return
+
+        self.cooldown_manager.set_ability(killer_id, ability)
+        self.overlay_controller.update_widget()
+        logger.info(
+            "Synchronized active ability '%s' (%s) for killer '%s' to CooldownManager.",
+            ability.name,
+            ability.id,
+            killer_id,
+        )
 
     def _update_killer_display(self) -> None:
         """Memperbarui label rincian kemampuan killer sesuai pilihan aktif."""
@@ -441,8 +592,121 @@ class CapturePreviewWindow(QMainWindow):
         if killer_id and killer_id != self.config.active_killer_id:
             self.config.active_killer_id = killer_id
             self.settings_manager.save(self.config)
-            self._update_killer_display()
             logger.info("Active killer changed to '%s'. Updated app config.", killer_id)
+
+        self._update_killer_display()
+        self._populate_ability_combobox()
+        self.combo_killer.clearFocus()
+        self.setFocus()
+
+    def on_ability_selection_changed(self, index: int) -> None:
+        """Event listener saat pengguna mengganti kemampuan aktif di GUI."""
+        self._sync_active_ability()
+        self.combo_ability.clearFocus()
+        self.setFocus()
+
+    def on_toggle_overlay_checked(self, checked: bool) -> None:
+        """Mengatur visibilitas overlay sesuai checkbox dan menyimpan preferensi."""
+        if checked:
+            self.overlay_controller.show_overlay()
+        else:
+            self.overlay_controller.hide_overlay()
+        if self.config.overlay.visible != checked:
+            self.config.overlay.visible = checked
+            self.settings_manager.save(self.config)
+            logger.info("Saved overlay visibility preference: %s", checked)
+
+    def on_toggle_calibration_mode(self, checked: bool) -> None:
+        """Mengatur mode kalibrasi posisi overlay."""
+        self.overlay_controller.set_calibration_mode(checked)
+
+    def on_overlay_moved(self, x: int, y: int) -> None:
+        """Callback saat jendela overlay digeser pengguna pada mode kalibrasi."""
+        self.config.overlay.x = x
+        self.config.overlay.y = y
+        self.config.overlay.position = {"x": x, "y": y}
+        self.settings_manager.save(self.config)
+        logger.debug("Overlay position changed to: (%d, %d). Saved to config.", x, y)
+
+    def simulate_cast_start(self, source: str = "manual") -> None:
+        """Memicu simulasi event cast_start untuk kemampuan aktif."""
+        killer_id = self.combo_killer.currentData()
+        ability_id = self.combo_ability.currentData()
+        if not killer_id or not ability_id:
+            logger.warning("Simulate cast_start ignored: No killer or ability selected.")
+            return
+
+        event = AbilityEvent(
+            killer_id=killer_id,
+            ability_id=ability_id,
+            event_type="cast_start",
+            timestamp=time.monotonic(),
+            confidence=1.0,
+            source=source,
+        )
+        logger.info("Simulating '%s' event from source '%s': %s/%s", event.event_type, source, killer_id, ability_id)
+        self.cooldown_manager.handle_event(event)
+
+    def simulate_release(self, source: str = "manual") -> None:
+        """Memicu simulasi event release untuk kemampuan aktif."""
+        killer_id = self.combo_killer.currentData()
+        ability_id = self.combo_ability.currentData()
+        if not killer_id or not ability_id:
+            logger.warning("Simulate release ignored: No killer or ability selected.")
+            return
+
+        event = AbilityEvent(
+            killer_id=killer_id,
+            ability_id=ability_id,
+            event_type="release",
+            timestamp=time.monotonic(),
+            confidence=1.0,
+            source=source,
+        )
+        logger.info("Simulating '%s' event from source '%s': %s/%s", event.event_type, source, killer_id, ability_id)
+        self.cooldown_manager.handle_event(event)
+
+    def reset_cooldown(self) -> None:
+        """Mereset status cooldown kemampuan aktif kembali ke READY."""
+        logger.info("Resetting cooldown timer back to READY.")
+        self.cooldown_manager.reset()
+
+    def _handle_hotkey(self, key: int) -> bool:
+        """Menangani aksi hotkey F1-F4 secara terpusat.
+
+        Returns:
+            bool: True jika tombol dikenali dan ditangani, False jika tidak.
+        """
+        if key == Qt.Key.Key_F1 or key == Qt.Key_F1:
+            self.simulate_cast_start(source="hotkey")
+            return True
+        elif key == Qt.Key.Key_F2 or key == Qt.Key_F2:
+            self.simulate_release(source="hotkey")
+            return True
+        elif key == Qt.Key.Key_F3 or key == Qt.Key_F3:
+            self.reset_cooldown()
+            return True
+        elif key == Qt.Key.Key_F4 or key == Qt.Key_F4:
+            is_visible = self.overlay_controller.toggle_overlay()
+            self.check_overlay_visible.blockSignals(True)
+            self.check_overlay_visible.setChecked(is_visible)
+            self.check_overlay_visible.blockSignals(False)
+            return True
+        return False
+
+    def eventFilter(self, obj, event) -> bool:
+        """Filter event global aplikasi untuk mencegat tombol F1-F4 sebelum dicuri QComboBox / widget anak."""
+        if event.type() == QEvent.Type.KeyPress:
+            if self._handle_hotkey(event.key()):
+                return True
+        return super().eventFilter(obj, event)
+
+    def keyPressEvent(self, event) -> None:
+        """Hotkey listener cadangan jika tidak tertangkap oleh eventFilter."""
+        if self._handle_hotkey(event.key()):
+            event.accept()
+        else:
+            super().keyPressEvent(event)
 
     def on_roi_spin_changed(self) -> None:
         """Memperbarui model ROI saat nilai spinbox digeser pengguna."""
@@ -645,9 +909,29 @@ class CapturePreviewWindow(QMainWindow):
         self.preview_label.setPixmap(QPixmap.fromImage(q_img))
 
     def closeEvent(self, event) -> None:
-        """Memastikan clean shutdown worker thread saat window ditutup."""
+        """Memastikan clean shutdown worker thread & overlay saat window ditutup."""
         logger.info("Closing application window. Cleaning up timers and capture engine...")
+        app_inst = QApplication.instance()
+        if app_inst is not None:
+            app_inst.removeEventFilter(self)
+
+        # Simpan preferensi posisi overlay terkini ke config
+        try:
+            if hasattr(self, "overlay_window") and self.overlay_window is not None:
+                self.config.overlay.x = self.overlay_window.x()
+                self.config.overlay.y = self.overlay_window.y()
+                self.config.overlay.width = self.overlay_window.width()
+                self.config.overlay.height = self.overlay_window.height()
+                self.config.overlay.visible = self.check_overlay_visible.isChecked()
+                self.config.overlay.position = {"x": self.overlay_window.x(), "y": self.overlay_window.y()}
+                self.settings_manager.save(self.config)
+                logger.info("Overlay settings successfully persisted on exit.")
+        except Exception as exc:
+            logger.warning("Could not persist overlay settings on exit: %s", exc)
+
         self.render_timer.stop()
+        if hasattr(self, "overlay_controller") and self.overlay_controller is not None:
+            self.overlay_controller.close()
         if self.capture_engine.is_running:
             self.capture_engine.stop()
         logger.info("Application cleanly closed.")
