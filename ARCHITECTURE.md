@@ -347,6 +347,7 @@ Screen capture does not guarantee policy approval. Do not describe overlay hidin
 | Desktop UI | PySide6 | Concrete platform limitation is demonstrated |
 | CV baseline | OpenCV | Measurements show learned model is necessary |
 | Initial storage | JSON | Data complexity requires database features |
-| Capture backend | MSS / Win32 BitBlt provisional backend (27.58ms @ 35.4 FPS), behind modular interface | Evaluate WGC/DXGI in-game if occlusion or higher FPS is strictly required |
-| Initial detector | Template matching experiment | Actual HUD footage demonstrates limitations |
+| Capture backend | MSS / Win32 BitBlt provisional backend (11.1-16.9ms @ 30 FPS) with WDA_EXCLUDEFROMCAPTURE, behind modular interface | Transition to WGC in-game if high-refresh game FPS requires GPU VRAM texture |
+| Capture exclusion | WDA_EXCLUDEFROMCAPTURE via SetWindowDisplayAffinity & strict PID filtering | Revisit if Windows version < 2004 |
+| Initial detector | Template matching baseline & Preprocessing pipeline (CLAHE/Canny/Gray) evaluated Day 4/5 | Full training in Week 3 (YOLO + Temporal Classifier for Survivor POV pose recognition) |
 | First ability | The Hidden — Leap | First MVP path is validated |

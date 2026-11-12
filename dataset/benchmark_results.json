@@ -1,0 +1,62 @@
+[
+    {
+        "scenario": "1. Idle (No Capture)",
+        "duration_sec": 3.0,
+        "capture_fps": 0.0,
+        "processing_fps": 0.0,
+        "capture_lat_ms": 0.0,
+        "cv_proc_lat_ms": 0.0,
+        "app_cpu_avg": 0.0,
+        "app_cpu_max": 0.0,
+        "app_ram_avg_mb": 38.67,
+        "app_ram_max_mb": 38.69
+    },
+    {
+        "scenario": "2. Full 1080p Raw Capture",
+        "duration_sec": 5.0,
+        "capture_fps": 29.6,
+        "processing_fps": 0.0,
+        "capture_lat_ms": 11.15,
+        "cv_proc_lat_ms": 0.0,
+        "app_cpu_avg": 45.35,
+        "app_cpu_max": 509.5,
+        "app_ram_avg_mb": 65.45,
+        "app_ram_max_mb": 74.35
+    },
+    {
+        "scenario": "3. ROI Cropping (1280x780)",
+        "duration_sec": 5.0,
+        "capture_fps": 29.5,
+        "processing_fps": 29.5,
+        "capture_lat_ms": 16.94,
+        "cv_proc_lat_ms": 0.44,
+        "app_cpu_avg": 47.42,
+        "app_cpu_max": 451.1,
+        "app_ram_avg_mb": 74.34,
+        "app_ram_max_mb": 81.77
+    },
+    {
+        "scenario": "4. ROI + CLAHE Preprocessing",
+        "duration_sec": 5.0,
+        "capture_fps": 10.9,
+        "processing_fps": 14.0,
+        "capture_lat_ms": 33.09,
+        "cv_proc_lat_ms": 54.26,
+        "app_cpu_avg": 174.1,
+        "app_cpu_max": 599.4,
+        "app_ram_avg_mb": 85.63,
+        "app_ram_max_mb": 93.35
+    },
+    {
+        "scenario": "5. Sustained Run (10.0s)",
+        "duration_sec": 10.0,
+        "capture_fps": 20.7,
+        "processing_fps": 20.8,
+        "capture_lat_ms": 22.2,
+        "cv_proc_lat_ms": 13.18,
+        "app_cpu_avg": 163.2,
+        "app_cpu_max": 446.4,
+        "app_ram_avg_mb": 85.42,
+        "app_ram_max_mb": 90.04
+    }
+]

@@ -4,6 +4,7 @@ Violence District Cooldown Tracker
 """
 import ctypes
 from ctypes import wintypes
+import os
 from typing import Optional, Tuple, List, Dict
 
 # Setup DPI Awareness agar koordinat pixel 1:1 akurat di layar dengan scaling Windows
@@ -19,6 +20,7 @@ user32 = ctypes.windll.user32
 dwmapi = ctypes.windll.dwmapi
 
 DWMWA_EXTENDED_FRAME_BOUNDS = 9
+WDA_EXCLUDEFROMCAPTURE = 0x00000011
 
 
 class RECT(ctypes.Structure):
@@ -30,11 +32,22 @@ class RECT(ctypes.Structure):
     ]
 
 
+def set_window_capture_invisible(hwnd: int) -> bool:
+    """
+    Menginstruksikan Windows OS agar jendela ini TIDAK TERLIHAT oleh screen capture.
+    Mencegah efek rekursif (hall of mirrors) jika tracker berada di atas game.
+    """
+    try:
+        res = user32.SetWindowDisplayAffinity(wintypes.HWND(hwnd), wintypes.DWORD(WDA_EXCLUDEFROMCAPTURE))
+        return bool(res)
+    except Exception:
+        return False
+
+
 def get_window_bounds(hwnd: int) -> Optional[Tuple[int, int, int, int]]:
     """
-    Mengambil (x, y, width, height) yang presisi via DWM API
-    dengan menyaring invisible borders bawaan Windows.
-    Mengembalikan None jika window tidak valid atau diminimalkan.
+    Mengambil (x, y, width, height) yang presisi via DWM API.
+    Mengembalikan None jika window tidak valid, diminimalkan, atau ditutup.
     """
     if not user32.IsWindow(hwnd) or user32.IsIconic(hwnd):
         return None
@@ -49,21 +62,32 @@ def get_window_bounds(hwnd: int) -> Optional[Tuple[int, int, int, int]]:
     if res == 0:
         w = rect.right - rect.left
         h = rect.bottom - rect.top
-        return (rect.left, rect.top, w, h) if w > 0 and h > 0 else None
+        return (rect.left, rect.top, w, h) if w > 100 and h > 100 else None
 
     # Fallback standard GetWindowRect
     user32.GetWindowRect(wintypes.HWND(hwnd), ctypes.byref(rect))
     w = rect.right - rect.left
     h = rect.bottom - rect.top
-    return (rect.left, rect.top, w, h) if w > 0 and h > 0 else None
+    return (rect.left, rect.top, w, h) if w > 100 and h > 100 else None
 
 
 def find_target_window(title_keyword: str = "Roblox") -> Optional[Dict]:
-    """Mencari jendela utama aktif berdasarkan kata kunci judul."""
+    """
+    Mencari jendela utama aktif target secara ketat.
+    Mengabaikan jendela milik aplikasi kita sendiri untuk mencegah self-capture.
+    """
     found = []
+    my_pid = os.getpid()
 
     def enum_cb(hwnd, extra):
         if user32.IsWindowVisible(hwnd) and not user32.IsIconic(hwnd):
+            # 1. Pastikan bukan proses tracker kita sendiri
+            proc_id = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(proc_id))
+            if proc_id.value == my_pid:
+                return True
+
+            # 2. Cek judul window
             length = user32.GetWindowTextLengthW(hwnd)
             if length > 0:
                 buff = ctypes.create_unicode_buffer(length + 1)
@@ -75,7 +99,8 @@ def find_target_window(title_keyword: str = "Roblox") -> Optional[Dict]:
                         found.append({
                             "hwnd": hwnd,
                             "title": title,
-                            "bounds": bounds
+                            "bounds": bounds,
+                            "pid": proc_id.value
                         })
         return True
 

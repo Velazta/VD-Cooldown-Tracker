@@ -3,7 +3,13 @@ Unit Tests for ROI Processor
 Violence District Cooldown Tracker
 """
 import unittest
+import sys
+from pathlib import Path
 import numpy as np
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from processing.roi_processor import ROIConfig, ROIProcessor
 

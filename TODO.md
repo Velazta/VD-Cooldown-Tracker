@@ -42,16 +42,16 @@
 **Deliverable:** capture backend decision record and working proof of capture.
 
 ## Day 3 — Capture Engine Prototype
-- [ ] Define capture backend interface.
-- [ ] Implement capture start.
-- [ ] Implement capture stop.
-- [ ] Add frame timestamps.
-- [ ] Add frame dimension metadata.
-- [ ] Implement bounded/latest-frame buffer.
-- [ ] Implement live preview.
-- [ ] Add capture FPS counter.
-- [ ] Add capture error reporting.
-- [ ] Verify clean shutdown.
+- [x] Define capture backend interface.
+- [x] Implement capture start.
+- [x] Implement capture stop.
+- [x] Add frame timestamps.
+- [x] Add frame dimension metadata.
+- [x] Implement bounded/latest-frame buffer.
+- [x] Implement live preview.
+- [x] Add capture FPS counter.
+- [x] Add capture error reporting.
+- [x] Verify clean shutdown.
 
 **Deliverable:** continuous capture prototype with preview and FPS.
 
@@ -71,17 +71,17 @@
 **Deliverable:** ROI processor and initial OpenCV experiment.
 
 ## Day 5 — Performance and Stability
-- [ ] Record baseline game FPS without application.
-- [ ] Measure application CPU with capture disabled.
-- [ ] Measure capture FPS.
-- [ ] Measure processing FPS.
-- [ ] Measure ROI processing time.
-- [ ] Measure application RAM.
-- [ ] Compare game FPS with capture enabled.
-- [ ] Compare game FPS with ROI processing enabled.
-- [ ] Test bounded buffer behavior under slow processing.
-- [ ] Run a sustained stability test.
-- [ ] Document hardware, resolution, display mode, and test duration.
+- [x] Record baseline game FPS without application.
+- [x] Measure application CPU with capture disabled.
+- [x] Measure capture FPS.
+- [x] Measure processing FPS.
+- [x] Measure ROI processing time.
+- [x] Measure application RAM.
+- [x] Compare game FPS with capture enabled.
+- [x] Compare game FPS with ROI processing enabled.
+- [x] Test bounded buffer behavior under slow processing.
+- [x] Run a sustained stability test.
+- [x] Document hardware, resolution, display mode, and test duration.
 
 **Deliverable:** performance and stability report.
 

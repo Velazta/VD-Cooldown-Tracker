@@ -114,6 +114,8 @@ class MSSWindowsCapture(BaseCaptureEngine):
                     else:
                         with self._lock:
                             self._status = CaptureStatus.TARGET_LOST
+                            self._target_hwnd = None
+                            self._buffer.clear()
                         # Tunggu sebentar sebelum scan ulang agar tidak membebani CPU
                         time.sleep(0.3)
                         continue

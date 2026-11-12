@@ -21,8 +21,10 @@ from PySide6.QtGui import QImage, QPixmap, QFont
 
 from capture.windows_capture import MSSWindowsCapture
 from capture.capture_interface import CaptureStatus
+from capture.window_helper import set_window_capture_invisible
 from processing.roi_processor import ROIConfig, ROIProcessor
 from processing.preprocessing import ImagePreprocessor, PreprocessingConfig, PreprocessorMode
+from monitoring.performance_monitor import PerformanceMonitor
 
 
 class CapturePreviewWindow(QMainWindow):
@@ -52,6 +54,10 @@ class CapturePreviewWindow(QMainWindow):
 
         # Inisialisasi Capture Engine
         self.capture_engine = MSSWindowsCapture(buffer_size=1)
+
+        # Inisialisasi Performance Monitor Telemetry (Day 5)
+        self.monitor = PerformanceMonitor(history_size=60, target_process_name="Roblox")
+        self._telemetry_tick_counter = 0
 
         self.setWindowTitle("Violence District Tracker — HUD ROI Calibration (Day 4)")
         self.resize(1020, 640)
@@ -98,10 +104,18 @@ class CapturePreviewWindow(QMainWindow):
 
         self.setup_ui()
 
+        # Proteksi OS: Buat jendela tracker ini tidak terlihat oleh screen capture
+        # (Mencegah efek rekursif hall of mirrors saat tracker ditaruh di atas Roblox)
+        set_window_capture_invisible(int(self.winId()))
+
         # Timer untuk polling UI (Consumer Loop) ~30 FPS
         self.render_timer = QTimer(self)
         self.render_timer.timeout.connect(self.update_frame_preview)
         self.render_timer.start(33)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        set_window_capture_invisible(int(self.winId()))
 
     def setup_ui(self):
         central_widget = QWidget(self)
@@ -153,27 +167,50 @@ class CapturePreviewWindow(QMainWindow):
         self.preview_label.setMinimumHeight(380)
         left_col.addWidget(self.preview_label, stretch=1)
 
-        # Metrics Panel
+        # Metrics Panel (2 Baris: Frame Telemetry & Hardware Telemetry)
         metrics_frame = QFrame()
         metrics_frame.setStyleSheet("""
             background-color: #1A1A1E;
             border: 1px solid #2E2E36;
             border-radius: 6px;
         """)
-        metrics_layout = QHBoxLayout(metrics_frame)
-        metrics_layout.setContentsMargins(10, 6, 10, 6)
+        metrics_root_layout = QVBoxLayout(metrics_frame)
+        metrics_root_layout.setContentsMargins(10, 6, 10, 6)
+        metrics_root_layout.setSpacing(4)
 
+        # Baris 1: Frame Telemetry
+        row1 = QHBoxLayout()
         self.fps_metric = QLabel("FPS: <b>0.0</b>")
-        self.latency_metric = QLabel("Latency: <b>0.0 ms</b>")
+        self.latency_metric = QLabel("Capture Lat: <b>0.0 ms</b>")
         self.cv_proc_metric = QLabel("CV Proc: <b>0.0 ms</b>")
         self.res_metric = QLabel("Resolution: <b>0x0</b>")
         self.frame_num_metric = QLabel("Frames: <b>0</b>")
 
-        metrics_layout.addWidget(self.fps_metric)
-        metrics_layout.addWidget(self.latency_metric)
-        metrics_layout.addWidget(self.cv_proc_metric)
-        metrics_layout.addWidget(self.res_metric)
-        metrics_layout.addWidget(self.frame_num_metric)
+        row1.addWidget(self.fps_metric)
+        row1.addWidget(self.latency_metric)
+        row1.addWidget(self.cv_proc_metric)
+        row1.addWidget(self.res_metric)
+        row1.addWidget(self.frame_num_metric)
+        metrics_root_layout.addLayout(row1)
+
+        # Baris 2: Hardware Telemetry (psutil)
+        row2 = QHBoxLayout()
+        self.app_cpu_metric = QLabel("App CPU: <b>0.0%</b>")
+        self.app_ram_metric = QLabel("App RAM: <b>0.0 MB</b>")
+        self.roblox_cpu_metric = QLabel("Roblox CPU: <b>--</b>")
+        self.roblox_ram_metric = QLabel("Roblox RAM: <b>--</b>")
+
+        self.app_cpu_metric.setStyleSheet("color: #60A5FA;")
+        self.app_ram_metric.setStyleSheet("color: #60A5FA;")
+        self.roblox_cpu_metric.setStyleSheet("color: #F472B6;")
+        self.roblox_ram_metric.setStyleSheet("color: #F472B6;")
+
+        row2.addWidget(self.app_cpu_metric)
+        row2.addWidget(self.app_ram_metric)
+        row2.addWidget(self.roblox_cpu_metric)
+        row2.addWidget(self.roblox_ram_metric)
+        metrics_root_layout.addLayout(row2)
+
         left_col.addWidget(metrics_frame)
 
         # Capture Control Buttons
@@ -407,19 +444,39 @@ class CapturePreviewWindow(QMainWindow):
             self.status_badge.setText("ERROR")
             self.status_badge.setStyleSheet("background-color: #4A1E24; color: #F87171; border-radius: 4px; padding: 3px 8px; font-weight: bold;")
 
-        # Update Metrik
+        # Update Metrik Frame
         self.fps_metric.setText(f"FPS: <b>{self.capture_engine.current_fps:.1f}</b>")
-        self.latency_metric.setText(f"Latency: <b>{self.capture_engine.current_latency_ms:.1f} ms</b>")
+        self.latency_metric.setText(f"Capture Lat: <b>{self.capture_engine.current_latency_ms:.1f} ms</b>")
+
+        # Update Metrik Hardware Telemetry (psutil) setiap ~500ms (15 ticks)
+        self._telemetry_tick_counter += 1
+        if self._telemetry_tick_counter >= 15:
+            self._telemetry_tick_counter = 0
+            snapshot = self.monitor.sample_metrics()
+            self.app_cpu_metric.setText(f"App CPU: <b>{snapshot.app_cpu_percent:.1f}%</b>")
+            self.app_ram_metric.setText(f"App RAM: <b>{snapshot.app_ram_rss_mb:.1f} MB</b>")
+            if snapshot.target_cpu_percent is not None:
+                self.roblox_cpu_metric.setText(f"Roblox CPU: <b>{snapshot.target_cpu_percent:.1f}%</b>")
+                self.roblox_ram_metric.setText(f"Roblox RAM: <b>{snapshot.target_ram_rss_mb:.1f} MB</b>")
+            else:
+                self.roblox_cpu_metric.setText("Roblox CPU: <b>--</b>")
+                self.roblox_ram_metric.setText("Roblox RAM: <b>--</b>")
 
         if not self.capture_engine.is_running:
             return
 
         frame_data = self.capture_engine.get_latest_frame()
-        if frame_data is None:
-            if status == CaptureStatus.TARGET_LOST:
-                self.preview_label.setText(f"Menunggu jendela target '{self.target_input.text()}' aktif...")
+        if frame_data is None or status == CaptureStatus.TARGET_LOST:
+            self.preview_label.clear()
+            self.preview_label.setText(f"Target '{self.target_input.text()}' tidak terdeteksi atau sedang diminimalkan.\nSilakan buka / aktifkan jendela Roblox.")
+            self.roi_preview_label.clear()
+            self.roi_preview_label.setText("Target Lost")
+            self.fps_metric.setText("FPS: <b>0.0</b>")
+            self.latency_metric.setText("Capture Lat: <b>0.0 ms</b>")
+            self.res_metric.setText("Resolution: <b>0x0</b>")
             return
 
+        self.monitor.record_capture_frame(frame_data.latency_ms)
         self.res_metric.setText(f"Resolution: <b>{frame_data.width}x{frame_data.height}</b>")
         self.frame_num_metric.setText(f"Frames: <b>{frame_data.frame_index}</b>")
 
@@ -431,6 +488,7 @@ class CapturePreviewWindow(QMainWindow):
 
             # Jalankan Pipeline Preprocessing OpenCV terukur
             processed_roi, proc_time_ms = self.preprocessor.process(cropped_roi)
+            self.monitor.record_processing_frame(proc_time_ms)
             self.cv_proc_metric.setText(f"CV Proc: <b>{proc_time_ms:.1f} ms</b>")
 
             # Konversi format citra ke RGB untuk render Qt
