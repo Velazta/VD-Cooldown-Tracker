@@ -181,11 +181,11 @@
 **Deliverable:** Persisted overlay settings and robust lifecycle.
 
 ## Day 14 — Integration, QA & Week 2 Review (22 Nov)
-- [ ] Run full test suite (Week 1 regression + Week 2 tests).
-- [ ] Test overlay stacking, click-through, and mouse-look lock in Roblox.
-- [ ] Measure CPU/RAM and game FPS impact with overlay visible vs hidden.
-- [ ] Update documentation (`TODO.md`, `ARCHITECTURE.md`, `RISK.md`, `dataset/WEEK2_FINAL_REPORT.md`).
-- [ ] Tag release `v0.2.0-week2` and prepare Week 3 detection backlog.
+- [x] Run full test suite (Week 1 regression + Week 2 tests).
+- [x] Test overlay stacking, click-through, and mouse-look lock in Roblox.
+- [x] Measure CPU/RAM and game FPS impact with overlay visible vs hidden.
+- [x] Update documentation (`TODO.md`, `ARCHITECTURE.md`, `RISK.md`, `dataset/WEEK2_FINAL_REPORT.md`).
+- [x] Tag release `v0.2.0-week2` and prepare Week 3 detection backlog.
 
 **Deliverable:** Integrated manual cooldown overlay prototype and Week 2 report.
 

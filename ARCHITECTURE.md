@@ -79,70 +79,71 @@ A candidate detection must not directly create repeated cooldown timers without 
 
 ## 5. Module Responsibilities and Boundaries
 
-| Module | Core Responsibility | Concrete Implementation (Week 1 Verified) | Boundary Constraints (Must Not Do) |
+| Module | Core Responsibility | Concrete Implementation (Week 1 & 2 Verified) | Boundary Constraints (Must Not Do) |
 |---|---|---|---|
 | `capture` | Frame acquisition, target HWND tracking, timestamps, drop-oldest ring buffer | `BaseCaptureEngine`, `MSSWindowsCapture`, `LatestFrameBuffer`, `window_helper.py` | Must not perform CV inference, killer selection, or UI rendering |
 | `processing` | ROI cropping, image preprocessing pipelines, normalized template matching | `ROIProcessor`, `ImagePreprocessor`, `TemplateMatcher` | Must not retain frame queues, mutate capture settings, or own timers |
 | `database` | Strongly-typed killer/ability persistence, schema validation, cooldown values | `DatabaseManager`, `KillerDatabase`, `KillerConfig`, `AbilityConfig` | Must not import UI libraries, CV modules, or hard-code detection logic |
 | `monitoring` | Non-blocking process telemetry, CPU/RAM sampling, rolling FPS & latency | `PerformanceMonitor`, `PerformanceSnapshot` | Must not block capture/UI loops or modify system state |
-| `app` | Application composition, runtime configuration loading, PySide6 main window | `SettingsManager`, `AppConfig`, `CapturePreviewWindow` (`main.py`) | Must not perform monolithic CV calculations in Qt UI thread |
-| `cooldown` *(Week 2)* | Timer lifecycle, ability state machine (READY, ACTIVE, COOLDOWN), manual hotkeys | To be implemented in Day 8-10 | Must not perform screen capture or render UI directly |
-| `overlay` *(Week 2)* | Transparent, frameless, click-through HUD overlay, radial progress widget | To be implemented in Day 10-12 | Must not run heavy image processing or block game input |
+| `app` | Application composition, runtime configuration loading, PySide6 main window | `SettingsManager`, `AppConfig`, `OverlaySettings`, `CapturePreviewWindow` (`main.py`) | Must not perform monolithic CV calculations in Qt UI thread |
+| `cooldown` *(Week 2)* | Timer lifecycle, ability state machine (READY, WAITING_FOR_RELEASE, COOLDOWN), monotonic deadline, duplicate event suppression | `AbilityEvent`, `CooldownState`, `CooldownSnapshot`, `CooldownManager` | Must not import PySide6/Qt or OpenCV; pure Python only |
+| `overlay` *(Week 2)* | Transparent, frameless, click-through HUD overlay, radial circular progress widget, repaint cadence controller | `OverlayWindow`, `CooldownWidget`, `OverlayController` | Must not run heavy image processing or block game input |
 
-## 6. Proposed Project Structure
+## 6. Project Structure (Week 2 Verified)
 
 ```text
 ViolenceDistrictTracker/
-├── main.py
+├── main.py                     # Integrated PySide6 GUI with capture, ROI, telemetry, and overlay controls
 ├── requirements.txt
 ├── README.md
 ├── PRD.md
+├── PRD_WEEK_2.md
+├── REFERENCES_WEEK_2.md
 ├── AGENTS.md
 ├── ARCHITECTURE.md
 ├── TODO.md
 ├── WORKFLOW.md
+├── RISK.md
 ├── app/
 │   ├── __init__.py
-│   ├── application.py
-│   └── settings.py
+│   ├── logger.py               # Hierarchical dual console + rotating file logging
+│   └── settings.py             # AppConfig, CaptureSettings, OverlaySettings persistence
 ├── capture/
 │   ├── __init__.py
-│   ├── capture_interface.py
-│   ├── windows_capture.py
-│   └── frame_buffer.py
+│   ├── capture_interface.py    # BaseCaptureEngine and CaptureFrame models
+│   ├── windows_capture.py      # MSS Windows BitBlt background producer thread
+│   ├── window_helper.py       # DWM bounds resolution & SetWindowDisplayAffinity
+│   └── frame_buffer.py         # Thread-safe drop-oldest ring buffer (maxlen=1)
 ├── processing/
 │   ├── __init__.py
-│   ├── roi_processor.py
-│   ├── preprocessing.py
-│   └── template_matcher.py
-├── detection/
+│   ├── roi_processor.py        # Clamped ROI coordinate cropping & annotation
+│   ├── preprocessing.py        # OpenCV RAW, Gray, CLAHE, Threshold, Canny filters
+│   └── template_matcher.py     # Normalized TM_CCOEFF_NORMED matcher
+├── cooldown/                   # Pure Python Cooldown Engine (Week 2)
 │   ├── __init__.py
-│   ├── killer_detector.py
-│   ├── ability_detector.py
-│   └── event_recognition.py
-├── cooldown/
+│   ├── ability_event.py        # Normalized AbilityEvent dataclass
+│   ├── cooldown_state.py       # CooldownState enum & immutable CooldownSnapshot
+│   └── cooldown_manager.py     # Deterministic zero-drift monotonic state machine
+├── overlay/                    # PySide6 HUD Display Engine (Week 2)
 │   ├── __init__.py
-│   └── cooldown_manager.py
-├── overlay/
-│   ├── __init__.py
-│   ├── overlay_window.py
-│   ├── cooldown_widget.py
-│   └── overlay_controller.py
+│   ├── overlay_window.py       # Frameless, transparent, Win32 click-through window
+│   ├── cooldown_widget.py      # Radial circular progress ring via QPainter
+│   └── overlay_controller.py   # State snapshot bridge & 30 FPS repaint cadence
 ├── database/
 │   ├── __init__.py
-│   ├── database_manager.py
-│   └── killerDatabase.json
+│   ├── database_manager.py     # Schema validator and strongly-typed data models
+│   └── killerDatabase.json     # The Hidden & Veil killer configurations
 ├── config/
-│   └── app_config.json
+│   └── app_config.json         # Runtime capture, ROI, and overlay configuration
 ├── monitoring/
 │   ├── __init__.py
-│   ├── performance_monitor.py
-│   └── logger.py
-├── assets/
-│   └── templates/
+│   └── performance_monitor.py  # psutil non-blocking hardware & FPS telemetry
 ├── dataset/
-│   └── README.md
-└── tests/
+│   ├── WEEK1_FINAL_REPORT.md   # Week 1 acceptance and benchmark report
+│   ├── WEEK2_FINAL_REPORT.md   # Week 2 acceptance and benchmark report
+│   └── roi_samples/            # Captured gameplay crop samples
+└── tests/                      # 15 test suites (94 automated tests passing)
+```
     ├── test_capture.py
     ├── test_roi.py
     └── test_database.py
