@@ -32,9 +32,8 @@ from detection.base_detector import BaseDetector
 logger = get_logger("detection.yolo")
 
 DEFAULT_CLASSES = [
-    "hidden_grounded",
-    "hidden_leap_airborne",
-    "hidden_mark_stab",
+    "killer_the_hidden",
+    "survivor",
 ]
 
 
@@ -69,7 +68,7 @@ class YoloDetector(BaseDetector):
     def __init__(
         self,
         model_path: Optional[Path] = None,
-        input_size: Tuple[int, int] = (320, 320),
+        input_size: Tuple[int, int] = (480, 480),
         confidence_threshold: float = 0.40,
         nms_threshold: float = 0.45,
         class_names: Optional[List[str]] = None,

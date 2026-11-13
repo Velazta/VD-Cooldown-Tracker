@@ -20,6 +20,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Deque, List, Optional, Tuple
 
+import numpy as np
+
 from app.logger import get_logger
 
 logger = get_logger("detection.trajectory_action")
@@ -97,6 +99,7 @@ class TrajectoryActionDetector:
         self._ground_y: Optional[float] = None
         self._ground_bottom_y: Optional[float] = None
         self._airborne_frames: int = 0
+        self._confirmation_counter: int = 0
         self._state: KillerKinematicState = KillerKinematicState.UNKNOWN
         self._last_leap_timestamp: float = -999.0
 
@@ -114,9 +117,38 @@ class TrajectoryActionDetector:
         self._ground_y = None
         self._ground_bottom_y = None
         self._airborne_frames = 0
+        self._confirmation_counter = 0
         self._state = KillerKinematicState.UNKNOWN
         self._last_leap_timestamp = -999.0
         logger.debug("TrajectoryActionDetector reset to initial state.")
+
+    def compute_parabolic_fit(self) -> Tuple[float, float]:
+        """Menghitung koefisien kurva parabola y = a*t^2 + b*t + c dan R^2 determinasi.
+        Returns:
+            Tuple[curvature_a, r_squared]
+        """
+        if len(self._history) < 4:
+            return 0.0, 0.0
+
+        ts = np.array([pt.timestamp for pt in self._history])
+        ys = np.array([pt.centroid_y for pt in self._history])
+
+        t_norm = ts - ts[0]
+        if t_norm[-1] < 0.05:
+            return 0.0, 0.0
+
+        try:
+            coeffs = np.polyfit(t_norm, ys, 2)
+            a = float(coeffs[0])
+            y_pred = np.polyval(coeffs, t_norm)
+            ss_tot = float(np.sum((ys - np.mean(ys)) ** 2))
+            if ss_tot < 1e-4:
+                return a, 0.0
+            ss_res = float(np.sum((ys - y_pred) ** 2))
+            r2 = max(0.0, 1.0 - (ss_res / ss_tot))
+            return a, float(r2)
+        except Exception:
+            return 0.0, 0.0
 
     def update(
         self,
@@ -213,16 +245,27 @@ class TrajectoryActionDetector:
         # Path C: Posisi puncak lompatan di udara (Apex / floating high)
         is_high_airborne = (elevation >= 40.0 or bottom_elevation >= 35.0)
 
+        # Path D: Parabolic ballistic curve fit (R^2 >= 0.54)
+        curv_a, r2 = self.compute_parabolic_fit()
+        is_parabolic_leap = (r2 >= 0.54 and curv_a > 15.0 and (elevation >= 20.0 or bottom_elevation >= 15.0))
+
+        # Multi-frame temporal confirmation: butuh >= 2 frame sinyal positif
+        candidate_leap = (is_takeoff or is_sustained_airborne or is_high_airborne or is_parabolic_leap)
+        if candidate_leap:
+            self._confirmation_counter += 1
+        else:
+            self._confirmation_counter = max(0, self._confirmation_counter - 1)
+
         is_leap = False
-        explanation = f"Vy={vy:.1f} px/s, Elev={elevation:.1f} px, AirFrames={self._airborne_frames}"
+        explanation = f"Vy={vy:.1f} px/s, Elev={elevation:.1f} px, AirFrames={self._airborne_frames}, ConfCounter={self._confirmation_counter}"
 
         if not is_debounced:
-            if is_takeoff or is_sustained_airborne or is_high_airborne:
+            if candidate_leap and (self._confirmation_counter >= 2 or is_takeoff or is_high_airborne):
                 is_leap = True
                 self._last_leap_timestamp = now
                 self._state = KillerKinematicState.AIRBORNE
                 explanation = (
-                    f"LEAP CONFIRMED! (Takeoff={is_takeoff}, SustainedAir={is_sustained_airborne}, HighAir={is_high_airborne}) "
+                    f"LEAP CONFIRMED! (Takeoff={is_takeoff}, SustainedAir={is_sustained_airborne}, HighAir={is_high_airborne}, Parabolic={is_parabolic_leap}, R2={r2:.2f}) "
                     f"Launch Vy={vy:.1f} px/s, Elev={elevation:.1f} px, AirFrames={self._airborne_frames}"
                 )
                 logger.info(explanation)

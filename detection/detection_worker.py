@@ -267,15 +267,11 @@ class DetectionWorker(QThread):
                         kinematic_state = action_res.state.value
                         motion_elev_px = action_res.elevation_px
 
-                        # Fusi Multi-Class Neural Vision (Pose Leap Terdeteksi Langsung)
-                        if best_target.class_name == "hidden_leap_airborne" and best_target.confidence >= 0.38:
-                            is_leap = True
-                            kinematic_state = "AIRBORNE_NEURAL"
-                        elif best_target.class_name == "hidden_mark_stab":
-                            kinematic_state = "MARK_STAB"
-                        elif best_target.class_name == "hidden_grounded":
-                            if not is_leap:
-                                kinematic_state = "GROUNDED"
+                        # Filter Entitas: Pastikan target adalah Killer (bukan Survivor)
+                        is_killer = (best_target.class_name == "killer_the_hidden")
+                        if not is_killer:
+                            is_leap = False
+                            kinematic_state = "SURVIVOR"
 
                         # Pancarkan target_tracked real-time ke UI untuk visualisasi bounding box
                         self.target_tracked.emit(
@@ -288,8 +284,8 @@ class DetectionWorker(QThread):
                             }
                         )
 
-                        # Jika Leap terkonfirmasi valid via lonjakan vertikal, pancarkan AbilityEvent
-                        if is_leap:
+                        # Jika Leap terkonfirmasi valid pada entitas Killer
+                        if is_leap and is_killer:
                             event = AbilityEvent(
                                 killer_id="the_hidden",
                                 ability_id="leap",

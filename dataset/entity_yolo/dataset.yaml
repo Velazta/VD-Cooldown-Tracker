@@ -1,0 +1,5 @@
+path: D:/KULIAH/CODINGAN/OverlayToolsVD/dataset/entity_yolo
+train: images/train
+val: images/val
+nc: 2
+names: ['killer_the_hidden', 'survivor']
