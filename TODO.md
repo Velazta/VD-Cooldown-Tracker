@@ -306,6 +306,57 @@
 
 **Deliverable:** Week 4 Final Milestone Report and locked release tag `v0.4.0-week4`.
 
+# Week 5 — Neural Object Detection & Action Tracking (YOLOv8-Nano)
+
+## Day 25 — Architecture, ONNX Runtime Pipeline & Detector Interface
+- [x] Define Day 25 architecture in `PRD_WEEK_5.md`.
+- [x] Install and smoke-test `onnxruntime` dependency (version 1.32.0).
+- [x] Implement `detection/base_detector.py` and `detection/yolo_detector.py` implementing modular `BaseDetector` interface.
+- [x] Implement input pre-processing (letterbox resizing, normalization to FP32 NCHW tensor) and output NMS (Non-Maximum Suppression) decoder.
+- [x] Add automated unit tests in `tests/test_yolo_detector.py` (156 tests passing total).
+
+**Deliverable:** Lightweight ONNX Runtime detector interface and preprocessing/NMS pipeline.
+
+## Day 26 — Dataset Annotation & Synthetic Augmentation Pipeline
+- [ ] Build dataset annotation tool in `tools/dataset_annotator.py` for YOLO labeling format (`class x_center y_center width height`).
+- [ ] Extract and annotate killer frames from available gameplay footage and ROI crops.
+- [ ] Generate synthetic augmentations: rotations ($\pm 15^\circ$), scale variations ($0.3\times - 1.2\times$), and night illumination shifts.
+- [ ] Split dataset into balanced Train (80%) and Validation (20%) sets.
+
+**Deliverable:** Labeled and augmented YOLO dataset ready for fine-tuning.
+
+## Day 27 — YOLOv8n Training, INT8/FP16 Quantization & ONNX Export
+- [ ] Fine-tune YOLOv8-Nano on Violence District dataset.
+- [ ] Export trained weights to ONNX format with FP16/INT8 optimization.
+- [ ] Profile CPU inference latency (target: $\le 18.0\text{ ms}$).
+- [ ] Verify mAP@0.5 accuracy on validation split (target: $\ge 85\%$).
+
+**Deliverable:** Production-ready `the_hidden_yolov8n.onnx` model with sub-20ms CPU latency.
+
+## Day 28 — YoloDetector & DetectionWorker Pipeline Integration
+- [ ] Integrate `YoloDetector` into `DetectionWorker` background thread.
+- [ ] Wire real-time killer entity bounding box coordinates to `main.py` preview viewport.
+- [ ] Verify 100% rejection of stone pillars, gazebo walls, and background clutter.
+- [ ] Profile application memory footprint (target: $< 250\text{ MB}$).
+
+**Deliverable:** End-to-end entity tracking with rock-solid false positive rejection.
+
+## Day 29 — Trajectory-Based Leap Action Recognition
+- [ ] Build kinematic trajectory analyzer in `detection/trajectory_action_detector.py`.
+- [ ] Implement vertical velocity ($V_y$) and elevation tracking for Leap airborne state detection.
+- [ ] Connect action confirmation to `CooldownManager` Leap countdown (25.0s).
+- [ ] Add unit and integration tests in `tests/test_action_detector.py`.
+
+**Deliverable:** Action recognition engine triggering Leap accurately at any angle or distance.
+
+## Day 30 — Full QA Regression, Week 5 Milestone Report & Release Tag
+- [ ] Execute full regression test suite (> 155 tests).
+- [ ] Benchmark live mAP, recall, precision, and end-to-end latency.
+- [ ] Author Week 5 Final Milestone Report in `dataset/WEEK5_FINAL_REPORT.md`.
+- [ ] Tag release `v0.5.0-week5`.
+
+**Deliverable:** Week 5 Final Milestone Report and locked release tag `v0.5.0-week5`.
+
 # Finalization (Preview)
 - [ ] Package application for local use.
 - [ ] Document installation and configuration.
