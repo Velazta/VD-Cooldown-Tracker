@@ -129,6 +129,12 @@ ViolenceDistrictTracker/
 │   ├── overlay_window.py       # Frameless, transparent, Win32 click-through window
 │   ├── cooldown_widget.py      # Radial circular progress ring via QPainter
 │   └── overlay_controller.py   # State snapshot bridge & 30 FPS repaint cadence
+├── detection/                  # Multi-Modal Action Detector Engine (Week 3)
+│   ├── __init__.py
+│   ├── detection_result.py     # Normalized DetectionResult contract & AbilityEvent adapter
+│   ├── template_detector.py    # Multi-scale TM_CCOEFF_NORMED matcher with pre-cached scaling
+│   ├── motion_detector.py      # MOG2 background subtractor & parabolic trajectory tracker
+│   └── hybrid_detector.py      # Vision-Motion-Audio multi-modal fusion engine
 ├── database/
 │   ├── __init__.py
 │   ├── database_manager.py     # Schema validator and strongly-typed data models
@@ -139,14 +145,21 @@ ViolenceDistrictTracker/
 │   ├── __init__.py
 │   └── performance_monitor.py  # psutil non-blocking hardware & FPS telemetry
 ├── dataset/
+│   ├── catalog.json            # Multi-modal dataset provenance catalog
+│   ├── baseline_benchmark_results.json # Day 17 test split benchmark data
+│   ├── DAY17_BASELINE_REPORT.md# Comprehensive empirical baseline benchmark report
 │   ├── WEEK1_FINAL_REPORT.md   # Week 1 acceptance and benchmark report
-│   ├── WEEK2_FINAL_REPORT.md   # Week 2 acceptance and benchmark report
-│   └── roi_samples/            # Captured gameplay crop samples
-└── tests/                      # 15 test suites (94 automated tests passing)
-```
-    ├── test_capture.py
-    ├── test_roi.py
-    └── test_database.py
+│   └── WEEK2_FINAL_REPORT.md   # Week 2 acceptance and benchmark report
+├── tools/                      # Dataset indexing, extraction, and evaluation tools
+│   ├── dataset_indexer.py
+│   ├── extract_dataset.py
+│   ├── audio_inspector.py
+│   ├── keyframe_profiler.py
+│   ├── spatial_annotator.py
+│   ├── trajectory_analyzer.py
+│   ├── template_builder.py
+│   └── evaluate_baseline.py
+└── tests/                      # 26 test modules (124 automated tests passing)
 ```
 
 Create modules incrementally. Empty placeholder files are not a substitute for working functionality.
@@ -224,6 +237,18 @@ Thresholds must be empirically selected from representative positive and negativ
 
 ### Machine learning escalation
 Use YOLO only when object localization is required and template matching/classification is insufficient. Use temporal methods for animation recognition. Keep model inference behind a detector interface so it can be replaced without changing cooldown or overlay modules.
+
+### Architectural Decision Record: Baseline vs. Deep Learning (Week 3 / Day 17)
+- **Status:** APPROVED & BENCHMARKED.
+- **Context:** `PRD.md` dan `AGENTS.md` mewajibkan evaluasi baseline OpenCV sebelum mengevaluasi model deep learning (YOLO/PyTorch).
+- **Hasil Benchmark (Held-Out Test Set, 341 frame):**
+  - *Template Matching Sendiri:* Recall 95.8%, namun Precision hanya 10.7% (191 False Positives akibat variasi terrain).
+  - *Kinematika Gerak Sendiri:* Precision 0.0%, Recall 0.0% (Kibasan kamera survivor mengaburkan estimasi optik).
+  - *Multi-Modal Audio-Vision Hybrid:* Precision **100.0%**, Recall **95.8%**, F1-Score **97.9%**, Latensi **60.4 ms**.
+- **Keputusan:**
+  1. Pelatihan model YOLO berat (PyTorch > 700 MB, ketergantungan CUDA, pemborosan GPU yang merusak performa game Roblox) **TIDAK DIPERLUKAN** untuk MVP The Hidden Leap.
+  2. Multi-Modal Audio-Vision Hybrid Engine (`detection/hybrid_detector.py`) diadopsi sebagai *primary detector engine*.
+  3. Audio spectral bandpass (100–3.500 Hz low/high energy ratio ~98.5x) berfungsi sebagai *precision gate*, mengeliminasi 100% false positive visual terrain tanpa membebani performa CPU (< 5% usage, latensi ~60 ms).
 
 ## 10. Event Recognition and Cooldown State
 

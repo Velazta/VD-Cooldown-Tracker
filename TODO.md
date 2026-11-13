@@ -220,10 +220,17 @@
 
 **Deliverable:** Spatial bounding box annotations, YOLO labels, kinematic parabolic validation, and canonical template library.
 
-## Day 17 — Template Matching & Motion Baseline (Preview)
-- [ ] Establish template-matching baseline.
-- [ ] Evaluate whether object detection is necessary.
-- [ ] Train a model only if baseline is insufficient.
+## Day 17 — Template Matching & Motion Baseline
+- [x] Establish template-matching baseline in `detection/template_detector.py` with multi-scale `cv2.TM_CCOEFF_NORMED` and pre-cached template scaling (latency 4.38 ms warm, 44.7 ms cold).
+- [x] Establish kinematic parabolic motion detector in `detection/motion_detector.py` with MOG2 foreground tracking, centroid vertical displacement ($V_y$, $\Delta Y$), and state machine debounce.
+- [x] Establish multi-modal hybrid detector in `detection/hybrid_detector.py` fusing visual template matching, kinematic motion, and audio spectral gating.
+- [x] Establish standardized detection contract and adapter in `detection/detection_result.py` (`DetectionResult.to_ability_event()` $\rightarrow$ `AbilityEvent(source='vision')`).
+- [x] Implement offline replay benchmark evaluator in `tools/evaluate_baseline.py` across Train/Val/Test splits.
+- [x] Benchmark baseline models against held-out Test split (341 frames: 24 ground truth Leap positives, 317 negatives) producing `dataset/baseline_benchmark_results.json` and `dataset/DAY17_BASELINE_REPORT.md`.
+- [x] Evaluate whether heavyweight object detection (YOLO/PyTorch) is necessary: Pure visual template matching achieves high recall (95.8%) but poor precision (10.7%, 191 FPs). Adding Audio Spectral Gating eliminates 100% of false positives (Precision 100%, Recall 95.8%, F1 97.9%, Latency 60.4 ms), proving the lightweight OpenCV baseline + audio fusion is sufficient for MVP without heavyweight PyTorch/YOLO dependencies.
+- [x] Add automated unit and integration tests in `tests/test_detection_result.py`, `tests/test_template_detector.py`, `tests/test_hybrid_detector.py`, and `tests/test_baseline_evaluator.py` (124 tests total passing).
+
+**Deliverable:** Validated Template Matching, Kinematic Motion, and Multi-Modal Hybrid Baseline with empirical evaluation report and architectural decision.
 
 ## Day 18 — Evaluation & Error Analysis (Preview)
 - [ ] Evaluate on unseen gameplay footage.
