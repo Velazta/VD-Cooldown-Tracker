@@ -37,14 +37,15 @@ class HybridDetector:
     def __init__(
         self,
         templates_dir: Path = Path("dataset/templates/the_hidden"),
-        template_threshold: float = 0.50,
+        template_threshold: float = 0.54,
         min_motion_span_px: float = 80.0,
-        debounce_sec: float = 1.5,
+        debounce_sec: float = 15.0,
     ) -> None:
         self.template_detector = TemplateDetector(
             templates_dir=templates_dir,
             confidence_threshold=template_threshold,
             processing_downscale=0.5,
+            target_phases=("leap_airborne",),
         )
         self.motion_detector = MotionDetector(
             min_vertical_span_px=min_motion_span_px,
@@ -96,29 +97,23 @@ class HybridDetector:
 
         is_debounced = (timestamp - self.last_detection_time) > self.debounce_sec
 
-        # Strategi A: Template Kuat + Gerak Terkonfirmasi
-        if tmpl_res.is_detected and motion_res.is_leap_motion and is_debounced:
+        # Strategi A: Konfirmasi Audio Kuat + Korelasi Visual Wajar (Paling Akurat / Zero FP)
+        if audio_confirmed and tmpl_res.confidence >= 0.40 and is_debounced:
             is_leap = True
-            strategy = "TEMPLATE_AND_MOTION_FUSION"
+            strategy = "AUDIO_VISION_FUSION"
+            final_conf = max(0.85, min(1.0, tmpl_res.confidence + 0.20))
+
+        # Strategi B: Pose Melayang di Udara (Airborne) + Lonjakan Kinematika Parabolik Terkonfirmasi
+        elif tmpl_res.is_detected and motion_res.is_leap_motion and is_debounced:
+            is_leap = True
+            strategy = "AIRBORNE_MOTION_FUSION"
             final_conf = min(1.0, (tmpl_res.confidence * 0.5) + (motion_res.confidence * 0.5))
 
-        # Strategi B: Template Sangat Tinggi (>= 0.65)
-        elif tmpl_res.confidence >= 0.65 and is_debounced:
+        # Strategi C: Korelasi Visual Sangat Tinggi Ekstrem (>= 0.80)
+        elif tmpl_res.confidence >= 0.80 and is_debounced:
             is_leap = True
             strategy = "HIGH_CONFIDENCE_TEMPLATE"
             final_conf = tmpl_res.confidence
-
-        # Strategi C: Kinematika Kuat (Span > 150 px) + Template Menengah (>= 0.45)
-        elif motion_res.is_leap_motion and tmpl_res.confidence >= 0.45 and is_debounced:
-            is_leap = True
-            strategy = "KINEMATIC_LED_FUSION"
-            final_conf = round(0.5 * motion_res.confidence + 0.5 * tmpl_res.confidence, 3)
-
-        # Strategi D: Konfirmasi Audio (Audio membangkitkan deteksi visual yang mendekati ambang batas)
-        elif audio_confirmed and (tmpl_res.confidence >= 0.40 or motion_res.vertical_span_px >= 60.0) and is_debounced:
-            is_leap = True
-            strategy = "AUDIO_VISION_FUSION"
-            final_conf = max(0.75, tmpl_res.confidence + 0.20)
 
         det_result: Optional[DetectionResult] = None
         if is_leap:

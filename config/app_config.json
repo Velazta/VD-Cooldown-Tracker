@@ -18,7 +18,7 @@
     }
   },
   "overlay": {
-    "x": 307,
+    "x": 610,
     "y": 5,
     "width": 220,
     "height": 220,
@@ -28,7 +28,7 @@
     "click_through": true,
     "fps_display": true,
     "position": {
-      "x": 307,
+      "x": 610,
       "y": 5
     }
   },

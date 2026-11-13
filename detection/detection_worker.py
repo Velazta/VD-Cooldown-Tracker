@@ -19,7 +19,10 @@ from PySide6.QtCore import QObject, QThread, Signal
 from app.logger import get_logger
 from capture.capture_interface import BaseCaptureEngine, CapturedFrame
 from cooldown.ability_event import AbilityEvent
+from cooldown.cooldown_manager import CooldownManager
+from cooldown.cooldown_state import CooldownState
 from detection.hybrid_detector import HybridDetectionEvaluation, HybridDetector
+from detection.match_state_detector import MatchStateDetector
 from processing.roi_processor import ROIProcessor
 
 logger = get_logger("detection.worker")
@@ -41,13 +44,15 @@ class DetectionWorker(QThread):
         self,
         capture_engine: BaseCaptureEngine,
         roi_processor: Optional[ROIProcessor] = None,
+        cooldown_manager: Optional[CooldownManager] = None,
         templates_dir: Optional[Path] = None,
-        confidence_threshold: float = 0.50,
+        confidence_threshold: float = 0.54,
         parent: Optional[QObject] = None,
     ) -> None:
         super().__init__(parent)
         self.capture_engine = capture_engine
         self.roi_processor = roi_processor or ROIProcessor()
+        self.cooldown_manager = cooldown_manager
 
         # Inisialisasi HybridDetector multi-modal
         t_dir = templates_dir or (Path(__file__).resolve().parent.parent / "dataset" / "templates" / "the_hidden")
@@ -55,8 +60,11 @@ class DetectionWorker(QThread):
             templates_dir=t_dir,
             template_threshold=confidence_threshold,
             min_motion_span_px=80.0,
-            debounce_sec=1.5,
+            debounce_sec=15.0,
         )
+
+        self.match_detector = MatchStateDetector()
+        self._filter_match_state = True
 
         self._running = False
         self._enabled = True
@@ -88,6 +96,15 @@ class DetectionWorker(QThread):
     def set_audio_confirmed(self, confirmed: bool) -> None:
         """Menyetel status konfirmasi audio (disuplai oleh loopback audio capture)."""
         self._audio_confirmed = confirmed
+
+    def set_filter_match_state(self, enabled: bool) -> None:
+        """Mengatur apakah detektor hanya aktif saat mendeteksi HUD pertandingan (bukan di lobby)."""
+        self._filter_match_state = enabled
+        logger.info("DetectionWorker match-state filter toggled: %s", "ENABLED" if enabled else "DISABLED")
+
+    def set_cooldown_manager(self, cooldown_manager: CooldownManager) -> None:
+        """Mengatur referensi CooldownManager untuk mencegah pemicuan ulang saat cooldown aktif."""
+        self.cooldown_manager = cooldown_manager
 
     def set_roi_processor(self, roi_processor: ROIProcessor) -> None:
         """Memperbarui processor ROI saat koordinat diubah pengguna."""
@@ -128,14 +145,48 @@ class DetectionWorker(QThread):
 
                 self._last_processed_frame_index = captured.frame_index
 
-                # 3. Potong frame berdasarkan ROI aktif jika tersedia
+                # 3. Cek apakah kemampuan sedang dalam masa cooldown aktif (cegah infinite loopback)
+                if self.cooldown_manager is not None and self.cooldown_manager.state == CooldownState.COOLDOWN:
+                    time.sleep(0.04)
+                    self.telemetry_updated.emit(
+                        {
+                            "state": "COOLDOWN_ACTIVE",
+                            "is_detected": False,
+                            "confidence": 0.0,
+                            "template_score": 0.0,
+                            "motion_span_px": 0.0,
+                            "latency_ms": 0.0,
+                            "worker_fps": round(self._current_fps, 1),
+                            "fusion_strategy": "COOLDOWN_LOCKOUT",
+                        }
+                    )
+                    continue
+
+                # 4. Cek apakah survivor sedang berada di dalam match (cegah pemicuan di lobby/menu)
+                if self._filter_match_state and not self.match_detector.is_in_match(captured.image):
+                    time.sleep(0.04)
+                    self.telemetry_updated.emit(
+                        {
+                            "state": "LOBBY_STANDBY",
+                            "is_detected": False,
+                            "confidence": 0.0,
+                            "template_score": 0.0,
+                            "motion_span_px": 0.0,
+                            "latency_ms": 0.0,
+                            "worker_fps": round(self._current_fps, 1),
+                            "fusion_strategy": "LOBBY_GATE",
+                        }
+                    )
+                    continue
+
+                # 5. Potong frame berdasarkan ROI aktif jika tersedia
                 frame_to_process = captured.image
                 if self.roi_processor is not None and self.roi_processor.config.enabled:
                     cropped = self.roi_processor.crop(captured.image)
                     if cropped is not None and cropped.size > 0:
                         frame_to_process = cropped
 
-                # 4. Jalankan inferensi HybridDetector
+                # 6. Jalankan inferensi HybridDetector
                 t0 = time.perf_counter()
                 eval_res: HybridDetectionEvaluation = self.hybrid_detector.process_frame(
                     frame=frame_to_process,

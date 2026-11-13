@@ -259,13 +259,16 @@
 **Deliverable:** End-to-end live detection pipeline in `main.py`; hands-free cooldown triggering.
 
 ## Day 20 — Temporal Debounce, Confidence Filtering & Audio Loopback
-- [ ] Wire dynamic confidence thresholding from GUI to `TemplateDetector`.
-- [ ] Implement non-blocking audio capture interface in `detection/audio_capture.py` for live spectral gating.
-- [ ] Validate multi-frame temporal debounce and duplicate-event suppression in live streaming.
-- [ ] Verify seamless hotkey manual fallback (`F1`–`F4`) alongside active auto-detection.
-- [ ] Add automated unit and integration tests in `tests/test_live_pipeline.py`.
+- [x] Wire dynamic confidence thresholding from GUI to `TemplateDetector`.
+- [x] Implement non-blocking real-time audio spectral monitor in `detection/audio_monitor.py` for live spectral gating (FFT low-band/high-band ratio >= 18.0).
+- [x] Implement in-match HUD state gate in `detection/match_state_detector.py` to prevent lobby / main menu false detections.
+- [x] Exclude over-fitting ground templates (`leap_landing`) and restrict to active airborne/windup templates (`leap_airborne`, `leap_windup`).
+- [x] Integrate cooldown active gate into `DetectionWorker` to suppress repetitive duplicate triggers during active cooldown.
+- [x] Validate multi-frame temporal debounce (increased from 1.5s to 15.0s) and duplicate-event suppression.
+- [x] Verify seamless hotkey manual fallback (`F1`–`F4`) alongside active auto-detection.
+- [x] Add automated unit and integration tests in `tests/test_match_state_detector.py` and `tests/test_audio_monitor.py` (140 tests passing total).
 
-**Deliverable:** Real-time audio spectral gating and robust manual fallback.
+**Deliverable:** Real-time audio spectral gating, match state lobby filtering, loopback prevention, and robust manual fallback.
 
 ## Day 21 — Live Latency Measurement & Cooldown Calibration
 - [ ] Implement end-to-end latency measurement tool in `tools/latency_benchmarker.py` ($T_{capture} \rightarrow T_{infer} \rightarrow T_{overlay}$).

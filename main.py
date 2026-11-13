@@ -46,6 +46,7 @@ from processing.roi_processor import ROIConfig, ROIProcessor
 from processing.preprocessing import ImagePreprocessor, PreprocessingConfig, PreprocessorMode
 from monitoring.performance_monitor import PerformanceMonitor
 from detection.detection_worker import DetectionWorker
+from detection.audio_monitor import AudioMonitor
 
 logger = get_logger("gui")
 
@@ -106,16 +107,19 @@ class CapturePreviewWindow(QMainWindow):
         )
         self.overlay_controller.overlay_moved.connect(self.on_overlay_moved)
 
-        # 6. Inisialisasi Detection Worker (Week 4 Day 19 Integration)
+        # 6. Inisialisasi Detection Worker & Audio Monitor (Multi-Modal Pipeline)
+        self.audio_monitor = AudioMonitor(parent=self)
         self.detection_worker = DetectionWorker(
             capture_engine=self.capture_engine,
             roi_processor=self.roi_processor,
-            confidence_threshold=0.50,
+            cooldown_manager=self.cooldown_manager,
+            confidence_threshold=0.54,
             parent=self,
         )
         self.detection_worker.ability_detected.connect(self.on_auto_ability_detected)
         self.detection_worker.telemetry_updated.connect(self.on_detector_telemetry_updated)
         self.detection_worker.worker_error.connect(self.on_detector_error)
+        self.audio_monitor.audio_surge_detected.connect(lambda t: self.detection_worker.set_audio_confirmed(True))
 
         # Setup Tampilan Jendela
         self.setWindowTitle(
@@ -436,11 +440,24 @@ class CapturePreviewWindow(QMainWindow):
         self.spin_confidence = QSpinBox()
         self.spin_confidence.setRange(20, 95)
         self.spin_confidence.setSingleStep(5)
-        self.spin_confidence.setValue(50)
+        self.spin_confidence.setValue(54)
         self.spin_confidence.setSuffix("%")
         self.spin_confidence.valueChanged.connect(self.on_confidence_changed)
         conf_row.addWidget(self.spin_confidence)
         auto_detect_layout.addLayout(conf_row)
+
+        # Baris Opsi Filter Match State & Audio Gating
+        filter_check_row = QVBoxLayout()
+        self.check_filter_match = QCheckBox("🛡️ Filter Lobby (Hanya Aktif Saat Match)")
+        self.check_filter_match.setChecked(True)
+        self.check_filter_match.toggled.connect(self.detection_worker.set_filter_match_state)
+        filter_check_row.addWidget(self.check_filter_match)
+
+        self.check_audio_gate = QCheckBox("🔊 Filter Audio Gating (Stereo Mix / Mic)")
+        self.check_audio_gate.setChecked(True)
+        self.check_audio_gate.toggled.connect(self.on_toggle_audio_gate)
+        filter_check_row.addWidget(self.check_audio_gate)
+        auto_detect_layout.addLayout(filter_check_row)
 
         self.detector_telemetry_label = QLabel("Status: <b>IDLE</b> | Lat: <b>0.0 ms</b> | FPS: <b>0.0</b>")
         self.detector_telemetry_label.setStyleSheet("color: #9E9EB0; font-size: 11px;")
@@ -540,7 +557,7 @@ class CapturePreviewWindow(QMainWindow):
             self.btn_simulate_cast, self.btn_simulate_release, self.btn_reset_cd,
             self.btn_save_roi, self.btn_save_roi_sample,
             self.check_overlay_visible, self.check_calibration_mode, self.check_roi_enable,
-            self.check_auto_detect, self.spin_confidence
+            self.check_auto_detect, self.spin_confidence, self.check_filter_match, self.check_audio_gate
         ):
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
@@ -780,6 +797,13 @@ class CapturePreviewWindow(QMainWindow):
                 "background-color: #3E1E24; color: #FF6B6B; border: 1px solid #DC2626; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;"
             )
 
+    def on_toggle_audio_gate(self, checked: bool) -> None:
+        """Mengaktifkan atau menonaktifkan filter konfirmasi audio spectral."""
+        if hasattr(self, "audio_monitor"):
+            self.audio_monitor.set_enabled(checked)
+        if hasattr(self, "detection_worker") and not checked:
+            self.detection_worker.set_audio_confirmed(False)
+
     def on_detector_telemetry_updated(self, data: dict) -> None:
         """Memperbarui label telemetri detektor dari background worker."""
         state = data.get("state", "IDLE")
@@ -789,6 +813,16 @@ class CapturePreviewWindow(QMainWindow):
         self.detector_telemetry_label.setText(
             f"State: <b>{state}</b> | Lat: <b>{lat:.1f}ms</b> | FPS: <b>{fps:.1f}</b> | Conf: <b>{conf*100:.0f}%</b>"
         )
+        if state == "LOBBY_STANDBY":
+            self.detector_badge.setText("LOBBY")
+            self.detector_badge.setStyleSheet(
+                "background-color: #374151; color: #D1D5DB; border: 1px solid #4B5563; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;"
+            )
+        elif state == "COOLDOWN_ACTIVE":
+            self.detector_badge.setText("COOLDOWN")
+            self.detector_badge.setStyleSheet(
+                "background-color: #1E3A8A; color: #93C5FD; border: 1px solid #2563EB; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;"
+            )
 
     def on_detector_error(self, err_msg: str) -> None:
         logger.error("Detector worker error: %s", err_msg)
@@ -895,6 +929,10 @@ class CapturePreviewWindow(QMainWindow):
         logger.info("User initiated capture start on target '%s' (%d FPS)", target, fps_target)
         self.capture_engine.start(target_title=target, target_fps=fps_target)
 
+        # Start audio monitor jika diaktifkan
+        if hasattr(self, "check_audio_gate") and self.check_audio_gate.isChecked():
+            self.audio_monitor.start()
+
         # Start detection worker jika auto-detection diaktifkan
         if hasattr(self, "check_auto_detect") and self.check_auto_detect.isChecked():
             if not self.detection_worker.isRunning():
@@ -912,6 +950,8 @@ class CapturePreviewWindow(QMainWindow):
 
     def on_stop_capture(self) -> None:
         logger.info("User initiated capture stop.")
+        if hasattr(self, "audio_monitor"):
+            self.audio_monitor.stop()
         if hasattr(self, "detection_worker") and self.detection_worker.isRunning():
             self.detection_worker.stop()
         self.capture_engine.stop()
@@ -1073,6 +1113,8 @@ class CapturePreviewWindow(QMainWindow):
             logger.warning("Could not persist overlay settings on exit: %s", exc)
 
         self.render_timer.stop()
+        if hasattr(self, "audio_monitor"):
+            self.audio_monitor.stop()
         if hasattr(self, "detection_worker") and self.detection_worker.isRunning():
             self.detection_worker.stop()
         if hasattr(self, "overlay_controller") and self.overlay_controller is not None:

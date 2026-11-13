@@ -48,9 +48,9 @@ class TemplateDetector:
         self,
         templates_dir: Path = Path("dataset/templates/the_hidden"),
         scales: Tuple[float, ...] = (0.85, 1.0),
-        confidence_threshold: float = 0.50,
+        confidence_threshold: float = 0.54,
         processing_downscale: float = 0.4,
-        target_phases: Tuple[str, ...] = ("leap_airborne", "leap_landing"),
+        target_phases: Tuple[str, ...] = ("leap_airborne", "leap_windup"),
     ) -> None:
         self.templates_dir = Path(templates_dir).resolve()
         self.scales = scales

@@ -136,6 +136,7 @@ class TestDetectionWorker(unittest.TestCase):
 
         self.mock_capture.frame = synth_frame
         self.worker.set_confidence_threshold(0.35)
+        self.worker.set_filter_match_state(False)
 
         # Slot listener
         emitted_events: list[AbilityEvent] = []
