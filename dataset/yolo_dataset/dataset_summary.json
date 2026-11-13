@@ -1,0 +1,12 @@
+{
+  "total_images": 1271,
+  "train_count": 1171,
+  "val_count": 100,
+  "augmented_count": 778,
+  "negative_distractor_count": 6,
+  "class_names": [
+    "killer_the_hidden"
+  ],
+  "split_ratio": "80/19",
+  "output_dir": "D:\\KULIAH\\CODINGAN\\OverlayToolsVD\\dataset\\yolo_dataset"
+}

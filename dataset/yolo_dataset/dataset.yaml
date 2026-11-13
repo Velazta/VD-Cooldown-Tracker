@@ -1,0 +1,5 @@
+path: D:/KULIAH/CODINGAN/OverlayToolsVD/dataset/yolo_dataset
+train: images/train
+val: images/val
+nc: 1
+names: ['killer_the_hidden']

@@ -318,10 +318,10 @@
 **Deliverable:** Lightweight ONNX Runtime detector interface and preprocessing/NMS pipeline.
 
 ## Day 26 — Dataset Annotation & Synthetic Augmentation Pipeline
-- [ ] Build dataset annotation tool in `tools/dataset_annotator.py` for YOLO labeling format (`class x_center y_center width height`).
-- [ ] Extract and annotate killer frames from available gameplay footage and ROI crops.
-- [ ] Generate synthetic augmentations: rotations ($\pm 15^\circ$), scale variations ($0.3\times - 1.2\times$), and night illumination shifts.
-- [ ] Split dataset into balanced Train (80%) and Validation (20%) sets.
+- [x] Build dataset annotation tool in `tools/dataset_annotator.py` for YOLO labeling format (`class x_center y_center width height`).
+- [x] Extract and annotate killer frames from available gameplay footage and ROI crops.
+- [x] Generate synthetic augmentations: rotations ($\pm 15^\circ$), scale variations ($0.3\times - 1.2\times$), and night illumination shifts.
+- [x] Split dataset into balanced Train (80%) and Validation (20%) sets.
 
 **Deliverable:** Labeled and augmented YOLO dataset ready for fine-tuning.
 
