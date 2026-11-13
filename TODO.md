@@ -298,11 +298,11 @@
 **Deliverable:** Continuous stability audit report, chaos resilience verification, and zero-leak proof.
 
 ## Day 24 — Final Integration QA, Week 4 Milestone Report & Release Tag
-- [ ] Execute full regression test suite (Week 1 s/d Week 4, > 135 tests).
-- [ ] Verify all PRD Week 4 Acceptance Criteria.
-- [ ] Update documentation (`TODO.md`, `ARCHITECTURE.md`).
-- [ ] Author Week 4 Final Milestone Report in `dataset/WEEK4_FINAL_REPORT.md`.
-- [ ] Tag release `v0.4.0-week4`.
+- [x] Execute full regression test suite (Week 1 s/d Week 4, 150 tests passing 100%).
+- [x] Verify all PRD Week 4 Acceptance Criteria (FR-08 s/d FR-14 all verified and passed).
+- [x] Update documentation (`TODO.md`, `ARCHITECTURE.md`).
+- [x] Author Week 4 Final Milestone Report in `dataset/WEEK4_FINAL_REPORT.md`.
+- [x] Tag release `v0.4.0-week4`.
 
 **Deliverable:** Week 4 Final Milestone Report and locked release tag `v0.4.0-week4`.
 

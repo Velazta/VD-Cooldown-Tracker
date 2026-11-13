@@ -88,6 +88,8 @@ A candidate detection must not directly create repeated cooldown timers without 
 | `app` | Application composition, runtime configuration loading, PySide6 main window | `SettingsManager`, `AppConfig`, `OverlaySettings`, `CapturePreviewWindow` (`main.py`) | Must not perform monolithic CV calculations in Qt UI thread |
 | `cooldown` *(Week 2)* | Timer lifecycle, ability state machine (READY, WAITING_FOR_RELEASE, COOLDOWN), monotonic deadline, duplicate event suppression | `AbilityEvent`, `CooldownState`, `CooldownSnapshot`, `CooldownManager` | Must not import PySide6/Qt or OpenCV; pure Python only |
 | `overlay` *(Week 2)* | Transparent, frameless, click-through HUD overlay, radial circular progress widget, repaint cadence controller | `OverlayWindow`, `CooldownWidget`, `OverlayController` | Must not run heavy image processing or block game input |
+| `detection` *(Week 3 & 4)* | Multi-modal fusion (vision + audio + motion), match-state lobby gate, asynchronous background worker | `TemplateDetector`, `MotionDetector`, `HybridDetector`, `MatchStateDetector`, `AudioMonitor`, `DetectionWorker` | Must not block main GUI thread; must respect debounce and match-state |
+| `benchmarking & tools` *(Week 4)* | End-to-end latency profiling, hardware resource telemetry audit, continuous chaos resilience test runner | `LatencyBenchmarker`, `HardwareProfiler`, `StabilityRunner`, `ErrorAnalyzer` | Must run non-invasively without interfering with production runtime |
 
 ## 6. Project Structure (Week 2 Verified)
 
@@ -378,5 +380,7 @@ Screen capture does not guarantee policy approval. Do not describe overlay hidin
 | Initial storage | JSON | Data complexity requires database features |
 | Capture backend | MSS / Win32 BitBlt provisional backend (11.1-16.9ms @ 30 FPS) with WDA_EXCLUDEFROMCAPTURE, behind modular interface | Transition to WGC in-game if high-refresh game FPS requires GPU VRAM texture |
 | Capture exclusion | WDA_EXCLUDEFROMCAPTURE via SetWindowDisplayAffinity & strict PID filtering | Revisit if Windows version < 2004 |
-| Initial detector | Template matching baseline & Preprocessing pipeline (CLAHE/Canny/Gray) evaluated Day 4/5 | Full training in Week 3 (YOLO + Temporal Classifier for Survivor POV pose recognition) |
-| First ability | The Hidden — Leap | First MVP path is validated |
+| Initial detector | Multi-modal fusion: Multi-scale template matching (0.5x-1.0x), MOG2 motion, audio spectral monitor & match-state HUD gate | Transition to true Object Detection (YOLO / MobileNet) + Temporal Action Tracking in Week 5+ |
+| Real-time detection pipeline | Asynchronous `DetectionWorker` (QThread) with non-blocking UI, live visual bounding box overlay & instant manual hotkey fallback | Revisit if worker latency exceeds 33 ms budget |
+| Audio spectral monitor | QtMultimedia + pure NumPy FFT low-band vs high-band ratio (>= 18.0) | Revisit if OS default audio input cannot route game loopback |
+| First ability | The Hidden — Leap (25.0s cooldown, verified & calibrated) | First MVP path is validated; expand to The Hidden Mark & Veil next |
