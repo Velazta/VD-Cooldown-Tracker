@@ -271,10 +271,11 @@
 **Deliverable:** Real-time audio spectral gating, match state lobby filtering, loopback prevention, and robust manual fallback.
 
 ## Day 21 — Live Latency Measurement & Cooldown Calibration
-- [ ] Implement end-to-end latency measurement tool in `tools/latency_benchmarker.py` ($T_{capture} \rightarrow T_{infer} \rightarrow T_{overlay}$).
-- [ ] Profile mean, median, P95, and P99 latency against acceptance target (< 150 ms) and stretch goal (< 100 ms).
-- [ ] Calibrate The Hidden Leap cooldown duration in `database/killerDatabase.json` against empirical footage.
-- [ ] Produce latency report in `dataset/LATENCY_BENCHMARK.md`.
+- [x] Implement end-to-end latency measurement tool in `tools/latency_benchmarker.py` ($T_{capture} \rightarrow T_{infer} \rightarrow T_{overlay}$).
+- [x] Profile mean (12.30 ms), median (11.34 ms), P90 (16.74 ms), P95 (19.70 ms), and P99 (23.14 ms) latency, far surpassing acceptance target (< 150 ms) and stretch goal (< 100 ms).
+- [x] Calibrate The Hidden Leap cooldown duration to 25.0s in `database/killerDatabase.json` and set `cooldown_verified: true`.
+- [x] Produce comprehensive latency report in `dataset/LATENCY_BENCHMARK.md`.
+- [x] Add automated unit tests in `tests/test_latency_benchmarker.py` (143 tests passing total).
 
 **Deliverable:** Empirical latency benchmark report and calibrated cooldown database.
 

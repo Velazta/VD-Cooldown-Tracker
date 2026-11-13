@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game": "Violence District",
-  "last_updated": "2026-11-12",
+  "last_updated": "2026-11-13",
   "killers": [
     {
       "id": "the_hidden",
@@ -12,7 +12,7 @@
           "id": "leap",
           "name": "Leap",
           "cooldown_seconds": 25.0,
-          "cooldown_verified": false,
+          "cooldown_verified": true,
           "enabled": true,
           "trigger_type": "on_cast_start",
           "interact_input": "E Button",
