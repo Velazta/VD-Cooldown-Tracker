@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-11-13 19:56:00",
+  "model_architecture": "YOLOv8-Nano",
+  "input_resolution": "320x320",
+  "epochs_trained": 17,
+  "weights_source": "dataset/runs/the_hidden_yolov8n/weights/best.pt",
+  "onnx_model_path": "models/the_hidden_yolov8n.onnx",
+  "onnx_size_mb": 12.06,
+  "cpu_latency": {
+    "mean_ms": 23.14,
+    "p95_ms": 25.73,
+    "min_ms": 19.65,
+    "max_ms": 33.2
+  },
+  "verification": {
+    "distractors_tested": 2,
+    "false_positives": 0,
+    "distractor_rejection_pct": 100.0,
+    "killer_frames_tested": 98,
+    "true_positives": 36,
+    "confidence_threshold": 0.50
+  },
+  "status": "PASSED"
+}

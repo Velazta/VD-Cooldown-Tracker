@@ -131,13 +131,18 @@ ViolenceDistrictTracker/
 │   ├── overlay_window.py       # Frameless, transparent, Win32 click-through window
 │   ├── cooldown_widget.py      # Radial circular progress ring via QPainter
 │   └── overlay_controller.py   # State snapshot bridge & 30 FPS repaint cadence
-├── detection/                  # Multi-Modal Action Detector Engine (Week 3 & Week 4)
+├── detection/                  # Multi-Modal & Neural Action Detector Engine (Week 3 - Week 5)
 │   ├── __init__.py
 │   ├── detection_result.py     # Normalized DetectionResult contract & AbilityEvent adapter
+│   ├── base_detector.py        # Abstract BaseDetector interface contract
+│   ├── yolo_detector.py        # ONNX Runtime YOLOv8n CPU SIMD object detector
+│   ├── trajectory_action_detector.py # Kinematic centroid tracking & Leap action recognition
 │   ├── template_detector.py    # Multi-scale TM_CCOEFF_NORMED matcher with pre-cached scaling
 │   ├── motion_detector.py      # MOG2 background subtractor & parabolic trajectory tracker
 │   ├── hybrid_detector.py      # Vision-Motion-Audio multi-modal fusion engine
-│   └── detection_worker.py     # Asynchronous background QThread live frame consumer
+│   └── detection_worker.py     # Dual-backend asynchronous background QThread live frame consumer
+├── models/                     # Production ONNX Neural Models (Week 5)
+│   └── the_hidden_yolov8n.onnx # Fine-tuned YOLOv8n FP32 model (12.06 MB) for CPU SIMD
 ├── database/
 │   ├── __init__.py
 │   ├── database_manager.py     # Schema validator and strongly-typed data models

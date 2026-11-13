@@ -165,6 +165,34 @@ class TestDetectionWorker(unittest.TestCase):
         self.assertEqual(first_event.ability_id, "leap")
         self.assertEqual(first_event.source, "vision")
 
+    def test_worker_yolo_backend_switch_and_tracking(self) -> None:
+        """Memverifikasi peralihan backend ke 'yolo' dan integrasi target tracking."""
+        self.worker.set_backend("yolo")
+        self.assertEqual(self.worker.detector_backend, "yolo")
+
+        tracked_data: list[dict] = []
+
+        def on_tracked(d: dict) -> None:
+            tracked_data.append(d)
+
+        self.worker.target_tracked.connect(on_tracked)
+        self.worker.set_confidence_threshold(0.50)
+        self.worker.set_filter_match_state(False)
+
+        self.mock_capture.start()
+        self.worker.start()
+
+        deadline = time.monotonic() + 0.5
+        while time.monotonic() < deadline:
+            QCoreApplication.processEvents()
+            time.sleep(0.05)
+
+        self.worker.stop()
+        self.mock_capture.stop()
+
+        # Pastikan worker thread berhenti bersih tanpa error
+        self.assertFalse(self.worker.isRunning())
+
 
 if __name__ == "__main__":
     unittest.main()

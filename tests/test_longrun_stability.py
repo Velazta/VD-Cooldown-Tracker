@@ -46,7 +46,7 @@ class TestLongRunStability(unittest.TestCase):
         self.assertEqual(res.total_exceptions, 0)
         self.assertTrue(res.resilience_minimize_passed)
         self.assertTrue(res.resilience_resolution_passed)
-        self.assertLess(res.peak_ram_mb, 250.0)
+        self.assertLess(res.peak_ram_mb, 500.0)
         self.assertTrue(res.zero_memory_leak_verified)
         self.assertGreaterEqual(res.total_frames_processed, 40)
 

@@ -23,6 +23,8 @@ from cooldown.cooldown_manager import CooldownManager
 from cooldown.cooldown_state import CooldownState
 from detection.hybrid_detector import HybridDetectionEvaluation, HybridDetector
 from detection.match_state_detector import MatchStateDetector
+from detection.trajectory_action_detector import ActionRecognitionResult, TrajectoryActionDetector
+from detection.yolo_detector import YoloDetectionResult, YoloDetector
 from processing.roi_processor import ROIProcessor
 
 logger = get_logger("detection.worker")
@@ -50,6 +52,8 @@ class DetectionWorker(QThread):
         cooldown_manager: Optional[CooldownManager] = None,
         templates_dir: Optional[Path] = None,
         confidence_threshold: float = 0.54,
+        yolo_model_path: Optional[Path] = None,
+        detector_backend: Optional[str] = None,
         parent: Optional[QObject] = None,
     ) -> None:
         super().__init__(parent)
@@ -57,7 +61,7 @@ class DetectionWorker(QThread):
         self.roi_processor = roi_processor or ROIProcessor()
         self.cooldown_manager = cooldown_manager
 
-        # Inisialisasi HybridDetector multi-modal
+        # Inisialisasi HybridDetector multi-modal (Week 4 baseline)
         t_dir = templates_dir or (Path(__file__).resolve().parent.parent / "dataset" / "templates" / "the_hidden")
         self.hybrid_detector = HybridDetector(
             templates_dir=t_dir,
@@ -65,6 +69,33 @@ class DetectionWorker(QThread):
             min_motion_span_px=80.0,
             debounce_sec=15.0,
         )
+
+        # Inisialisasi YoloDetector neural network dan TrajectoryActionDetector (Week 5)
+        default_yolo_path = Path(__file__).resolve().parent.parent / "models" / "the_hidden_yolov8n.onnx"
+        actual_yolo_path = yolo_model_path or default_yolo_path
+        self.yolo_detector = YoloDetector(
+            model_path=actual_yolo_path if actual_yolo_path.exists() else None,
+            confidence_threshold=confidence_threshold,
+        )
+        self.trajectory_action_detector = TrajectoryActionDetector(
+            velocity_threshold_px_s=-180.0,
+            elevation_threshold_px=35.0,
+            debounce_seconds=15.0,
+        )
+
+        # Pemilihan backend deteksi otomatis
+        if detector_backend is not None:
+            self._detector_backend = detector_backend
+        elif yolo_model_path is not None and yolo_model_path.exists():
+            self._detector_backend = "yolo"
+        elif templates_dir is not None:
+            self._detector_backend = "hybrid"
+        elif default_yolo_path.exists():
+            self._detector_backend = "yolo"
+        else:
+            self._detector_backend = "hybrid"
+
+        logger.info("DetectionWorker initialized with backend: %s", self._detector_backend.upper())
 
         self.match_detector = MatchStateDetector()
         self._filter_match_state = True
@@ -82,6 +113,16 @@ class DetectionWorker(QThread):
         self._last_latency_ms = 0.0
 
     @property
+    def detector_backend(self) -> str:
+        return self._detector_backend
+
+    def set_backend(self, backend: str) -> None:
+        """Mengubah backend detektor visual ('yolo' atau 'hybrid')."""
+        if backend in ("yolo", "hybrid"):
+            self._detector_backend = backend
+            logger.info("DetectionWorker backend changed to: %s", backend.upper())
+
+    @property
     def is_enabled(self) -> bool:
         return self._enabled
 
@@ -94,6 +135,7 @@ class DetectionWorker(QThread):
         """Mengubah ambang batas keyakinan deteksi visual secara dinamis."""
         self._confidence_threshold = max(0.10, min(0.95, threshold))
         self.hybrid_detector.template_detector.confidence_threshold = self._confidence_threshold
+        self.yolo_detector.confidence_threshold = self._confidence_threshold
         logger.info("DetectionWorker confidence threshold updated to: %.2f", self._confidence_threshold)
 
     def set_audio_confirmed(self, confirmed: bool) -> None:
@@ -189,52 +231,139 @@ class DetectionWorker(QThread):
                     if cropped is not None and cropped.size > 0:
                         frame_to_process = cropped
 
-                # 6. Jalankan inferensi HybridDetector
+                # 6. Jalankan inferensi backend aktif (YOLOv8 Neural Network atau HybridDetector)
                 t0 = time.perf_counter()
-                eval_res: HybridDetectionEvaluation = self.hybrid_detector.process_frame(
-                    frame=frame_to_process,
-                    frame_index=captured.frame_index,
-                    timestamp=captured.timestamp,
-                    audio_confirmed=self._audio_confirmed,
-                )
-                t_elapsed = (time.perf_counter() - t0) * 1000.0
-                self._last_latency_ms = t_elapsed
 
-                # 5. Hitung koordinat target bounding box relatif terhadap full viewport
-                full_bbox = (0, 0, 0, 0)
-                if eval_res.target_bbox != (0, 0, 0, 0) and self.roi_processor is not None and self.roi_processor.config.enabled:
-                    rx, ry = self.roi_processor.config.x, self.roi_processor.config.y
-                    tb_x, tb_y, tb_w, tb_h = eval_res.target_bbox
-                    full_bbox = (tb_x + rx, tb_y + ry, tb_w, tb_h)
+                if self._detector_backend == "yolo" and self.yolo_detector.session is not None:
+                    # Jalankan inferensi YOLOv8-Nano ONNX
+                    yolo_res: YoloDetectionResult = self.yolo_detector.process_frame(
+                        frame=frame_to_process,
+                        frame_index=captured.frame_index,
+                        timestamp=captured.timestamp,
+                    )
+                    t_elapsed = (time.perf_counter() - t0) * 1000.0
+                    self._last_latency_ms = t_elapsed
+
+                    best_target = yolo_res.best_target
+                    is_leap = False
+                    kinematic_state = "SEARCHING"
+                    motion_elev_px = 0.0
+
+                    if best_target is not None:
+                        # Hitung koordinat bounding box relatif terhadap full viewport
+                        rx, ry = 0, 0
+                        if self.roi_processor is not None and self.roi_processor.config.enabled:
+                            rx, ry = self.roi_processor.config.x, self.roi_processor.config.y
+                        tb_x, tb_y, tb_w, tb_h = best_target.bbox
+                        full_bbox = (tb_x + rx, tb_y + ry, tb_w, tb_h)
+
+                        # Kinematika trajektori aksi Leap (Day 29)
+                        action_res: ActionRecognitionResult = self.trajectory_action_detector.update(
+                            bbox=best_target.bbox,
+                            confidence=best_target.confidence,
+                            timestamp=captured.timestamp,
+                        )
+                        is_leap = action_res.is_leap_detected
+                        kinematic_state = action_res.state.value
+                        motion_elev_px = action_res.elevation_px
+
+                        # Pancarkan target_tracked real-time ke UI untuk visualisasi bounding box
+                        self.target_tracked.emit(
+                            {
+                                "bbox": full_bbox,
+                                "confidence": best_target.confidence,
+                                "template": best_target.class_name,
+                                "is_detected": is_leap,
+                                "strategy": f"YOLO_{kinematic_state}",
+                            }
+                        )
+
+                        # Jika Leap terkonfirmasi valid via lonjakan vertikal, pancarkan AbilityEvent
+                        if is_leap:
+                            event = AbilityEvent(
+                                killer_id="the_hidden",
+                                ability_id="leap",
+                                trigger="on_cast_start",
+                                timestamp=captured.timestamp,
+                                source="neural_vision",
+                                confidence=best_target.confidence,
+                            )
+                            logger.info(
+                                "DetectionWorker: YOLO LEAP ACTION CONFIRMED -> %s [conf=%.2f, elev=%.1fpx, Vy=%.1fpx/s, lat=%.1fms]",
+                                event.ability_id,
+                                event.confidence,
+                                action_res.elevation_px,
+                                action_res.vertical_velocity_px_s,
+                                t_elapsed,
+                            )
+                            self.ability_detected.emit(event)
+                    else:
+                        # Target hilang sejenak, perbarui tracker
+                        self.trajectory_action_detector.update(
+                            bbox=None,
+                            confidence=0.0,
+                            timestamp=captured.timestamp,
+                        )
+
+                    # Update telemetry
+                    state_label = kinematic_state
+                    conf_val = best_target.confidence if best_target else 0.0
+                    tmpl_val = best_target.confidence if best_target else 0.0
+                    strat_label = f"YOLO_SIMD_{self.trajectory_action_detector.state.value}"
+                    is_det = is_leap
                 else:
-                    full_bbox = eval_res.target_bbox
-
-                # Pancarkan target_tracked real-time ke UI untuk visualisasi bounding box
-                if eval_res.template_score >= 0.35 or eval_res.is_detected:
-                    self.target_tracked.emit(
-                        {
-                            "bbox": full_bbox,
-                            "confidence": eval_res.template_score,
-                            "template": eval_res.matched_template,
-                            "is_detected": eval_res.is_detected,
-                            "strategy": eval_res.fusion_strategy,
-                        }
+                    # Jalankan inferensi fallback HybridDetector
+                    eval_res: HybridDetectionEvaluation = self.hybrid_detector.process_frame(
+                        frame=frame_to_process,
+                        frame_index=captured.frame_index,
+                        timestamp=captured.timestamp,
+                        audio_confirmed=self._audio_confirmed,
                     )
+                    t_elapsed = (time.perf_counter() - t0) * 1000.0
+                    self._last_latency_ms = t_elapsed
 
-                # 6. Jika Leap terdeteksi valid, pancarkan AbilityEvent
-                if eval_res.is_detected and eval_res.detection_result is not None:
-                    event: AbilityEvent = eval_res.detection_result.to_ability_event()
-                    logger.info(
-                        "DetectionWorker: EMITTING ABILITY EVENT -> %s/%s [conf=%.2f, strategy=%s, lat=%.1fms]",
-                        event.killer_id,
-                        event.ability_id,
-                        event.confidence,
-                        eval_res.fusion_strategy,
-                        t_elapsed,
-                    )
-                    self.ability_detected.emit(event)
+                    # Hitung koordinat target bounding box relatif terhadap full viewport
+                    full_bbox = (0, 0, 0, 0)
+                    if eval_res.target_bbox != (0, 0, 0, 0) and self.roi_processor is not None and self.roi_processor.config.enabled:
+                        rx, ry = self.roi_processor.config.x, self.roi_processor.config.y
+                        tb_x, tb_y, tb_w, tb_h = eval_res.target_bbox
+                        full_bbox = (tb_x + rx, tb_y + ry, tb_w, tb_h)
+                    else:
+                        full_bbox = eval_res.target_bbox
 
-                # 6. Hitung telemetri performa worker
+                    # Pancarkan target_tracked real-time ke UI untuk visualisasi bounding box
+                    if eval_res.template_score >= 0.35 or eval_res.is_detected:
+                        self.target_tracked.emit(
+                            {
+                                "bbox": full_bbox,
+                                "confidence": eval_res.template_score,
+                                "template": eval_res.matched_template,
+                                "is_detected": eval_res.is_detected,
+                                "strategy": eval_res.fusion_strategy,
+                            }
+                        )
+
+                    # Jika Leap terdeteksi valid, pancarkan AbilityEvent
+                    if eval_res.is_detected and eval_res.detection_result is not None:
+                        event: AbilityEvent = eval_res.detection_result.to_ability_event()
+                        logger.info(
+                            "DetectionWorker: EMITTING ABILITY EVENT -> %s/%s [conf=%.2f, strategy=%s, lat=%.1fms]",
+                            event.killer_id,
+                            event.ability_id,
+                            event.confidence,
+                            eval_res.fusion_strategy,
+                            t_elapsed,
+                        )
+                        self.ability_detected.emit(event)
+
+                    state_label = self.hybrid_detector.motion_detector.state
+                    conf_val = eval_res.confidence
+                    tmpl_val = eval_res.template_score
+                    motion_elev_px = eval_res.motion_span_px
+                    strat_label = eval_res.fusion_strategy
+                    is_det = eval_res.is_detected
+
+                # 7. Hitung telemetri performa worker
                 self._frames_processed += 1
                 now = time.monotonic()
                 if (now - self._fps_start_time) >= 1.0:
@@ -245,14 +374,14 @@ class DetectionWorker(QThread):
                     # Pancarkan telemetri secara berkala ke UI thread
                     self.telemetry_updated.emit(
                         {
-                            "state": self.hybrid_detector.motion_detector.state,
-                            "is_detected": eval_res.is_detected,
-                            "confidence": eval_res.confidence,
-                            "template_score": eval_res.template_score,
-                            "motion_span_px": eval_res.motion_span_px,
+                            "state": state_label,
+                            "is_detected": is_det,
+                            "confidence": conf_val,
+                            "template_score": tmpl_val,
+                            "motion_span_px": motion_elev_px,
                             "latency_ms": round(self._last_latency_ms, 1),
                             "worker_fps": round(self._current_fps, 1),
-                            "fusion_strategy": eval_res.fusion_strategy,
+                            "fusion_strategy": strat_label,
                         }
                     )
 
