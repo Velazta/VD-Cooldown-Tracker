@@ -52,6 +52,14 @@ class TrajectoryPoint:
     def centroid_x(self) -> float:
         return self.x + self.w / 2.0
 
+    @property
+    def bottom_y(self) -> float:
+        return self.y + self.h
+
+    @property
+    def aspect_ratio(self) -> float:
+        return self.w / self.h if self.h > 0 else 0.0
+
 
 @dataclass
 class ActionRecognitionResult:
@@ -65,13 +73,19 @@ class ActionRecognitionResult:
 
 
 class TrajectoryActionDetector:
-    """Pengenal aksi kinematis berbasis trajektori bounding box killer."""
+    """Pengenal aksi kinematis berbasis trajektori bounding box killer.
+
+    Mendukung deteksi ganda (Dual-Path Trigger):
+    1. Path A (Takeoff Launch): Lonjakan kecepatan ke atas yang tajam (Vy <= threshold).
+    2. Path B (Airborne State): Killer sedang melayang / berada di udara (Elevation >= threshold
+       selama >= 2 frame beruntun), memastikan Leap tetap terdeteksi meski lonjakan awal terlewat.
+    """
 
     def __init__(
         self,
-        velocity_threshold_px_s: float = -180.0,
-        elevation_threshold_px: float = 35.0,
-        window_size: int = 10,
+        velocity_threshold_px_s: float = -140.0,
+        elevation_threshold_px: float = 30.0,
+        window_size: int = 15,
         debounce_seconds: float = 15.0,
     ) -> None:
         self.velocity_threshold_px_s = velocity_threshold_px_s
@@ -81,6 +95,8 @@ class TrajectoryActionDetector:
 
         self._history: Deque[TrajectoryPoint] = collections.deque(maxlen=window_size)
         self._ground_y: Optional[float] = None
+        self._ground_bottom_y: Optional[float] = None
+        self._airborne_frames: int = 0
         self._state: KillerKinematicState = KillerKinematicState.UNKNOWN
         self._last_leap_timestamp: float = -999.0
 
@@ -96,6 +112,8 @@ class TrajectoryActionDetector:
         """Mereset riwayat posisi dan status kinematis."""
         self._history.clear()
         self._ground_y = None
+        self._ground_bottom_y = None
+        self._airborne_frames = 0
         self._state = KillerKinematicState.UNKNOWN
         self._last_leap_timestamp = -999.0
         logger.debug("TrajectoryActionDetector reset to initial state.")
@@ -116,10 +134,11 @@ class TrajectoryActionDetector:
         now = timestamp if timestamp is not None else time.monotonic()
 
         # 1. Jika killer tidak terdeteksi pada frame ini
-        if bbox is None or confidence < 0.30:
-            if len(self._history) > 0 and (now - self._history[-1].timestamp) > 1.0:
-                # Target hilang lebih dari 1 detik, reset riwayat
+        if bbox is None or confidence < 0.25:
+            if len(self._history) > 0 and (now - self._history[-1].timestamp) > 1.2:
+                # Target hilang lebih dari 1.2 detik, reset riwayat
                 self._history.clear()
+                self._airborne_frames = 0
                 self._state = KillerKinematicState.UNKNOWN
             return ActionRecognitionResult(
                 is_leap_detected=False,
@@ -137,10 +156,14 @@ class TrajectoryActionDetector:
             confidence=confidence,
         )
 
-        # 2. Inisialisasi ground baseline
         cy = current_pt.centroid_y
+        c_bottom = current_pt.bottom_y
+
+        # 2. Inisialisasi dan adaptasi ground baseline
+        # Di koordinat layar citra, tanah berada di bawah (koordinat Y lebih besar).
         if self._ground_y is None:
             self._ground_y = cy
+            self._ground_bottom_y = c_bottom
             self._state = KillerKinematicState.GROUNDED
 
         # 3. Hitung kecepatan vertikal Vy (px/s)
@@ -149,49 +172,75 @@ class TrajectoryActionDetector:
             prev_pt = self._history[-1]
             dt = current_pt.timestamp - prev_pt.timestamp
             if dt > 0.001:
-                # Perhatikan: Pada koordinat citra, atas = Y lebih kecil.
                 # Melompat ke atas -> cy lebih kecil -> dY < 0 -> Vy negatif.
                 vy = (cy - prev_pt.centroid_y) / dt
 
         self._history.append(current_pt)
 
         # 4. Hitung elevasi relatif terhadap baseline tanah
-        # Elevasi positif berarti killer berada di atas ground baseline
         elevation = self._ground_y - cy
+        bottom_elevation = (self._ground_bottom_y - c_bottom) if self._ground_bottom_y else elevation
 
-        # 5. Adaptasi lambat ground baseline jika killer sedang berjalan di tanah (Vy mendekati 0)
-        if abs(vy) < 40.0 and abs(elevation) < 20.0:
-            # Alpha smoothing ground level
-            self._ground_y = 0.90 * self._ground_y + 0.10 * cy
-            self._state = KillerKinematicState.GROUNDED
+        # 5. Adaptasi lambat ground level saat killer di tanah (|Vy| < 45 px/s)
+        if abs(vy) < 45.0:
+            if self._ground_bottom_y and c_bottom > self._ground_bottom_y:
+                # Killer berada di posisi tanah lebih rendah -> update ground baseline
+                self._ground_bottom_y = c_bottom
+                self._ground_y = cy
+                self._state = KillerKinematicState.GROUNDED
+            elif abs(elevation) < 20.0:
+                # Alpha smoothing permukaan tanah datar
+                self._ground_y = 0.95 * self._ground_y + 0.05 * cy
+                if self._ground_bottom_y:
+                    self._ground_bottom_y = 0.95 * self._ground_bottom_y + 0.05 * c_bottom
+                self._state = KillerKinematicState.GROUNDED
 
-        # 6. Evaluasi aksi Leap
-        # Cek apakah debounce aktif
+        # 6. Pantau durasi frame melayang di udara (Airborne)
+        if elevation >= self.elevation_threshold_px or bottom_elevation >= (self.elevation_threshold_px * 0.8):
+            self._airborne_frames += 1
+        else:
+            self._airborne_frames = max(0, self._airborne_frames - 1)
+
+        # 7. Evaluasi aksi Leap (Dual-Path Trigger)
         is_debounced = (now - self._last_leap_timestamp) < self.debounce_seconds
 
+        # Path A: Lonjakan awal saat lepas landas (Takeoff Launch)
+        is_takeoff = (vy <= self.velocity_threshold_px_s and elevation >= 20.0)
+
+        # Path B: Sedang melayang di udara (Airborne presence >= 2 frames)
+        is_sustained_airborne = (self._airborne_frames >= 2 and (elevation >= self.elevation_threshold_px or bottom_elevation >= 25.0))
+
+        # Path C: Posisi puncak lompatan di udara (Apex / floating high)
+        is_high_airborne = (elevation >= 40.0 or bottom_elevation >= 35.0)
+
         is_leap = False
-        explanation = f"Vy={vy:.1f} px/s, Elev={elevation:.1f} px"
+        explanation = f"Vy={vy:.1f} px/s, Elev={elevation:.1f} px, AirFrames={self._airborne_frames}"
 
         if not is_debounced:
-            # Syarat konfirmasi Leap:
-            # a. Kecepatan lonjakan ke atas sangat tinggi (Vy <= threshold, e.g. -180 px/s)
-            # b. Bounding box terangkat di atas batas tanah (elevation >= threshold, e.g. 35 px)
-            if vy <= self.velocity_threshold_px_s and elevation >= self.elevation_threshold_px:
+            if is_takeoff or is_sustained_airborne or is_high_airborne:
                 is_leap = True
                 self._last_leap_timestamp = now
                 self._state = KillerKinematicState.AIRBORNE
-                explanation = f"LEAP CONFIRMED! Launch velocity {vy:.1f} px/s, Elevation {elevation:.1f} px"
+                explanation = (
+                    f"LEAP CONFIRMED! (Takeoff={is_takeoff}, SustainedAir={is_sustained_airborne}, HighAir={is_high_airborne}) "
+                    f"Launch Vy={vy:.1f} px/s, Elev={elevation:.1f} px, AirFrames={self._airborne_frames}"
+                )
                 logger.info(explanation)
-            elif vy <= self.velocity_threshold_px_s * 0.70:
+            elif vy <= self.velocity_threshold_px_s * 0.60:
                 self._state = KillerKinematicState.TAKEOFF
-            elif elevation >= self.elevation_threshold_px and self._state == KillerKinematicState.AIRBORNE:
-                # Masih melayang di udara
+            elif elevation >= self.elevation_threshold_px or self._airborne_frames > 0:
                 self._state = KillerKinematicState.AIRBORNE
             elif elevation < 15.0 and self._state == KillerKinematicState.AIRBORNE:
                 self._state = KillerKinematicState.LANDED
+            else:
+                self._state = KillerKinematicState.GROUNDED
         else:
             remaining_cd = self.debounce_seconds - (now - self._last_leap_timestamp)
             explanation = f"Debounce active ({remaining_cd:.1f}s remaining)"
+            if elevation >= self.elevation_threshold_px or self._airborne_frames > 0:
+                self._state = KillerKinematicState.AIRBORNE
+            elif elevation < 15.0:
+                self._state = KillerKinematicState.LANDED
 
         return ActionRecognitionResult(
             is_leap_detected=is_leap,

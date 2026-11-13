@@ -148,7 +148,8 @@ class CapturePreviewWindow(QMainWindow):
         # Timer untuk polling UI (Consumer Loop) ~30 FPS (33 ms)
         self.render_timer = QTimer(self)
         self.render_timer.timeout.connect(self.update_frame_preview)
-        self.render_timer.start(33)
+        init_fps = getattr(self.config.capture, "target_fps", 60)
+        self.render_timer.start(16 if init_fps == 60 else 33)
 
         logger.info("Main GUI window initialized successfully.")
 
@@ -225,6 +226,17 @@ class CapturePreviewWindow(QMainWindow):
         self.target_input = QLineEdit(self.config.capture.target_title)
         self.target_input.setFixedWidth(120)
         top_bar.addWidget(self.target_input)
+
+        top_bar.addSpacing(10)
+        top_bar.addWidget(QLabel("FPS:"))
+        self.combo_fps = QComboBox()
+        self.combo_fps.addItems(["60 FPS", "30 FPS"])
+        if getattr(self.config.capture, "target_fps", 60) == 30:
+            self.combo_fps.setCurrentText("30 FPS")
+        else:
+            self.combo_fps.setCurrentText("60 FPS")
+        self.combo_fps.currentTextChanged.connect(self.on_fps_changed)
+        top_bar.addWidget(self.combo_fps)
 
         top_bar.addStretch()
 
@@ -948,6 +960,18 @@ class CapturePreviewWindow(QMainWindow):
                     "Crop Tersimpan",
                     f"Sampel ROI ({mode_name.upper()}) berhasil disimpan ke:\n{file_path}"
                 )
+
+    def on_fps_changed(self, text: str) -> None:
+        """Mengatur target FPS capture (30 atau 60 FPS)."""
+        fps = 60 if "60" in text else 30
+        self.config.capture.target_fps = fps
+        self.settings_manager.save(self.config)
+        interval = 16 if fps == 60 else 33
+        self.render_timer.setInterval(interval)
+        if hasattr(self, "capture_engine") and self.capture_engine.is_running:
+            target = self.target_input.text().strip() or "Roblox"
+            self.capture_engine.start(target_title=target, target_fps=fps)
+        logger.info("Capture & Render FPS set to: %d FPS", fps)
 
     def on_start_capture(self) -> None:
         target = self.target_input.text().strip() or "Roblox"
