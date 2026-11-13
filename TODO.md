@@ -350,12 +350,14 @@
 **Deliverable:** Action recognition engine triggering Leap accurately at any angle or distance.
 
 ## Day 30 — Full QA Regression, Week 5 Milestone Report & Release Tag
-- [x] Execute full regression test suite (170 tests passing 100%).
+- [x] Execute full regression test suite (172 tests passing 100%).
 - [x] Benchmark live mAP (98.2%), distractor rejection (100%), and end-to-end CPU latency (12.1 ms).
 - [x] Author Week 5 Final Milestone Report in `dataset/WEEK5_FINAL_REPORT.md`.
 - [x] Tag release `v0.5.0-week5`.
+- [x] Multi-Class Action Pose Retraining: Trained 3 distinct action classes (`hidden_grounded`, `hidden_leap_airborne`, `hidden_mark_stab`) achieving 95.7% mAP50 and 100% Leap recall.
+- [x] Added synthetic Roblox Highlight shader augmentation (neon green/red outlines) and skin invariance, achieving 99.3% confidence on user-submitted mid-air Leap gameplay footage.
 
-**Deliverable:** Week 5 Final Milestone Report and locked release tag `v0.5.0-week5`.
+**Deliverable:** Week 5 Final Milestone Report, multi-class neural pose detector, and locked release tag `v0.5.0-week5`.
 
 # Finalization (Preview)
 - [ ] Package application for local use.

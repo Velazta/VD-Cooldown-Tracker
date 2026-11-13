@@ -267,6 +267,16 @@ class DetectionWorker(QThread):
                         kinematic_state = action_res.state.value
                         motion_elev_px = action_res.elevation_px
 
+                        # Fusi Multi-Class Neural Vision (Pose Leap Terdeteksi Langsung)
+                        if best_target.class_name == "hidden_leap_airborne" and best_target.confidence >= 0.38:
+                            is_leap = True
+                            kinematic_state = "AIRBORNE_NEURAL"
+                        elif best_target.class_name == "hidden_mark_stab":
+                            kinematic_state = "MARK_STAB"
+                        elif best_target.class_name == "hidden_grounded":
+                            if not is_leap:
+                                kinematic_state = "GROUNDED"
+
                         # Pancarkan target_tracked real-time ke UI untuk visualisasi bounding box
                         self.target_tracked.emit(
                             {

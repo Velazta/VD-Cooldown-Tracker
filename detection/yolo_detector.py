@@ -32,9 +32,9 @@ from detection.base_detector import BaseDetector
 logger = get_logger("detection.yolo")
 
 DEFAULT_CLASSES = [
-    "killer_the_hidden",
-    "killer_veil",
-    "survivor",
+    "hidden_grounded",
+    "hidden_leap_airborne",
+    "hidden_mark_stab",
 ]
 
 

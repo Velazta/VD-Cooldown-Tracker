@@ -8,7 +8,7 @@
   "capture": {
     "target_title": "Roblox",
     "backend": "windows_capture",
-    "target_fps": 60,
+    "target_fps": 30,
     "roi": {
       "x": 140,
       "y": 0,
@@ -18,8 +18,8 @@
     }
   },
   "overlay": {
-    "x": 377,
-    "y": 41,
+    "x": 1691,
+    "y": 26,
     "width": 220,
     "height": 220,
     "opacity": 0.9,
@@ -28,8 +28,8 @@
     "click_through": true,
     "fps_display": true,
     "position": {
-      "x": 377,
-      "y": 41
+      "x": 1691,
+      "y": 26
     }
   },
   "active_killer_id": "the_hidden"

@@ -461,6 +461,7 @@ class CapturePreviewWindow(QMainWindow):
         self.spin_confidence.setSingleStep(5)
         self.spin_confidence.setValue(54)
         self.spin_confidence.setSuffix("%")
+        self.spin_confidence.setToolTip("Rekomendasi ambang batas: 40% - 60%. Nilai > 75% berisiko menyaring deteksi karakter.")
         self.spin_confidence.valueChanged.connect(self.on_confidence_changed)
         conf_row.addWidget(self.spin_confidence)
         auto_detect_layout.addLayout(conf_row)
