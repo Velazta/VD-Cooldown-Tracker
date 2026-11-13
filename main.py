@@ -842,8 +842,11 @@ class CapturePreviewWindow(QMainWindow):
             self._latest_bbox_is_leap = data.get("is_detected", False)
             tmpl = data.get("template", "the_hidden")
             conf = data.get("confidence", 0.0)
+            strategy = data.get("strategy", "").replace("YOLO_", "")
             if self._latest_bbox_is_leap:
                 self._latest_bbox_label = f"LEAP CAST ({int(conf * 100)}%)"
+            elif strategy:
+                self._latest_bbox_label = f"The Hidden [{strategy}] ({int(conf * 100)}%)"
             else:
                 self._latest_bbox_label = f"{tmpl} ({int(conf * 100)}%)"
 

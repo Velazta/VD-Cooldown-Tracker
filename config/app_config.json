@@ -10,16 +10,16 @@
     "backend": "windows_capture",
     "target_fps": 30,
     "roi": {
-      "x": 110,
-      "y": 5,
-      "width": 1730,
-      "height": 1060,
+      "x": 140,
+      "y": 0,
+      "width": 1660,
+      "height": 840,
       "enabled": true
     }
   },
   "overlay": {
-    "x": 246,
-    "y": 57,
+    "x": 815,
+    "y": 155,
     "width": 220,
     "height": 220,
     "opacity": 0.9,
@@ -28,8 +28,8 @@
     "click_through": true,
     "fps_display": true,
     "position": {
-      "x": 246,
-      "y": 57
+      "x": 815,
+      "y": 155
     }
   },
   "active_killer_id": "the_hidden"
