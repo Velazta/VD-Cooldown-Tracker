@@ -34,6 +34,9 @@ class DetectionWorker(QThread):
     ability_detected = Signal(object)
     """Dipancarkan saat kemampuan Killer terdeteksi valid. Mengirimkan objek AbilityEvent."""
 
+    target_tracked = Signal(dict)
+    """Dipancarkan real-time saat target visual terdeteksi/terlacak di dalam ROI."""
+
     telemetry_updated = Signal(dict)
     """Dipancarkan secara periodik untuk memperbarui telemetri detektor di GUI."""
 
@@ -197,7 +200,28 @@ class DetectionWorker(QThread):
                 t_elapsed = (time.perf_counter() - t0) * 1000.0
                 self._last_latency_ms = t_elapsed
 
-                # 5. Jika Leap terdeteksi valid, pancarkan AbilityEvent
+                # 5. Hitung koordinat target bounding box relatif terhadap full viewport
+                full_bbox = (0, 0, 0, 0)
+                if eval_res.target_bbox != (0, 0, 0, 0) and self.roi_processor is not None and self.roi_processor.config.enabled:
+                    rx, ry = self.roi_processor.config.x, self.roi_processor.config.y
+                    tb_x, tb_y, tb_w, tb_h = eval_res.target_bbox
+                    full_bbox = (tb_x + rx, tb_y + ry, tb_w, tb_h)
+                else:
+                    full_bbox = eval_res.target_bbox
+
+                # Pancarkan target_tracked real-time ke UI untuk visualisasi bounding box
+                if eval_res.template_score >= 0.35 or eval_res.is_detected:
+                    self.target_tracked.emit(
+                        {
+                            "bbox": full_bbox,
+                            "confidence": eval_res.template_score,
+                            "template": eval_res.matched_template,
+                            "is_detected": eval_res.is_detected,
+                            "strategy": eval_res.fusion_strategy,
+                        }
+                    )
+
+                # 6. Jika Leap terdeteksi valid, pancarkan AbilityEvent
                 if eval_res.is_detected and eval_res.detection_result is not None:
                     event: AbilityEvent = eval_res.detection_result.to_ability_event()
                     logger.info(

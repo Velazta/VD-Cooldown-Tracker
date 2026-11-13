@@ -118,8 +118,15 @@ class CapturePreviewWindow(QMainWindow):
         )
         self.detection_worker.ability_detected.connect(self.on_auto_ability_detected)
         self.detection_worker.telemetry_updated.connect(self.on_detector_telemetry_updated)
+        self.detection_worker.target_tracked.connect(self.on_target_tracked)
         self.detection_worker.worker_error.connect(self.on_detector_error)
         self.audio_monitor.audio_surge_detected.connect(lambda t: self.detection_worker.set_audio_confirmed(True))
+
+        # Target Bounding Box Visualization Tracking
+        self._latest_target_bbox: Optional[Tuple[int, int, int, int]] = None
+        self._latest_bbox_label: str = ""
+        self._latest_bbox_time: float = 0.0
+        self._latest_bbox_is_leap: bool = False
 
         # Setup Tampilan Jendela
         self.setWindowTitle(
@@ -453,8 +460,10 @@ class CapturePreviewWindow(QMainWindow):
         self.check_filter_match.toggled.connect(self.detection_worker.set_filter_match_state)
         filter_check_row.addWidget(self.check_filter_match)
 
-        self.check_audio_gate = QCheckBox("🔊 Filter Audio Gating (Stereo Mix / Mic)")
-        self.check_audio_gate.setChecked(True)
+        self.check_audio_gate = QCheckBox("🔊 Filter Audio Gating (Stereo Mix / Loopback)")
+        self.check_audio_gate.setToolTip("Aktifkan jika perangkat Windows Stereo Mix / Loopback game terhubung.")
+        self.check_audio_gate.setChecked(False)
+        self.audio_monitor.set_enabled(False)
         self.check_audio_gate.toggled.connect(self.on_toggle_audio_gate)
         filter_check_row.addWidget(self.check_audio_gate)
         auto_detect_layout.addLayout(filter_check_row)
@@ -824,6 +833,20 @@ class CapturePreviewWindow(QMainWindow):
                 "background-color: #1E3A8A; color: #93C5FD; border: 1px solid #2563EB; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;"
             )
 
+    def on_target_tracked(self, data: dict) -> None:
+        """Menyimpan data bounding box target terbaru untuk digambar di viewport preview."""
+        bbox = data.get("bbox")
+        if bbox and bbox[2] > 0 and bbox[3] > 0:
+            self._latest_target_bbox = bbox
+            self._latest_bbox_time = time.monotonic()
+            self._latest_bbox_is_leap = data.get("is_detected", False)
+            tmpl = data.get("template", "the_hidden")
+            conf = data.get("confidence", 0.0)
+            if self._latest_bbox_is_leap:
+                self._latest_bbox_label = f"LEAP CAST ({int(conf * 100)}%)"
+            else:
+                self._latest_bbox_label = f"{tmpl} ({int(conf * 100)}%)"
+
     def on_detector_error(self, err_msg: str) -> None:
         logger.error("Detector worker error: %s", err_msg)
 
@@ -1075,6 +1098,22 @@ class CapturePreviewWindow(QMainWindow):
 
         # 2. Gambar Bounding Box Hijau pada Full Frame
         annotated_frame = self.roi_processor.draw_roi_box(frame_data.image)
+
+        # Gambar Bounding Box Target Killer jika sedang terdeteksi di dalam ROI (Entity Tracking Preview)
+        now_mono = time.monotonic()
+        if self._latest_target_bbox and (now_mono - self._latest_bbox_time) < 0.8:
+            bx, by, bw, bh = self._latest_target_bbox
+            if bw > 10 and bh > 10:
+                box_color = (0, 69, 255) if self._latest_bbox_is_leap else (0, 240, 255)  # BGR (Red jika Leap, Neon Yellow jika Tracking)
+                cv2.rectangle(annotated_frame, (bx, by), (bx + bw, by + bh), box_color, 2)
+                # Label banner di atas kotak
+                label = self._latest_bbox_label
+                font_scale = 0.45
+                thickness = 1
+                (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness)
+                ty = max(by - 6, th + 6)
+                cv2.rectangle(annotated_frame, (bx, ty - th - 4), (bx + tw + 6, ty + 2), (20, 20, 20), -1)
+                cv2.putText(annotated_frame, label, (bx + 3, ty - 2), cv2.FONT_HERSHEY_SIMPLEX, font_scale, box_color, thickness, cv2.LINE_AA)
 
         # 3. Optimasi Downsampling C++ sebelum ke QImage Viewport Kiri
         target_size = self.preview_label.size()

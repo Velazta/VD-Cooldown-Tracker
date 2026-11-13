@@ -29,6 +29,8 @@ class HybridDetectionEvaluation:
     fusion_strategy: str
     latency_ms: float
     detection_result: Optional[DetectionResult] = None
+    target_bbox: Tuple[int, int, int, int] = (0, 0, 0, 0)
+    matched_template: str = ""
 
 
 class HybridDetector:
@@ -44,8 +46,9 @@ class HybridDetector:
         self.template_detector = TemplateDetector(
             templates_dir=templates_dir,
             confidence_threshold=template_threshold,
-            processing_downscale=0.5,
-            target_phases=("leap_airborne",),
+            scales=(0.5, 0.75, 1.0),
+            processing_downscale=0.4,
+            target_phases=("leap_airborne", "leap_windup"),
         )
         self.motion_detector = MotionDetector(
             min_vertical_span_px=min_motion_span_px,
@@ -109,10 +112,10 @@ class HybridDetector:
             strategy = "AIRBORNE_MOTION_FUSION"
             final_conf = min(1.0, (tmpl_res.confidence * 0.5) + (motion_res.confidence * 0.5))
 
-        # Strategi C: Korelasi Visual Sangat Tinggi Ekstrem (>= 0.80)
-        elif tmpl_res.confidence >= 0.80 and is_debounced:
+        # Strategi C: Korelasi Visual Multi-Scale Kuat (>= 0.58)
+        elif tmpl_res.is_detected and tmpl_res.confidence >= 0.58 and is_debounced:
             is_leap = True
-            strategy = "HIGH_CONFIDENCE_TEMPLATE"
+            strategy = "MULTI_SCALE_VISION_MATCH"
             final_conf = tmpl_res.confidence
 
         det_result: Optional[DetectionResult] = None
@@ -144,4 +147,6 @@ class HybridDetector:
             fusion_strategy=strategy,
             latency_ms=round(t_elapsed, 2),
             detection_result=det_result,
+            target_bbox=tmpl_res.best_bbox,
+            matched_template=tmpl_res.matched_template,
         )
