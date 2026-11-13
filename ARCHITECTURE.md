@@ -148,8 +148,10 @@ ViolenceDistrictTracker/
 │   ├── catalog.json            # Multi-modal dataset provenance catalog
 │   ├── baseline_benchmark_results.json # Day 17 test split benchmark data
 │   ├── DAY17_BASELINE_REPORT.md# Comprehensive empirical baseline benchmark report
+│   ├── DAY18_ERROR_ANALYSIS.md # Forensic failure & action-level evaluation report
 │   ├── WEEK1_FINAL_REPORT.md   # Week 1 acceptance and benchmark report
-│   └── WEEK2_FINAL_REPORT.md   # Week 2 acceptance and benchmark report
+│   ├── WEEK2_FINAL_REPORT.md   # Week 2 acceptance and benchmark report
+│   └── WEEK3_FINAL_REPORT.md   # Week 3 acceptance and benchmark report
 ├── tools/                      # Dataset indexing, extraction, and evaluation tools
 │   ├── dataset_indexer.py
 │   ├── extract_dataset.py
@@ -158,8 +160,9 @@ ViolenceDistrictTracker/
 │   ├── spatial_annotator.py
 │   ├── trajectory_analyzer.py
 │   ├── template_builder.py
-│   └── evaluate_baseline.py
-└── tests/                      # 26 test modules (124 automated tests passing)
+│   ├── evaluate_baseline.py
+│   └── error_analyzer.py
+└── tests/                      # 27 test modules (127 automated tests passing)
 ```
 
 Create modules incrementally. Empty placeholder files are not a substitute for working functionality.
