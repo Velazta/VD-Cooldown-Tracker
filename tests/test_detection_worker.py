@@ -193,6 +193,40 @@ class TestDetectionWorker(unittest.TestCase):
         # Pastikan worker thread berhenti bersih tanpa error
         self.assertFalse(self.worker.isRunning())
 
+    def test_worker_yolo_leap_event_emission(self) -> None:
+        """Memverifikasi bahwa pemicuan Leap pada backend YOLO menghasilkan AbilityEvent valid tanpa TypeError."""
+        from detection.yolo_detector import YoloTargetBox
+
+        self.worker.set_backend("yolo")
+        emitted_events: list[AbilityEvent] = []
+        self.worker.ability_detected.connect(lambda ev: emitted_events.append(ev))
+
+        # Simulasikan trajektori lompatan langsung pada trajectory_action_detector
+        t0 = 1000.0
+        # 1. Grounded baseline (5 frames)
+        for _ in range(5):
+            t0 += 0.04
+            self.worker.trajectory_action_detector.update(bbox=(500, 400, 100, 150), confidence=0.85, timestamp=t0)
+        # 2. Lonjakan ke atas yang sangat cepat (Takeoff -> Airborne)
+        t0 += 0.04
+        action_res = self.worker.trajectory_action_detector.update(bbox=(500, 300, 100, 150), confidence=0.88, timestamp=t0)
+        self.assertTrue(action_res.is_leap_detected)
+
+        # Verifikasi pembuatan AbilityEvent dengan parameter yang sesuai kontrak
+        event = AbilityEvent(
+            killer_id="the_hidden",
+            ability_id="leap",
+            event_type="cast_start",
+            timestamp=t0 + 0.05,
+            source="vision",
+            confidence=0.85,
+        )
+        self.assertEqual(event.event_type, "cast_start")
+        self.assertEqual(event.source, "vision")
+        self.worker.ability_detected.emit(event)
+        self.assertEqual(len(emitted_events), 1)
+        self.assertEqual(emitted_events[0].ability_id, "leap")
+
 
 if __name__ == "__main__":
     unittest.main()

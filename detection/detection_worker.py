@@ -283,9 +283,9 @@ class DetectionWorker(QThread):
                             event = AbilityEvent(
                                 killer_id="the_hidden",
                                 ability_id="leap",
-                                trigger="on_cast_start",
+                                event_type="cast_start",
                                 timestamp=captured.timestamp,
-                                source="neural_vision",
+                                source="vision",
                                 confidence=best_target.confidence,
                             )
                             logger.info(
