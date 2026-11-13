@@ -45,6 +45,7 @@ from capture.window_helper import set_window_capture_invisible
 from processing.roi_processor import ROIConfig, ROIProcessor
 from processing.preprocessing import ImagePreprocessor, PreprocessingConfig, PreprocessorMode
 from monitoring.performance_monitor import PerformanceMonitor
+from detection.detection_worker import DetectionWorker
 
 logger = get_logger("gui")
 
@@ -105,9 +106,20 @@ class CapturePreviewWindow(QMainWindow):
         )
         self.overlay_controller.overlay_moved.connect(self.on_overlay_moved)
 
+        # 6. Inisialisasi Detection Worker (Week 4 Day 19 Integration)
+        self.detection_worker = DetectionWorker(
+            capture_engine=self.capture_engine,
+            roi_processor=self.roi_processor,
+            confidence_threshold=0.50,
+            parent=self,
+        )
+        self.detection_worker.ability_detected.connect(self.on_auto_ability_detected)
+        self.detection_worker.telemetry_updated.connect(self.on_detector_telemetry_updated)
+        self.detection_worker.worker_error.connect(self.on_detector_error)
+
         # Setup Tampilan Jendela
         self.setWindowTitle(
-            f"{self.config.app.name} v{self.config.app.version} — Day 7 / Day 13 Integrated Pipeline"
+            f"{self.config.app.name} v{self.config.app.version} — Day 7 / Day 19 Live Detection Pipeline"
         )
         self.resize(1160, 720)
         self.setMinimumSize(960, 600)
@@ -394,7 +406,49 @@ class CapturePreviewWindow(QMainWindow):
 
         right_col.addWidget(overlay_group)
 
-        # Panel 3: HUD Region of Interest (ROI)
+        # Panel 3: Live Auto-Detection Engine (Week 4 Day 19)
+        auto_detect_group = QGroupBox("🤖 Live Auto-Detection (Vision)")
+        auto_detect_layout = QVBoxLayout(auto_detect_group)
+        auto_detect_layout.setSpacing(6)
+
+        detect_top_row = QHBoxLayout()
+        self.check_auto_detect = QCheckBox("⚡ Aktifkan Auto-Detection")
+        self.check_auto_detect.setChecked(True)
+        self.check_auto_detect.toggled.connect(self.on_toggle_auto_detection)
+        detect_top_row.addWidget(self.check_auto_detect)
+        detect_top_row.addStretch()
+
+        self.detector_badge = QLabel("READY")
+        self.detector_badge.setStyleSheet("""
+            background-color: #14381C;
+            color: #4ADE80;
+            border: 1px solid #16A34A;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+        """)
+        detect_top_row.addWidget(self.detector_badge)
+        auto_detect_layout.addLayout(detect_top_row)
+
+        conf_row = QHBoxLayout()
+        conf_row.addWidget(QLabel("Ambang Batas (Conf):"))
+        self.spin_confidence = QSpinBox()
+        self.spin_confidence.setRange(20, 95)
+        self.spin_confidence.setSingleStep(5)
+        self.spin_confidence.setValue(50)
+        self.spin_confidence.setSuffix("%")
+        self.spin_confidence.valueChanged.connect(self.on_confidence_changed)
+        conf_row.addWidget(self.spin_confidence)
+        auto_detect_layout.addLayout(conf_row)
+
+        self.detector_telemetry_label = QLabel("Status: <b>IDLE</b> | Lat: <b>0.0 ms</b> | FPS: <b>0.0</b>")
+        self.detector_telemetry_label.setStyleSheet("color: #9E9EB0; font-size: 11px;")
+        auto_detect_layout.addWidget(self.detector_telemetry_label)
+
+        right_col.addWidget(auto_detect_group)
+
+        # Panel 4: HUD Region of Interest (ROI)
         roi_group = QGroupBox("HUD Region of Interest (ROI)")
         roi_layout = QVBoxLayout(roi_group)
         roi_layout.setSpacing(8)
@@ -485,7 +539,8 @@ class CapturePreviewWindow(QMainWindow):
             self.btn_start, self.btn_stop, self.btn_snapshot,
             self.btn_simulate_cast, self.btn_simulate_release, self.btn_reset_cd,
             self.btn_save_roi, self.btn_save_roi_sample,
-            self.check_overlay_visible, self.check_calibration_mode, self.check_roi_enable
+            self.check_overlay_visible, self.check_calibration_mode, self.check_roi_enable,
+            self.check_auto_detect, self.spin_confidence
         ):
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
@@ -671,6 +726,73 @@ class CapturePreviewWindow(QMainWindow):
         logger.info("Resetting cooldown timer back to READY.")
         self.cooldown_manager.reset()
 
+    def on_toggle_auto_detection(self, checked: bool) -> None:
+        """Mengaktifkan atau menonaktifkan proses inferensi detektor background."""
+        self.detection_worker.set_enabled(checked)
+        if checked:
+            self.detector_badge.setText("ACTIVE")
+            self.detector_badge.setStyleSheet(
+                "background-color: #14381C; color: #4ADE80; border: 1px solid #16A34A; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;"
+            )
+            if self.capture_engine.is_running and not self.detection_worker.isRunning():
+                self.detection_worker.start()
+        else:
+            self.detector_badge.setText("DISABLED")
+            self.detector_badge.setStyleSheet(
+                "background-color: #3E1E24; color: #FF6B6B; border: 1px solid #DC2626; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;"
+            )
+
+    def on_confidence_changed(self, value: int) -> None:
+        """Mengatur confidence threshold detektor dari spinbox GUI."""
+        thresh = value / 100.0
+        self.detection_worker.set_confidence_threshold(thresh)
+
+    def on_auto_ability_detected(self, event: AbilityEvent) -> None:
+        """Handler saat DetectionWorker memancarkan deteksi kemampuan Killer secara otomatis."""
+        logger.info(
+            "Auto-Detection triggered: %s/%s [confidence=%.2f, source=%s]",
+            event.killer_id,
+            event.ability_id,
+            event.confidence,
+            event.source,
+        )
+
+        # Beri indikasi visual kilatan pada badge
+        self.detector_badge.setText(f"🔥 {event.ability_id.upper()} DETECTED!")
+        self.detector_badge.setStyleSheet(
+            "background-color: #78350F; color: #FDE047; border: 1px solid #CA8A04; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;"
+        )
+        QTimer.singleShot(1500, self._reset_detector_badge)
+
+        # Teruskan ke CooldownManager
+        self.cooldown_manager.handle_event(event)
+
+    def _reset_detector_badge(self) -> None:
+        """Mengembalikan badge status detektor ke status normal setelah kilatan deteksi."""
+        if self.detection_worker.is_enabled:
+            self.detector_badge.setText("ACTIVE" if self.capture_engine.is_running else "READY")
+            self.detector_badge.setStyleSheet(
+                "background-color: #14381C; color: #4ADE80; border: 1px solid #16A34A; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;"
+            )
+        else:
+            self.detector_badge.setText("DISABLED")
+            self.detector_badge.setStyleSheet(
+                "background-color: #3E1E24; color: #FF6B6B; border: 1px solid #DC2626; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;"
+            )
+
+    def on_detector_telemetry_updated(self, data: dict) -> None:
+        """Memperbarui label telemetri detektor dari background worker."""
+        state = data.get("state", "IDLE")
+        lat = data.get("latency_ms", 0.0)
+        fps = data.get("worker_fps", 0.0)
+        conf = data.get("confidence", 0.0)
+        self.detector_telemetry_label.setText(
+            f"State: <b>{state}</b> | Lat: <b>{lat:.1f}ms</b> | FPS: <b>{fps:.1f}</b> | Conf: <b>{conf*100:.0f}%</b>"
+        )
+
+    def on_detector_error(self, err_msg: str) -> None:
+        logger.error("Detector worker error: %s", err_msg)
+
     def _handle_hotkey(self, key: int) -> bool:
         """Menangani aksi hotkey F1-F4 secara terpusat.
 
@@ -715,10 +837,14 @@ class CapturePreviewWindow(QMainWindow):
         self.roi_config.width = self.spin_w.value()
         self.roi_config.height = self.spin_h.value()
         self.roi_processor.update_config(self.roi_config)
+        if hasattr(self, "detection_worker"):
+            self.detection_worker.set_roi_processor(self.roi_processor)
 
     def on_roi_toggle_changed(self, checked: bool) -> None:
         self.roi_config.enabled = checked
         self.roi_processor.update_config(self.roi_config)
+        if hasattr(self, "detection_worker"):
+            self.detection_worker.set_roi_processor(self.roi_processor)
 
     def on_filter_mode_changed(self, index: int) -> None:
         mode = self.combo_filter.currentData()
@@ -769,6 +895,15 @@ class CapturePreviewWindow(QMainWindow):
         logger.info("User initiated capture start on target '%s' (%d FPS)", target, fps_target)
         self.capture_engine.start(target_title=target, target_fps=fps_target)
 
+        # Start detection worker jika auto-detection diaktifkan
+        if hasattr(self, "check_auto_detect") and self.check_auto_detect.isChecked():
+            if not self.detection_worker.isRunning():
+                self.detection_worker.start()
+                self.detector_badge.setText("ACTIVE")
+                self.detector_badge.setStyleSheet(
+                    "background-color: #14381C; color: #4ADE80; border: 1px solid #16A34A; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;"
+                )
+
         self.btn_start.setEnabled(False)
         self.btn_stop.setEnabled(True)
         self.btn_snapshot.setEnabled(True)
@@ -777,7 +912,15 @@ class CapturePreviewWindow(QMainWindow):
 
     def on_stop_capture(self) -> None:
         logger.info("User initiated capture stop.")
+        if hasattr(self, "detection_worker") and self.detection_worker.isRunning():
+            self.detection_worker.stop()
         self.capture_engine.stop()
+
+        if hasattr(self, "detector_badge"):
+            self.detector_badge.setText("READY")
+            self.detector_badge.setStyleSheet(
+                "background-color: #1F2937; color: #9CA3AF; border: 1px solid #374151; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: bold;"
+            )
 
         self.btn_start.setEnabled(True)
         self.btn_stop.setEnabled(False)
@@ -930,6 +1073,8 @@ class CapturePreviewWindow(QMainWindow):
             logger.warning("Could not persist overlay settings on exit: %s", exc)
 
         self.render_timer.stop()
+        if hasattr(self, "detection_worker") and self.detection_worker.isRunning():
+            self.detection_worker.stop()
         if hasattr(self, "overlay_controller") and self.overlay_controller is not None:
             self.overlay_controller.close()
         if self.capture_engine.is_running:

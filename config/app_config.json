@@ -18,19 +18,19 @@
     }
   },
   "overlay": {
-    "x": 314,
-    "y": 57,
+    "x": 307,
+    "y": 5,
     "width": 220,
     "height": 220,
     "opacity": 0.9,
-    "visible": true,
+    "visible": false,
     "always_on_top": true,
     "click_through": true,
     "fps_display": true,
     "position": {
-      "x": 314,
-      "y": 57
+      "x": 307,
+      "y": 5
     }
   },
-  "active_killer_id": "veil"
+  "active_killer_id": "the_hidden"
 }

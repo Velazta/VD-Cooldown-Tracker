@@ -129,12 +129,13 @@ ViolenceDistrictTracker/
 │   ├── overlay_window.py       # Frameless, transparent, Win32 click-through window
 │   ├── cooldown_widget.py      # Radial circular progress ring via QPainter
 │   └── overlay_controller.py   # State snapshot bridge & 30 FPS repaint cadence
-├── detection/                  # Multi-Modal Action Detector Engine (Week 3)
+├── detection/                  # Multi-Modal Action Detector Engine (Week 3 & Week 4)
 │   ├── __init__.py
 │   ├── detection_result.py     # Normalized DetectionResult contract & AbilityEvent adapter
 │   ├── template_detector.py    # Multi-scale TM_CCOEFF_NORMED matcher with pre-cached scaling
 │   ├── motion_detector.py      # MOG2 background subtractor & parabolic trajectory tracker
-│   └── hybrid_detector.py      # Vision-Motion-Audio multi-modal fusion engine
+│   ├── hybrid_detector.py      # Vision-Motion-Audio multi-modal fusion engine
+│   └── detection_worker.py     # Asynchronous background QThread live frame consumer
 ├── database/
 │   ├── __init__.py
 │   ├── database_manager.py     # Schema validator and strongly-typed data models
@@ -162,7 +163,7 @@ ViolenceDistrictTracker/
 │   ├── template_builder.py
 │   ├── evaluate_baseline.py
 │   └── error_analyzer.py
-└── tests/                      # 27 test modules (127 automated tests passing)
+└── tests/                      # 28 test modules (131 automated tests passing)
 ```
 
 Create modules incrementally. Empty placeholder files are not a substitute for working functionality.

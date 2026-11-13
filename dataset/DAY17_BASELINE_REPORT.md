@@ -8,10 +8,10 @@
 
 | Metode Pendeteksian | Akurasi | Precision | Recall | F1-Score | Latensi Rata-rata | P95 Latensi |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Template_Matching_Alone** | 43.7% | 10.7% | 95.8% | 19.3% | 44.7 ms | 68.4 ms |
-| **Kinematic_Motion_Alone** | 92.4% | 0.0% | 0.0% | 0.0% | 14.7 ms | 23.4 ms |
-| **Hybrid_Vision_Motion** | 93.0% | 50.0% | 8.3% | 14.3% | 59.9 ms | 89.4 ms |
-| **Multi_Modal_Audio_Vision_Hybrid** | 99.7% | 100.0% | 95.8% | 97.9% | 60.4 ms | 89.9 ms |
+| **Template_Matching_Alone** | 43.7% | 10.7% | 95.8% | 19.3% | 29.3 ms | 41.7 ms |
+| **Kinematic_Motion_Alone** | 92.4% | 0.0% | 0.0% | 0.0% | 12.7 ms | 26.0 ms |
+| **Hybrid_Vision_Motion** | 93.0% | 50.0% | 8.3% | 14.3% | 42.6 ms | 56.4 ms |
+| **Multi_Modal_Audio_Vision_Hybrid** | 99.7% | 100.0% | 95.8% | 97.9% | 43.1 ms | 56.9 ms |
 
 ## 2. Analisa Matriks Konfusi (Confusion Matrix)
 

@@ -10,6 +10,7 @@ import os
 import sys
 import logging
 import tempfile
+import time
 from pathlib import Path
 import unittest
 
@@ -26,6 +27,7 @@ from PySide6.QtGui import QKeyEvent
 from app.settings import SettingsManager, AppConfig
 from app.logger import setup_logging, APP_LOGGER_NAME
 from database.database_manager import DatabaseManager
+from cooldown.ability_event import AbilityEvent
 from cooldown.cooldown_state import CooldownState
 from main import CapturePreviewWindow
 
@@ -325,6 +327,36 @@ class TestMainAppIntegration(unittest.TestCase):
         self.assertFalse(self.window.render_timer.isActive())
         self.assertFalse(self.window.overlay_controller.refresh_timer.isActive())
         self.assertFalse(self.window.capture_engine.is_running)
+
+    def test_auto_detection_integration_wiring(self) -> None:
+        """Verify DetectionWorker integration into main GUI window and auto-cooldown trigger."""
+        self.assertTrue(hasattr(self.window, "detection_worker"))
+        self.assertTrue(self.window.check_auto_detect.isChecked())
+        self.assertTrue(self.window.detection_worker.is_enabled)
+
+        # Toggle auto-detection off
+        self.window.check_auto_detect.setChecked(False)
+        self.assertFalse(self.window.detection_worker.is_enabled)
+        self.assertIn("DISABLED", self.window.detector_badge.text())
+
+        # Toggle auto-detection on
+        self.window.check_auto_detect.setChecked(True)
+        self.assertTrue(self.window.detection_worker.is_enabled)
+
+        # Test simulated auto-detection event arrival
+        event = AbilityEvent(
+            killer_id="the_hidden",
+            ability_id="leap",
+            event_type="cast_start",
+            timestamp=time.monotonic(),
+            confidence=0.89,
+            source="vision",
+        )
+        self.window.on_auto_ability_detected(event)
+
+        # Verify CooldownManager transitioned into COOLDOWN state
+        self.assertEqual(self.window.cooldown_manager.state, CooldownState.COOLDOWN)
+        self.assertIn("LEAP DETECTED", self.window.detector_badge.text())
 
 
 if __name__ == "__main__":

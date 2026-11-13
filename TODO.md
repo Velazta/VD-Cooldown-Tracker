@@ -245,18 +245,60 @@
 
 **Deliverable:** Forensic error analysis report, 100% action-level recall verification, skin invariance analysis, and Week 3 Final Report locking the detection baseline.
 
-# Week 4 — Integration and Evaluation (Preview)
-- [ ] Integrate detection output with cooldown manager.
-- [ ] Add confidence threshold.
-- [ ] Add temporal confirmation/debounce.
-- [ ] Add duplicate-event suppression.
-- [ ] Test missed detections and false positives.
-- [ ] Test cooldown timer against observed events.
-- [ ] Measure end-to-end latency.
-- [ ] Measure game FPS impact.
-- [ ] Run one-hour stability test.
-- [ ] Fix critical issues.
-- [ ] Prepare MVP evaluation report.
+# Week 4 — Integration and Evaluation
+
+## Day 19 — Background Detection Worker & Real-Time Pipeline Integration
+- [x] Implement asynchronous background worker thread in `detection/detection_worker.py` inheriting `QThread`.
+- [x] Connect `MSSWindowsCapture` latest-frame buffer to `DetectionWorker` with drop-oldest frame strategy.
+- [x] Integrate clamped `ROIProcessor` cropping into `DetectionWorker`.
+- [x] Connect `DetectionResult.to_ability_event()` signal to `CooldownManager.handle_event()`.
+- [x] Connect `CooldownManager` state transitions to `OverlayController.update_state()` for automated ring animation.
+- [x] Add GUI controls in `main.py`: `[x] Auto-Detection (Vision)` toggle, confidence threshold slider, and detector telemetry readout.
+- [x] Add unit and integration tests in `tests/test_detection_worker.py` and `tests/test_app_integration.py` (131 tests passing total).
+
+**Deliverable:** End-to-end live detection pipeline in `main.py`; hands-free cooldown triggering.
+
+## Day 20 — Temporal Debounce, Confidence Filtering & Audio Loopback
+- [ ] Wire dynamic confidence thresholding from GUI to `TemplateDetector`.
+- [ ] Implement non-blocking audio capture interface in `detection/audio_capture.py` for live spectral gating.
+- [ ] Validate multi-frame temporal debounce and duplicate-event suppression in live streaming.
+- [ ] Verify seamless hotkey manual fallback (`F1`–`F4`) alongside active auto-detection.
+- [ ] Add automated unit and integration tests in `tests/test_live_pipeline.py`.
+
+**Deliverable:** Real-time audio spectral gating and robust manual fallback.
+
+## Day 21 — Live Latency Measurement & Cooldown Calibration
+- [ ] Implement end-to-end latency measurement tool in `tools/latency_benchmarker.py` ($T_{capture} \rightarrow T_{infer} \rightarrow T_{overlay}$).
+- [ ] Profile mean, median, P95, and P99 latency against acceptance target (< 150 ms) and stretch goal (< 100 ms).
+- [ ] Calibrate The Hidden Leap cooldown duration in `database/killerDatabase.json` against empirical footage.
+- [ ] Produce latency report in `dataset/LATENCY_BENCHMARK.md`.
+
+**Deliverable:** Empirical latency benchmark report and calibrated cooldown database.
+
+## Day 22 — Hardware Resource Profiling & Game FPS Impact
+- [ ] Measure application CPU utilization (total system and Python process, target < 5.0%).
+- [ ] Measure application memory footprint (RSS RAM, target < 250 MB).
+- [ ] Measure Roblox game FPS with overlay + detection active vs inactive (target degradation < 3%).
+- [ ] Produce hardware telemetry audit report in `dataset/HARDWARE_AUDIT.md`.
+
+**Deliverable:** Hardware resource audit confirming zero impact on Roblox gameplay.
+
+## Day 23 — 1-Hour Long-Run Continuous Stability Stress Test
+- [ ] Implement continuous stability test harness in `tools/stability_runner.py` for 1-hour unattended streaming.
+- [ ] Test window minimize/restore, resolution change, and game close/reopen resilience.
+- [ ] Audit memory curve to verify zero memory leaks over 70,000+ continuous frames.
+- [ ] Add long-run stability tests in `tests/test_longrun_stability.py`.
+
+**Deliverable:** 1-hour continuous stability audit report and zero-leak verification.
+
+## Day 24 — Final Integration QA, Week 4 Milestone Report & Release Tag
+- [ ] Execute full regression test suite (Week 1 s/d Week 4, > 135 tests).
+- [ ] Verify all PRD Week 4 Acceptance Criteria.
+- [ ] Update documentation (`TODO.md`, `ARCHITECTURE.md`).
+- [ ] Author Week 4 Final Milestone Report in `dataset/WEEK4_FINAL_REPORT.md`.
+- [ ] Tag release `v0.4.0-week4`.
+
+**Deliverable:** Week 4 Final Milestone Report and locked release tag `v0.4.0-week4`.
 
 # Finalization (Preview)
 - [ ] Package application for local use.
