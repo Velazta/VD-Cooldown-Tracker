@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "killer_id": "the_hidden",
+  "description": "Ground truth temporal action intervals for The Hidden gameplay recordings.",
+  "videos": {
+    "hidden1_leap_skill.mp4": {
+      "fps": 30.0,
+      "total_frames": 167,
+      "duration_seconds": 5.57,
+      "active_leap_window": {
+        "start_frame": 75,
+        "end_frame": 165,
+        "start_seconds": 2.50,
+        "end_seconds": 5.50
+      },
+      "phases": [
+        {"phase": "idle_pre_leap", "start_frame": 0, "end_frame": 74, "is_leap": false},
+        {"phase": "leap_windup", "start_frame": 75, "end_frame": 86, "is_leap": true},
+        {"phase": "leap_airborne", "start_frame": 87, "end_frame": 145, "is_leap": true},
+        {"phase": "leap_landing", "start_frame": 146, "end_frame": 165, "is_leap": true},
+        {"phase": "recovery_post_leap", "start_frame": 166, "end_frame": 166, "is_leap": false}
+      ]
+    },
+    "hidden1_leap_skill_ref2.mp4": {
+      "fps": 30.0,
+      "total_frames": 129,
+      "duration_seconds": 4.30,
+      "active_leap_window": {
+        "start_frame": 15,
+        "end_frame": 55,
+        "start_seconds": 0.50,
+        "end_seconds": 1.83
+      },
+      "phases": [
+        {"phase": "idle_pre_leap", "start_frame": 0, "end_frame": 14, "is_leap": false},
+        {"phase": "leap_windup", "start_frame": 15, "end_frame": 24, "is_leap": true},
+        {"phase": "leap_airborne", "start_frame": 25, "end_frame": 42, "is_leap": true},
+        {"phase": "leap_landing", "start_frame": 43, "end_frame": 55, "is_leap": true},
+        {"phase": "recovery_post_leap", "start_frame": 56, "end_frame": 128, "is_leap": false}
+      ]
+    },
+    "hidden2_leap_skill.mp4": {
+      "fps": 30.0,
+      "total_frames": 157,
+      "duration_seconds": 5.23,
+      "active_leap_window": {
+        "start_frame": 55,
+        "end_frame": 120,
+        "start_seconds": 1.83,
+        "end_seconds": 4.00
+      },
+      "phases": [
+        {"phase": "idle_pre_leap", "start_frame": 0, "end_frame": 54, "is_leap": false},
+        {"phase": "leap_windup", "start_frame": 55, "end_frame": 68, "is_leap": true},
+        {"phase": "leap_airborne", "start_frame": 69, "end_frame": 100, "is_leap": true},
+        {"phase": "leap_landing", "start_frame": 101, "end_frame": 120, "is_leap": true},
+        {"phase": "recovery_post_leap", "start_frame": 121, "end_frame": 156, "is_leap": false}
+      ]
+    },
+    "hidden3_leap_skill.mp4": {
+      "fps": 30.0,
+      "total_frames": 408,
+      "duration_seconds": 13.60,
+      "active_leap_window": {
+        "start_frame": 270,
+        "end_frame": 340,
+        "start_seconds": 9.00,
+        "end_seconds": 11.33
+      },
+      "phases": [
+        {"phase": "idle_pre_leap", "start_frame": 0, "end_frame": 269, "is_leap": false},
+        {"phase": "leap_windup", "start_frame": 270, "end_frame": 285, "is_leap": true},
+        {"phase": "leap_airborne", "start_frame": 286, "end_frame": 320, "is_leap": true},
+        {"phase": "leap_landing", "start_frame": 321, "end_frame": 340, "is_leap": true},
+        {"phase": "recovery_post_leap", "start_frame": 341, "end_frame": 407, "is_leap": false}
+      ]
+    },
+    "hidden3_leap_skills.mp4": {
+      "fps": 30.0,
+      "total_frames": 77,
+      "duration_seconds": 2.57,
+      "active_leap_window": {
+        "start_frame": 1,
+        "end_frame": 55,
+        "start_seconds": 0.03,
+        "end_seconds": 1.83
+      },
+      "phases": [
+        {"phase": "idle_pre_leap", "start_frame": 0, "end_frame": 0, "is_leap": false},
+        {"phase": "leap_windup", "start_frame": 1, "end_frame": 10, "is_leap": true},
+        {"phase": "leap_airborne", "start_frame": 11, "end_frame": 40, "is_leap": true},
+        {"phase": "leap_landing", "start_frame": 41, "end_frame": 55, "is_leap": true},
+        {"phase": "recovery_post_leap", "start_frame": 56, "end_frame": 76, "is_leap": false}
+      ]
+    },
+    "hidden_leap+mark_comboskill.mp4": {
+      "fps": 30.0,
+      "total_frames": 258,
+      "duration_seconds": 8.60,
+      "active_leap_window": {
+        "start_frame": 157,
+        "end_frame": 230,
+        "start_seconds": 5.23,
+        "end_seconds": 7.67
+      },
+      "phases": [
+        {"phase": "mark_pre_combo", "start_frame": 0, "end_frame": 156, "is_leap": false},
+        {"phase": "leap_windup", "start_frame": 157, "end_frame": 168, "is_leap": true},
+        {"phase": "leap_airborne", "start_frame": 169, "end_frame": 205, "is_leap": true},
+        {"phase": "leap_landing", "start_frame": 206, "end_frame": 230, "is_leap": true},
+        {"phase": "recovery_post_leap", "start_frame": 231, "end_frame": 257, "is_leap": false}
+      ]
+    }
+  }
+}

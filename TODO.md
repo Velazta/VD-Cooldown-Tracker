@@ -189,15 +189,43 @@
 
 **Deliverable:** Integrated manual cooldown overlay prototype and Week 2 report.
 
-# Week 3 — Dataset and Initial Detection (Preview)
-- [ ] Record representative The Hidden gameplay using OBS.
-- [ ] Extract frames and timestamped clips.
-- [ ] Annotate positive Leap states.
-- [ ] Annotate hard negatives (normal attack, vault, stun, similar motion).
-- [ ] Split data by independent recordings/matches.
+# Week 3 — Dataset and Initial Detection (23–29 Nov)
+
+## Day 15 — Dataset Ingestion, Integrity & Multi-Modal Cataloging
+- [x] Scan and index raw multi-modal dataset files (18 MP4, 11 ingame PNG, 52 skin PNG, 5 WAV).
+- [x] Implement SHA-256 cryptographic provenance hashing in `tools/dataset_indexer.py`.
+- [x] Implement granular sub-category semantic tagging (`leap_solo`, `leap_mark_combo`, `hit_survivor`, `hit_wall`, `mark_miss`, dll.).
+- [x] Implement balanced Train/Val/Test split allocation to prevent data leakage.
+- [x] Implement video technical profiling (H.264 codec, bitrate kbps, aspect ratio 16:9).
+- [x] Implement skin HSV color profiling to mathematically quantify visual skin diversity across 13 skins.
+- [x] Implement acoustic FFT analysis (dominant frequency, spectral centroid, dBFS energy) using pure NumPy.
+- [x] Implement automated dataset integrity diagnostics (`--verify-integrity`) with frame decodability checks.
+- [x] Generate structured manifest `dataset/catalog.json` (schema version 2).
+- [x] Add automated unit and integration tests in `tests/test_dataset_pipeline.py` (6 tests passing).
+- [x] Day 15 Langkah 2: Frame Extraction & Temporal Action Slicing in `tools/extract_dataset.py` (967 balanced frames, motion diff profiling).
+- [x] Day 15 Langkah 3: Audio Spectrogram & Frequency Filter in `tools/audio_inspector.py` (FFT bandpass energy ratio, 100% accuracy separation).
+- [x] Day 15 Refinement: Temporal Action Ground Truth Windows in `dataset/temporal_annotations.json` (eliminates label noise from pre/post idle).
+- [x] Day 15 Refinement: Golden In-Game Keyframe Similarity Profiling in `tools/keyframe_profiler.py` (`dataset/keyframe_validation.json`).
+- [x] Add automated unit tests in `tests/test_frame_extractor.py`, `tests/test_audio_inspector.py`, and `tests/test_temporal_annotations.py` (108 tests total passing).
+
+## Day 16 — Spatial Bounding Box Annotation, Trajectory Kinematics & Template Library
+- [x] Implement spatial bounding box detection and normalization in `tools/spatial_annotator.py`.
+- [x] Extract 487 validated bounding boxes across extracted action frames in `dataset/annotations/bounding_boxes.json`.
+- [x] Export standard normalized YOLO `.txt` labels in `dataset/extracted/labels/` for future model training compatibility.
+- [x] Extract cropped Killer ROI patches for Leap airborne, windup, and landing in `dataset/extracted/killer_rois/`.
+- [x] Implement kinematic parabolic trajectory analyzer in `tools/trajectory_analyzer.py`.
+- [x] Mathematically prove Leap parabolic curvature signature ($R^2 \ge 0.54 - 0.80$, $\Delta Y = 290 - 543\text{ px}$) vs linear attack motion in `dataset/trajectory_profiles.json`.
+- [x] Extract 14 canonical multi-scale visual action templates in `dataset/templates/the_hidden/` via `tools/template_builder.py`.
+- [x] Add automated unit and integration tests in `tests/test_spatial_annotator.py` and `tests/test_trajectory_analyzer.py` (112 tests total passing).
+
+**Deliverable:** Spatial bounding box annotations, YOLO labels, kinematic parabolic validation, and canonical template library.
+
+## Day 17 — Template Matching & Motion Baseline (Preview)
 - [ ] Establish template-matching baseline.
 - [ ] Evaluate whether object detection is necessary.
 - [ ] Train a model only if baseline is insufficient.
+
+## Day 18 — Evaluation & Error Analysis (Preview)
 - [ ] Evaluate on unseen gameplay footage.
 - [ ] Record precision, recall, false positives, and false negatives.
 

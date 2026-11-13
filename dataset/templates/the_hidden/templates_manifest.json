@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "killer_id": "the_hidden",
+  "total_templates": 14,
+  "templates": [
+    {
+      "template_id": "template_leap_airborne_var1",
+      "phase": "leap_airborne",
+      "action_type": "leap_action",
+      "source_frame_id": "hidden_leap+mark_comboskill_f00177.jpg",
+      "width": 481,
+      "height": 469,
+      "aspect_ratio": 1.026,
+      "relative_path": "templates/the_hidden/template_leap_airborne_var1.png"
+    },
+    {
+      "template_id": "template_leap_airborne_var2",
+      "phase": "leap_airborne",
+      "action_type": "leap_action",
+      "source_frame_id": "hidden_leap+mark_comboskill_f00183.jpg",
+      "width": 399,
+      "height": 457,
+      "aspect_ratio": 0.873,
+      "relative_path": "templates/the_hidden/template_leap_airborne_var2.png"
+    },
+    {
+      "template_id": "template_leap_windup_var1",
+      "phase": "leap_windup",
+      "action_type": "leap_action",
+      "source_frame_id": "hidden3_leap_skills_f00003.jpg",
+      "width": 194,
+      "height": 194,
+      "aspect_ratio": 1.0,
+      "relative_path": "templates/the_hidden/template_leap_windup_var1.png"
+    },
+    {
+      "template_id": "template_leap_windup_var2",
+      "phase": "leap_windup",
+      "action_type": "leap_action",
+      "source_frame_id": "hidden3_leap_skills_f00006.jpg",
+      "width": 207,
+      "height": 185,
+      "aspect_ratio": 1.119,
+      "relative_path": "templates/the_hidden/template_leap_windup_var2.png"
+    },
+    {
+      "template_id": "template_leap_landing_var1",
+      "phase": "leap_landing",
+      "action_type": "leap_action",
+      "source_frame_id": "hidden1_leap_skill_ref2_f00054.jpg",
+      "width": 252,
+      "height": 271,
+      "aspect_ratio": 0.93,
+      "relative_path": "templates/the_hidden/template_leap_landing_var1.png"
+    },
+    {
+      "template_id": "template_leap_landing_var2",
+      "phase": "leap_landing",
+      "action_type": "leap_action",
+      "source_frame_id": "hidden_leap+mark_comboskill_f00228.jpg",
+      "width": 169,
+      "height": 249,
+      "aspect_ratio": 0.679,
+      "relative_path": "templates/the_hidden/template_leap_landing_var2.png"
+    },
+    {
+      "template_id": "template_hit_survivor_var1",
+      "phase": "hit_survivor",
+      "action_type": "basic_attack",
+      "source_frame_id": "hidden1_basic_hit_survivor_f00108.jpg",
+      "width": 338,
+      "height": 374,
+      "aspect_ratio": 0.904,
+      "relative_path": "templates/the_hidden/template_hit_survivor_var1.png"
+    },
+    {
+      "template_id": "template_hit_survivor_var2",
+      "phase": "hit_survivor",
+      "action_type": "basic_attack",
+      "source_frame_id": "hidden1_basic_hit_survivor_f00120.jpg",
+      "width": 297,
+      "height": 369,
+      "aspect_ratio": 0.805,
+      "relative_path": "templates/the_hidden/template_hit_survivor_var2.png"
+    },
+    {
+      "template_id": "template_hit_wall_var1",
+      "phase": "hit_wall",
+      "action_type": "basic_attack",
+      "source_frame_id": "hidden1_basic_hit_wall_f00087.jpg",
+      "width": 204,
+      "height": 331,
+      "aspect_ratio": 0.616,
+      "relative_path": "templates/the_hidden/template_hit_wall_var1.png"
+    },
+    {
+      "template_id": "template_hit_wall_var2",
+      "phase": "hit_wall",
+      "action_type": "basic_attack",
+      "source_frame_id": "hidden1_basic_hit_wall_f00090.jpg",
+      "width": 167,
+      "height": 341,
+      "aspect_ratio": 0.49,
+      "relative_path": "templates/the_hidden/template_hit_wall_var2.png"
+    },
+    {
+      "template_id": "template_mark_solo_var1",
+      "phase": "mark_solo",
+      "action_type": "mark_action",
+      "source_frame_id": "hidden2_mark_skill_f00069.jpg",
+      "width": 238,
+      "height": 258,
+      "aspect_ratio": 0.922,
+      "relative_path": "templates/the_hidden/template_mark_solo_var1.png"
+    },
+    {
+      "template_id": "template_mark_solo_var2",
+      "phase": "mark_solo",
+      "action_type": "mark_action",
+      "source_frame_id": "hidden2_mark_skill_f00066.jpg",
+      "width": 271,
+      "height": 286,
+      "aspect_ratio": 0.948,
+      "relative_path": "templates/the_hidden/template_mark_solo_var2.png"
+    },
+    {
+      "template_id": "template_idle_pre_leap_var1",
+      "phase": "idle_pre_leap",
+      "action_type": "idle_baseline",
+      "source_frame_id": "hidden3_leap_skill_f00003.jpg",
+      "width": 194,
+      "height": 194,
+      "aspect_ratio": 1.0,
+      "relative_path": "templates/the_hidden/template_idle_pre_leap_var1.png"
+    },
+    {
+      "template_id": "template_idle_pre_leap_var2",
+      "phase": "idle_pre_leap",
+      "action_type": "idle_baseline",
+      "source_frame_id": "hidden3_leap_skill_f00006.jpg",
+      "width": 207,
+      "height": 185,
+      "aspect_ratio": 1.119,
+      "relative_path": "templates/the_hidden/template_idle_pre_leap_var2.png"
+    }
+  ]
+}

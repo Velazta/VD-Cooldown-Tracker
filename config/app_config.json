@@ -10,7 +10,7 @@
     "backend": "windows_capture",
     "target_fps": 30,
     "roi": {
-      "x": 330,
+      "x": 310,
       "y": 150,
       "width": 1280,
       "height": 780,
@@ -18,13 +18,18 @@
     }
   },
   "overlay": {
+    "x": 314,
+    "y": 57,
+    "width": 220,
+    "height": 220,
+    "opacity": 0.9,
+    "visible": true,
     "always_on_top": true,
     "click_through": true,
-    "opacity": 0.9,
     "fps_display": true,
     "position": {
-      "x": 100,
-      "y": 100
+      "x": 314,
+      "y": 57
     }
   },
   "active_killer_id": "veil"

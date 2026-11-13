@@ -1,0 +1,1556 @@
+{
+  "schema_version": 2,
+  "killer_id": "the_hidden",
+  "total_videos": 18,
+  "total_video_frames": 5468,
+  "total_video_duration_seconds": 173.89,
+  "total_ingame_images": 11,
+  "total_skin_variations": 13,
+  "total_skin_images": 52,
+  "total_audio_samples": 5,
+  "train_samples_count": 17,
+  "val_samples_count": 9,
+  "test_samples_count": 8,
+  "videos": [
+    {
+      "file_name": "hidden1_basic_hit.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden1_basic_hit.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 60.0,
+      "frame_count": 164,
+      "duration_seconds": 2.73,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 10889.6,
+      "category": "basic_attack",
+      "sub_category": "hit_air",
+      "split": "train",
+      "is_positive_leap": false,
+      "file_size_bytes": 3720613,
+      "sha256": "022925b6273b5743759a1b8f6a026f2a0449ef93095a2c656699e7551d2a625b"
+    },
+    {
+      "file_name": "hidden1_basic_hit_survivor.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden1_basic_hit_survivor.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 60.0,
+      "frame_count": 338,
+      "duration_seconds": 5.63,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 10988.21,
+      "category": "basic_attack",
+      "sub_category": "hit_survivor",
+      "split": "train",
+      "is_positive_leap": false,
+      "file_size_bytes": 7737528,
+      "sha256": "801abe3196d41a491ba7f3abe6dbfe3367cf858c8feb24eb74f998cd5c001642"
+    },
+    {
+      "file_name": "hidden1_basic_hit_wall.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden1_basic_hit_wall.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 133,
+      "duration_seconds": 4.43,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 7756.66,
+      "category": "basic_attack",
+      "sub_category": "hit_wall",
+      "split": "val",
+      "is_positive_leap": false,
+      "file_size_bytes": 4298480,
+      "sha256": "e0b22bd4acadd869701b938810bd4e1acfe590ed842ebb70a1866854a34cf00d"
+    },
+    {
+      "file_name": "hidden1_leap_skill.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden1_leap_skill.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 167,
+      "duration_seconds": 5.57,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 7790.38,
+      "category": "leap_action",
+      "sub_category": "leap_solo",
+      "split": "train",
+      "is_positive_leap": true,
+      "file_size_bytes": 5420806,
+      "sha256": "a253ccccabbff512cbcfa0d6e057d0e9a9cf286c3b426e9f618d962d33ceeb8c"
+    },
+    {
+      "file_name": "hidden1_leap_skill_ref2.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden1_leap_skill_ref2.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 129,
+      "duration_seconds": 4.3,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 8103.09,
+      "category": "leap_action",
+      "sub_category": "leap_solo",
+      "split": "train",
+      "is_positive_leap": true,
+      "file_size_bytes": 4355410,
+      "sha256": "7db54b5102f75a96767a1c3debcf2cf7d7c8649d7004e6112413607fe4991c48"
+    },
+    {
+      "file_name": "hidden1_mark_skill_hitsurvivor.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden1_mark_skill_hitsurvivor.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 143,
+      "duration_seconds": 4.77,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 8975.31,
+      "category": "mark_action",
+      "sub_category": "mark_hit_survivor",
+      "split": "val",
+      "is_positive_leap": false,
+      "file_size_bytes": 5347788,
+      "sha256": "4230c01a801ce455fe49af8e0e1c258d9a4602dd04802154e29bb3cf1616ec0a"
+    },
+    {
+      "file_name": "hidden1_mark_skill_nohitsurvivor.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden1_mark_skill_nohitsurvivor.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 139,
+      "duration_seconds": 4.63,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 7584.03,
+      "category": "mark_action",
+      "sub_category": "mark_miss",
+      "split": "val",
+      "is_positive_leap": false,
+      "file_size_bytes": 4392416,
+      "sha256": "0777f754070fdc804be35c611f82984e31ed8e3de2031bdbc4d358335875b538"
+    },
+    {
+      "file_name": "hidden2_leap_skill.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden2_leap_skill.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 157,
+      "duration_seconds": 5.23,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 8299.15,
+      "category": "leap_action",
+      "sub_category": "leap_solo",
+      "split": "train",
+      "is_positive_leap": true,
+      "file_size_bytes": 5429026,
+      "sha256": "461ed096da80ec543e787860a6c804b1451cade56aca5299cf60bc89bd960c10"
+    },
+    {
+      "file_name": "hidden2_mark_skill.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden2_mark_skill.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 134,
+      "duration_seconds": 4.47,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 7873.16,
+      "category": "mark_action",
+      "sub_category": "mark_solo",
+      "split": "train",
+      "is_positive_leap": false,
+      "file_size_bytes": 4395847,
+      "sha256": "49853aa794adec20693c60bbe4cac02ebe2a08eb19a149f9cb2a894f19f27419"
+    },
+    {
+      "file_name": "hidden3_leap_skill.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden3_leap_skill.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 408,
+      "duration_seconds": 13.6,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 7169.87,
+      "category": "leap_action",
+      "sub_category": "leap_solo",
+      "split": "val",
+      "is_positive_leap": true,
+      "file_size_bytes": 12188782,
+      "sha256": "8e1a8a2a7305a3cc5de0d1625c71f12280a2c442e0f808f9fbf050474cdabc6f"
+    },
+    {
+      "file_name": "hidden3_leap_skills.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden3_leap_skills.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 77,
+      "duration_seconds": 2.57,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 6273.53,
+      "category": "leap_action",
+      "sub_category": "leap_multi",
+      "split": "val",
+      "is_positive_leap": true,
+      "file_size_bytes": 2012757,
+      "sha256": "e3b835cac39aeb20eab7fa4d46c1396b8d0f954d24c1cc8d15aea7f67aaca77d"
+    },
+    {
+      "file_name": "hidden_chasing+mark_skill.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden_chasing+mark_skill.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 225,
+      "duration_seconds": 7.5,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 6067.19,
+      "category": "mark_action",
+      "sub_category": "chase_and_mark",
+      "split": "test",
+      "is_positive_leap": false,
+      "file_size_bytes": 5687993,
+      "sha256": "09f677117514800f6e1553cd3c86a0f6882ee640b9b93f37b4eacc1d905e792c"
+    },
+    {
+      "file_name": "hidden_chasing2_skill.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden_chasing2_skill.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 1418,
+      "duration_seconds": 47.27,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 4845.26,
+      "category": "chasing_movement",
+      "sub_category": "chase_running",
+      "split": "test",
+      "is_positive_leap": false,
+      "file_size_bytes": 28627410,
+      "sha256": "3924c2c8cfadb8ee65a82d0b8907ee8e1cdcca572aa871a3c435002390aa725a"
+    },
+    {
+      "file_name": "hidden_chasing_skill.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden_chasing_skill.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 1006,
+      "duration_seconds": 33.53,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 7411.84,
+      "category": "chasing_movement",
+      "sub_category": "chase_running",
+      "split": "test",
+      "is_positive_leap": false,
+      "file_size_bytes": 31067960,
+      "sha256": "2d566aa59154e90bfc5884ea0df39ff889e98080fb6b8a30d9224a297cefec89"
+    },
+    {
+      "file_name": "hidden_leap+mark_comboskill.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden_leap+mark_comboskill.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 258,
+      "duration_seconds": 8.6,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 9162.19,
+      "category": "leap_action",
+      "sub_category": "leap_mark_combo",
+      "split": "test",
+      "is_positive_leap": true,
+      "file_size_bytes": 9849352,
+      "sha256": "207e26b7bb6f404233480656cdaafd305eed0807b586c34753077b0656a1cd7a"
+    },
+    {
+      "file_name": "hidden_mark_skill_ref2.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden_mark_skill_ref2.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 126,
+      "duration_seconds": 4.2,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 8311.79,
+      "category": "mark_action",
+      "sub_category": "mark_solo",
+      "split": "train",
+      "is_positive_leap": false,
+      "file_size_bytes": 4363690,
+      "sha256": "ab4a6b4ed218edc6fd3200906a1ff246fe3b5361d2530117b9d016bb64b45ec7"
+    },
+    {
+      "file_name": "hidden_movement_chasing.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden_movement_chasing.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 304,
+      "duration_seconds": 10.13,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 9439.69,
+      "category": "chasing_movement",
+      "sub_category": "chase_running",
+      "split": "test",
+      "is_positive_leap": false,
+      "file_size_bytes": 11956943,
+      "sha256": "556e163806760bead090dcbe9141de85826d222565f2d9cadb54836d2249679c"
+    },
+    {
+      "file_name": "hidden_movement_chasing2.mp4",
+      "relative_path": "database/dataset/HIDDEN/MP4/SURVIVOR CAM/hidden_movement_chasing2.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "frame_count": 142,
+      "duration_seconds": 4.73,
+      "codec": "h264",
+      "aspect_ratio": "16:9",
+      "bitrate_kbps": 8926.83,
+      "category": "chasing_movement",
+      "sub_category": "chase_running",
+      "split": "test",
+      "is_positive_leap": false,
+      "file_size_bytes": 5281708,
+      "sha256": "6a481335ef38772628d678242c662e65be159cc00e0014ce868d4c9993678f76"
+    }
+  ],
+  "ingame_images": [
+    {
+      "file_name": "hidden_leap.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/INGAME/hidden_leap.png",
+      "width": 1087,
+      "height": 866,
+      "category": "leap",
+      "sub_category": "leap_keyframe",
+      "split": "train",
+      "is_positive_leap": true,
+      "file_size_bytes": 1237479,
+      "sha256": "cebb9ecdf3cc7f4c8a5041fe60d7d8f48fa666a2d8a64ca00b53aab96502f499"
+    },
+    {
+      "file_name": "hidden_leap2.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/INGAME/hidden_leap2.png",
+      "width": 844,
+      "height": 795,
+      "category": "leap",
+      "sub_category": "leap_keyframe",
+      "split": "train",
+      "is_positive_leap": true,
+      "file_size_bytes": 903205,
+      "sha256": "7418ac26cfb3e6c7ef135ef4c75633e1fd76f38d5b185b1b8c9f5d1a081d05d0"
+    },
+    {
+      "file_name": "hidden_leap3.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/INGAME/hidden_leap3.png",
+      "width": 1104,
+      "height": 878,
+      "category": "leap",
+      "sub_category": "leap_keyframe",
+      "split": "train",
+      "is_positive_leap": true,
+      "file_size_bytes": 1257561,
+      "sha256": "b1337e1191e414e4c93e03229306bc582b1d592aa114ac765328867c5abe8bbf"
+    },
+    {
+      "file_name": "hidden_leap4.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/INGAME/hidden_leap4.png",
+      "width": 805,
+      "height": 809,
+      "category": "leap",
+      "sub_category": "leap_keyframe",
+      "split": "test",
+      "is_positive_leap": true,
+      "file_size_bytes": 619484,
+      "sha256": "6b3675dbc03b06cc301ba3016e47e5ffd438f8b27db82eb2fc91920d1275fd92"
+    },
+    {
+      "file_name": "hidden_mark.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/INGAME/hidden_mark.png",
+      "width": 1236,
+      "height": 822,
+      "category": "mark",
+      "sub_category": "mark_keyframe",
+      "split": "train",
+      "is_positive_leap": false,
+      "file_size_bytes": 1345679,
+      "sha256": "41361fd0d5384479cb99aa50e5d161ba8378e0229af04bd5e77b4610523897d3"
+    },
+    {
+      "file_name": "hidden_mark2.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/INGAME/hidden_mark2.png",
+      "width": 1067,
+      "height": 745,
+      "category": "mark",
+      "sub_category": "mark_keyframe",
+      "split": "train",
+      "is_positive_leap": false,
+      "file_size_bytes": 976408,
+      "sha256": "7caf24dd1cd2666e41a09056572250de8ac726416d2a1ad5e4bcfd2f78f37146"
+    },
+    {
+      "file_name": "hidden_mark3.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/INGAME/hidden_mark3.png",
+      "width": 1315,
+      "height": 787,
+      "category": "mark",
+      "sub_category": "mark_keyframe",
+      "split": "train",
+      "is_positive_leap": false,
+      "file_size_bytes": 1388843,
+      "sha256": "2742c7baa5b91875b1c931bf8acfa89e5d6657a035833ced2abb383a2b7a4350"
+    },
+    {
+      "file_name": "hidden_mark4.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/INGAME/hidden_mark4.png",
+      "width": 1153,
+      "height": 770,
+      "category": "mark",
+      "sub_category": "mark_keyframe",
+      "split": "train",
+      "is_positive_leap": false,
+      "file_size_bytes": 1191357,
+      "sha256": "e27717f3f1e2a445ce527d0e8a3bbfa430762beb1d7c1df71137234ff9d7b0e9"
+    },
+    {
+      "file_name": "hidden_mark5.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/INGAME/hidden_mark5.png",
+      "width": 1446,
+      "height": 808,
+      "category": "mark",
+      "sub_category": "mark_keyframe",
+      "split": "val",
+      "is_positive_leap": false,
+      "file_size_bytes": 1567439,
+      "sha256": "ae10f2c17ddcdc80dcae0d82e54cbda160ed0ed9e1f67276632fe729548a3313"
+    },
+    {
+      "file_name": "hidden_mark6.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/INGAME/hidden_mark6.png",
+      "width": 1516,
+      "height": 839,
+      "category": "mark",
+      "sub_category": "mark_keyframe",
+      "split": "val",
+      "is_positive_leap": false,
+      "file_size_bytes": 1699201,
+      "sha256": "bff3cc9b25c1d02e8151694dada03c4c09b53beaca5ff0496f309db399b67fe2"
+    },
+    {
+      "file_name": "hidden_stay.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/INGAME/hidden_stay.png",
+      "width": 928,
+      "height": 770,
+      "category": "stay",
+      "sub_category": "idle_keyframe",
+      "split": "train",
+      "is_positive_leap": false,
+      "file_size_bytes": 949808,
+      "sha256": "a02b0094042597ae8d93424a83801574ace68565cad60c8141624c30ed352427"
+    }
+  ],
+  "skins": [
+    {
+      "skin_id": "skin 1",
+      "file_name": "Screenshot 2026-11-12 222327.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 1/Screenshot 2026-11-12 222327.png",
+      "width": 684,
+      "height": 836,
+      "mean_hsv": [
+        62.05,
+        175.6,
+        65.34
+      ],
+      "mean_bgr": [
+        33,
+        32,
+        61
+      ],
+      "file_size_bytes": 762555,
+      "sha256": "4b4f1e9f9fb06e50e4d473cb3e818ddebecd44e3085f3d4141756dc27d46d592"
+    },
+    {
+      "skin_id": "skin 1",
+      "file_name": "Screenshot 2026-11-12 222341.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 1/Screenshot 2026-11-12 222341.png",
+      "width": 532,
+      "height": 862,
+      "mean_hsv": [
+        57.35,
+        176.36,
+        61.43
+      ],
+      "mean_bgr": [
+        32,
+        30,
+        57
+      ],
+      "file_size_bytes": 596317,
+      "sha256": "2033257e2e9fd41ff13bedf4233790c79333d1763154c1c0000793c82b9267ba"
+    },
+    {
+      "skin_id": "skin 1",
+      "file_name": "Screenshot 2026-11-12 222346.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 1/Screenshot 2026-11-12 222346.png",
+      "width": 551,
+      "height": 741,
+      "mean_hsv": [
+        70.37,
+        169.54,
+        70.88
+      ],
+      "mean_bgr": [
+        40,
+        36,
+        65
+      ],
+      "file_size_bytes": 541649,
+      "sha256": "64610de83b5d945dde21953811697ff63745188cd936508f1f24a615c26da654"
+    },
+    {
+      "skin_id": "skin 1",
+      "file_name": "Screenshot 2026-11-12 222351.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 1/Screenshot 2026-11-12 222351.png",
+      "width": 593,
+      "height": 780,
+      "mean_hsv": [
+        62.47,
+        176.54,
+        63.23
+      ],
+      "mean_bgr": [
+        31,
+        31,
+        60
+      ],
+      "file_size_bytes": 551712,
+      "sha256": "ce58d0f0f5bbffe04a309f6ec4ea3c2e56065ba868218402b7f40ee4f28ad900"
+    },
+    {
+      "skin_id": "skin 10",
+      "file_name": "Screenshot 2026-11-12 223714.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 10/Screenshot 2026-11-12 223714.png",
+      "width": 671,
+      "height": 758,
+      "mean_hsv": [
+        51.16,
+        188.92,
+        44.46
+      ],
+      "mean_bgr": [
+        20,
+        21,
+        44
+      ],
+      "file_size_bytes": 532305,
+      "sha256": "56088310252c6b0250ac954ad82df64d3fc48a8a4df48a5a4cca7f2c116d03cd"
+    },
+    {
+      "skin_id": "skin 10",
+      "file_name": "Screenshot 2026-11-12 223746.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 10/Screenshot 2026-11-12 223746.png",
+      "width": 632,
+      "height": 740,
+      "mean_hsv": [
+        56.95,
+        181.2,
+        51.05
+      ],
+      "mean_bgr": [
+        29,
+        25,
+        50
+      ],
+      "file_size_bytes": 519861,
+      "sha256": "6c3097075d087eb0ac68967c591b33140645c9438b16136ae0afff9271199134"
+    },
+    {
+      "skin_id": "skin 10",
+      "file_name": "Screenshot 2026-11-12 223751.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 10/Screenshot 2026-11-12 223751.png",
+      "width": 596,
+      "height": 739,
+      "mean_hsv": [
+        70.4,
+        174.88,
+        50.24
+      ],
+      "mean_bgr": [
+        30,
+        24,
+        47
+      ],
+      "file_size_bytes": 504125,
+      "sha256": "504f4c666e44f7e583ed7e2f144429070ce7619e91abcea126dea5b3bbd20f0a"
+    },
+    {
+      "skin_id": "skin 10",
+      "file_name": "Screenshot 2026-11-12 223802.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 10/Screenshot 2026-11-12 223802.png",
+      "width": 568,
+      "height": 739,
+      "mean_hsv": [
+        64.85,
+        180.91,
+        44.71
+      ],
+      "mean_bgr": [
+        23,
+        21,
+        43
+      ],
+      "file_size_bytes": 444590,
+      "sha256": "0a4d4789c46631edb35c12a447d168a4080bc8f0b7d75bf22df91d8089c4d6a2"
+    },
+    {
+      "skin_id": "skin 11",
+      "file_name": "Screenshot 2026-11-12 223825.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 11/Screenshot 2026-11-12 223825.png",
+      "width": 672,
+      "height": 792,
+      "mean_hsv": [
+        64.01,
+        181.77,
+        51.77
+      ],
+      "mean_bgr": [
+        22,
+        23,
+        49
+      ],
+      "file_size_bytes": 598835,
+      "sha256": "8b911833897a69daed631d3b1307d8b2d67d48574aeae7aaa7de990d108ce828"
+    },
+    {
+      "skin_id": "skin 11",
+      "file_name": "Screenshot 2026-11-12 224050.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 11/Screenshot 2026-11-12 224050.png",
+      "width": 586,
+      "height": 814,
+      "mean_hsv": [
+        52.95,
+        189.66,
+        46.43
+      ],
+      "mean_bgr": [
+        14,
+        21,
+        45
+      ],
+      "file_size_bytes": 511972,
+      "sha256": "b2102869530aab10afadd89b0ba6e34b34ed9dbe32a10684ab3def3ee3c9eef1"
+    },
+    {
+      "skin_id": "skin 11",
+      "file_name": "Screenshot 2026-11-12 224055.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 11/Screenshot 2026-11-12 224055.png",
+      "width": 598,
+      "height": 738,
+      "mean_hsv": [
+        67.09,
+        182.59,
+        43.01
+      ],
+      "mean_bgr": [
+        17,
+        20,
+        43
+      ],
+      "file_size_bytes": 426653,
+      "sha256": "9347b9d4af1db6501be69f9d1a622b30b4dbbeaccac90bd8ae4a9143306ce684"
+    },
+    {
+      "skin_id": "skin 11",
+      "file_name": "Screenshot 2026-11-12 224100.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 11/Screenshot 2026-11-12 224100.png",
+      "width": 584,
+      "height": 753,
+      "mean_hsv": [
+        58.47,
+        188.69,
+        45.95
+      ],
+      "mean_bgr": [
+        16,
+        20,
+        43
+      ],
+      "file_size_bytes": 443216,
+      "sha256": "baeaa688908045d809c414fd4b5e1ecbd6b3b80f748f0b3bd362248f8ed6d9cd"
+    },
+    {
+      "skin_id": "skin 12",
+      "file_name": "Screenshot 2026-11-12 224122.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 12/Screenshot 2026-11-12 224122.png",
+      "width": 739,
+      "height": 851,
+      "mean_hsv": [
+        61.52,
+        185.03,
+        42.73
+      ],
+      "mean_bgr": [
+        15,
+        19,
+        43
+      ],
+      "file_size_bytes": 684540,
+      "sha256": "99aba3b4257162cfa82041ba15659edcf834960d9ab750c3b0b23c0f2c9a2e97"
+    },
+    {
+      "skin_id": "skin 12",
+      "file_name": "Screenshot 2026-11-12 224127.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 12/Screenshot 2026-11-12 224127.png",
+      "width": 633,
+      "height": 875,
+      "mean_hsv": [
+        66.54,
+        182.75,
+        38.98
+      ],
+      "mean_bgr": [
+        15,
+        17,
+        39
+      ],
+      "file_size_bytes": 577730,
+      "sha256": "b79d5bff789fc42ce084e22a595a06489c8b698ad5a25ac0978c9360e0d1af13"
+    },
+    {
+      "skin_id": "skin 12",
+      "file_name": "Screenshot 2026-11-12 224135.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 12/Screenshot 2026-11-12 224135.png",
+      "width": 566,
+      "height": 780,
+      "mean_hsv": [
+        64.33,
+        185.73,
+        29.98
+      ],
+      "mean_bgr": [
+        9,
+        13,
+        30
+      ],
+      "file_size_bytes": 394052,
+      "sha256": "9b09437fd91e3b7f61124a400c47f6884695a626993f52ce94d2a36a650caa3b"
+    },
+    {
+      "skin_id": "skin 12",
+      "file_name": "Screenshot 2026-11-12 224141.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 12/Screenshot 2026-11-12 224141.png",
+      "width": 644,
+      "height": 778,
+      "mean_hsv": [
+        67.23,
+        183.43,
+        39.25
+      ],
+      "mean_bgr": [
+        14,
+        17,
+        39
+      ],
+      "file_size_bytes": 500682,
+      "sha256": "0ad79c7384a6698f3a07bef424bb7ce55a263befbd5a3704dc1ca08fdadb985e"
+    },
+    {
+      "skin_id": "skin 13",
+      "file_name": "Screenshot 2026-11-12 230350.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 13/Screenshot 2026-11-12 230350.png",
+      "width": 663,
+      "height": 813,
+      "mean_hsv": [
+        70.29,
+        182.36,
+        55.61
+      ],
+      "mean_bgr": [
+        24,
+        26,
+        55
+      ],
+      "file_size_bytes": 661167,
+      "sha256": "5b7687fc3a091f6861b49a3832688c76592da56d220ec1e0683d719fff4bca36"
+    },
+    {
+      "skin_id": "skin 13",
+      "file_name": "Screenshot 2026-11-12 230358.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 13/Screenshot 2026-11-12 230358.png",
+      "width": 633,
+      "height": 827,
+      "mean_hsv": [
+        63.21,
+        183.8,
+        54.43
+      ],
+      "mean_bgr": [
+        24,
+        26,
+        54
+      ],
+      "file_size_bytes": 610698,
+      "sha256": "32b2be5f57ec6c98fe5ad831e66467ea3323011be696e2215711fd03399cd3a8"
+    },
+    {
+      "skin_id": "skin 13",
+      "file_name": "Screenshot 2026-11-12 230403.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 13/Screenshot 2026-11-12 230403.png",
+      "width": 588,
+      "height": 796,
+      "mean_hsv": [
+        68.76,
+        182.25,
+        57.67
+      ],
+      "mean_bgr": [
+        26,
+        28,
+        57
+      ],
+      "file_size_bytes": 566973,
+      "sha256": "a0825e8da9c8795a436249c28df6285fe5f00a6594997125fc548a5b9f500a60"
+    },
+    {
+      "skin_id": "skin 13",
+      "file_name": "Screenshot 2026-11-12 230408.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 13/Screenshot 2026-11-12 230408.png",
+      "width": 592,
+      "height": 797,
+      "mean_hsv": [
+        70.83,
+        181.53,
+        55.83
+      ],
+      "mean_bgr": [
+        26,
+        26,
+        55
+      ],
+      "file_size_bytes": 595208,
+      "sha256": "6ec9194ed8868a17a4a55a43d32e3eebdb68154e1904db3842724c9233a1db5b"
+    },
+    {
+      "skin_id": "skin 2",
+      "file_name": "Screenshot 2026-11-12 222407.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 2/Screenshot 2026-11-12 222407.png",
+      "width": 685,
+      "height": 784,
+      "mean_hsv": [
+        57.85,
+        186.76,
+        33.34
+      ],
+      "mean_bgr": [
+        7,
+        14,
+        33
+      ],
+      "file_size_bytes": 520272,
+      "sha256": "36e264cf2ccda9e2d7c616ca82893753d8b2bde1875d179fcd95586ade981a19"
+    },
+    {
+      "skin_id": "skin 2",
+      "file_name": "Screenshot 2026-11-12 222412.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 2/Screenshot 2026-11-12 222412.png",
+      "width": 500,
+      "height": 778,
+      "mean_hsv": [
+        57.67,
+        187.08,
+        28.45
+      ],
+      "mean_bgr": [
+        6,
+        12,
+        28
+      ],
+      "file_size_bytes": 339509,
+      "sha256": "56142792b2eff95ad91b999866ca71b6be5b743b52c5138e978459fb50abc19a"
+    },
+    {
+      "skin_id": "skin 2",
+      "file_name": "Screenshot 2026-11-12 222429.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 2/Screenshot 2026-11-12 222429.png",
+      "width": 552,
+      "height": 715,
+      "mean_hsv": [
+        71.8,
+        185.53,
+        30.21
+      ],
+      "mean_bgr": [
+        7,
+        13,
+        30
+      ],
+      "file_size_bytes": 348454,
+      "sha256": "772e049a81a25ca1a1142eb1e8a080beeef655a36db033b481b7d6ac6dabb8d2"
+    },
+    {
+      "skin_id": "skin 2",
+      "file_name": "Screenshot 2026-11-12 222437.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 2/Screenshot 2026-11-12 222437.png",
+      "width": 547,
+      "height": 745,
+      "mean_hsv": [
+        62.49,
+        185.5,
+        31.74
+      ],
+      "mean_bgr": [
+        7,
+        14,
+        32
+      ],
+      "file_size_bytes": 356700,
+      "sha256": "422fe36c0b9d71eb5f8d73ec497988ce9413b7cd709df9a32320f8893b9b27c8"
+    },
+    {
+      "skin_id": "skin 3",
+      "file_name": "Screenshot 2026-11-12 222507.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 3/Screenshot 2026-11-12 222507.png",
+      "width": 699,
+      "height": 802,
+      "mean_hsv": [
+        49.92,
+        189.94,
+        48.63
+      ],
+      "mean_bgr": [
+        16,
+        20,
+        48
+      ],
+      "file_size_bytes": 618769,
+      "sha256": "ffad621a478aa0c235e62931fd5c34e9e3d0270b040e61938d39ebae5bc21125"
+    },
+    {
+      "skin_id": "skin 3",
+      "file_name": "Screenshot 2026-11-12 222513.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 3/Screenshot 2026-11-12 222513.png",
+      "width": 537,
+      "height": 799,
+      "mean_hsv": [
+        44.14,
+        188.81,
+        44.57
+      ],
+      "mean_bgr": [
+        16,
+        18,
+        44
+      ],
+      "file_size_bytes": 430474,
+      "sha256": "a8993bf31c3c9d5f86c1193373040d6252e1116f6dc93eb5dc9affabd6d965fb"
+    },
+    {
+      "skin_id": "skin 3",
+      "file_name": "Screenshot 2026-11-12 222521.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 3/Screenshot 2026-11-12 222521.png",
+      "width": 558,
+      "height": 746,
+      "mean_hsv": [
+        27.41,
+        196.31,
+        55.71
+      ],
+      "mean_bgr": [
+        14,
+        20,
+        56
+      ],
+      "file_size_bytes": 427269,
+      "sha256": "2db7fe1b604e76b1d65ca813e8ed40dde8d01de48724d4e94faeabd3f80f3c80"
+    },
+    {
+      "skin_id": "skin 3",
+      "file_name": "Screenshot 2026-11-12 222530.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 3/Screenshot 2026-11-12 222530.png",
+      "width": 543,
+      "height": 762,
+      "mean_hsv": [
+        45.67,
+        192.0,
+        51.4
+      ],
+      "mean_bgr": [
+        15,
+        21,
+        51
+      ],
+      "file_size_bytes": 458754,
+      "sha256": "3de85952854506b7588b7c69d48de6aa226d74215c26cbf12fc5267deb96c60b"
+    },
+    {
+      "skin_id": "skin 4",
+      "file_name": "Screenshot 2026-11-12 222616.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 4/Screenshot 2026-11-12 222616.png",
+      "width": 677,
+      "height": 757,
+      "mean_hsv": [
+        46.62,
+        199.69,
+        41.36
+      ],
+      "mean_bgr": [
+        12,
+        17,
+        41
+      ],
+      "file_size_bytes": 483992,
+      "sha256": "3b77e9f9eb32be98f2d0ec921add20c1dfa93e1e284672d38f3272d3cb5b9e2d"
+    },
+    {
+      "skin_id": "skin 4",
+      "file_name": "Screenshot 2026-11-12 222623.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 4/Screenshot 2026-11-12 222623.png",
+      "width": 594,
+      "height": 801,
+      "mean_hsv": [
+        43.34,
+        198.17,
+        42.32
+      ],
+      "mean_bgr": [
+        13,
+        18,
+        42
+      ],
+      "file_size_bytes": 462764,
+      "sha256": "64e674381409da270b0ccdb1436124603aebbd9f1e487257c82666110dd92250"
+    },
+    {
+      "skin_id": "skin 4",
+      "file_name": "Screenshot 2026-11-12 222630.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 4/Screenshot 2026-11-12 222630.png",
+      "width": 598,
+      "height": 740,
+      "mean_hsv": [
+        38.44,
+        196.89,
+        38.13
+      ],
+      "mean_bgr": [
+        11,
+        17,
+        38
+      ],
+      "file_size_bytes": 398730,
+      "sha256": "288acd7bfdea104c5720a253bc208ad975de34bc71ea218255a20f2adbb80ab5"
+    },
+    {
+      "skin_id": "skin 4",
+      "file_name": "Screenshot 2026-11-12 222635.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 4/Screenshot 2026-11-12 222635.png",
+      "width": 527,
+      "height": 749,
+      "mean_hsv": [
+        48.26,
+        199.0,
+        45.27
+      ],
+      "mean_bgr": [
+        15,
+        19,
+        45
+      ],
+      "file_size_bytes": 379430,
+      "sha256": "7f2369b6222afb9038e682e2272a537596d9382203c41b964b2c63c3647214cc"
+    },
+    {
+      "skin_id": "skin 5",
+      "file_name": "Screenshot 2026-11-12 222658.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 5/Screenshot 2026-11-12 222658.png",
+      "width": 695,
+      "height": 759,
+      "mean_hsv": [
+        34.02,
+        199.97,
+        32.84
+      ],
+      "mean_bgr": [
+        8,
+        14,
+        33
+      ],
+      "file_size_bytes": 453298,
+      "sha256": "7bd5da6cd912c4fa6ab400814078987a494f7bb27bc6effc0f3f954e2e151906"
+    },
+    {
+      "skin_id": "skin 5",
+      "file_name": "Screenshot 2026-11-12 222704.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 5/Screenshot 2026-11-12 222704.png",
+      "width": 596,
+      "height": 760,
+      "mean_hsv": [
+        40.01,
+        195.71,
+        28.29
+      ],
+      "mean_bgr": [
+        7,
+        12,
+        28
+      ],
+      "file_size_bytes": 380385,
+      "sha256": "db8513f42ed7cec685877c809e022e5b5d14db3f9fef373aa963992eb1fc104c"
+    },
+    {
+      "skin_id": "skin 5",
+      "file_name": "Screenshot 2026-11-12 222712.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 5/Screenshot 2026-11-12 222712.png",
+      "width": 557,
+      "height": 717,
+      "mean_hsv": [
+        27.24,
+        201.15,
+        26.45
+      ],
+      "mean_bgr": [
+        5,
+        11,
+        26
+      ],
+      "file_size_bytes": 281353,
+      "sha256": "a6e2e3f8c89ea3436b850b9f3141e87aca66f70a278fb4f990eef2f01d7a494e"
+    },
+    {
+      "skin_id": "skin 5",
+      "file_name": "Screenshot 2026-11-12 222718.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 5/Screenshot 2026-11-12 222718.png",
+      "width": 579,
+      "height": 768,
+      "mean_hsv": [
+        46.64,
+        194.59,
+        34.7
+      ],
+      "mean_bgr": [
+        10,
+        15,
+        35
+      ],
+      "file_size_bytes": 414180,
+      "sha256": "b00a90fceee7ea8c21c07ec4b80b3e7f8a33df0a47ac3729c28b9585f3575a2e"
+    },
+    {
+      "skin_id": "skin 6",
+      "file_name": "Screenshot 2026-11-12 222737.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 6/Screenshot 2026-11-12 222737.png",
+      "width": 677,
+      "height": 723,
+      "mean_hsv": [
+        86.45,
+        178.25,
+        54.91
+      ],
+      "mean_bgr": [
+        25,
+        25,
+        55
+      ],
+      "file_size_bytes": 537149,
+      "sha256": "6cd1f662621a83b2788a95ca62c3f478b1a392ba8527dbc7061469945169181a"
+    },
+    {
+      "skin_id": "skin 6",
+      "file_name": "Screenshot 2026-11-12 222745.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 6/Screenshot 2026-11-12 222745.png",
+      "width": 584,
+      "height": 771,
+      "mean_hsv": [
+        74.32,
+        178.78,
+        37.95
+      ],
+      "mean_bgr": [
+        15,
+        17,
+        38
+      ],
+      "file_size_bytes": 441024,
+      "sha256": "22f67cc94e8e635b0858c8c119bdbed390d5680d4b929eb863212e1ef192b070"
+    },
+    {
+      "skin_id": "skin 6",
+      "file_name": "Screenshot 2026-11-12 222751.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 6/Screenshot 2026-11-12 222751.png",
+      "width": 602,
+      "height": 756,
+      "mean_hsv": [
+        77.59,
+        178.51,
+        31.92
+      ],
+      "mean_bgr": [
+        11,
+        14,
+        32
+      ],
+      "file_size_bytes": 406301,
+      "sha256": "1508b615ffe0e47976e789335cfc434ad12bfc6bf3607da2645d09ae9ad75fe5"
+    },
+    {
+      "skin_id": "skin 6",
+      "file_name": "Screenshot 2026-11-12 222757.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 6/Screenshot 2026-11-12 222757.png",
+      "width": 574,
+      "height": 799,
+      "mean_hsv": [
+        78.27,
+        184.95,
+        46.5
+      ],
+      "mean_bgr": [
+        18,
+        20,
+        46
+      ],
+      "file_size_bytes": 478338,
+      "sha256": "89e2361a5de6b21d3a8c2f8fea9d9c174f7c96af6f0703ce4e9362e1310f2379"
+    },
+    {
+      "skin_id": "skin 7",
+      "file_name": "Screenshot 2026-11-12 222826.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 7/Screenshot 2026-11-12 222826.png",
+      "width": 713,
+      "height": 876,
+      "mean_hsv": [
+        67.78,
+        181.14,
+        61.04
+      ],
+      "mean_bgr": [
+        30,
+        27,
+        61
+      ],
+      "file_size_bytes": 722834,
+      "sha256": "4f47eaf3166a1e87d09e298dbbb7d28837935b11ca62869055b00abaf20e090b"
+    },
+    {
+      "skin_id": "skin 7",
+      "file_name": "Screenshot 2026-11-12 222830.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 7/Screenshot 2026-11-12 222830.png",
+      "width": 544,
+      "height": 787,
+      "mean_hsv": [
+        72.53,
+        185.46,
+        59.76
+      ],
+      "mean_bgr": [
+        29,
+        24,
+        60
+      ],
+      "file_size_bytes": 454452,
+      "sha256": "d6b28f6ca2f9721f69090d009c62c528607ef7c69837549c60bc6897115d10b1"
+    },
+    {
+      "skin_id": "skin 7",
+      "file_name": "Screenshot 2026-11-12 222837.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 7/Screenshot 2026-11-12 222837.png",
+      "width": 603,
+      "height": 807,
+      "mean_hsv": [
+        70.28,
+        174.64,
+        62.64
+      ],
+      "mean_bgr": [
+        38,
+        30,
+        62
+      ],
+      "file_size_bytes": 522925,
+      "sha256": "0b9b0f526afd557572fdf8670e2c4f2a0e6873166e23e5c0be21f5284477ab1c"
+    },
+    {
+      "skin_id": "skin 7",
+      "file_name": "Screenshot 2026-11-12 222842.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 7/Screenshot 2026-11-12 222842.png",
+      "width": 611,
+      "height": 782,
+      "mean_hsv": [
+        76.52,
+        186.44,
+        60.82
+      ],
+      "mean_bgr": [
+        27,
+        25,
+        61
+      ],
+      "file_size_bytes": 524647,
+      "sha256": "a3e33eeee0293d6d35c1548898aae127eab8d028635b50a420adcdc6e0b944c0"
+    },
+    {
+      "skin_id": "skin 8",
+      "file_name": "Screenshot 2026-11-12 222937.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 8/Screenshot 2026-11-12 222937.png",
+      "width": 693,
+      "height": 793,
+      "mean_hsv": [
+        73.08,
+        169.73,
+        65.19
+      ],
+      "mean_bgr": [
+        39,
+        33,
+        64
+      ],
+      "file_size_bytes": 790304,
+      "sha256": "ac4ee9794e56b45b2cdfa217fbe1994cee878954ad9f56d2f67dfa8b62df6ad6"
+    },
+    {
+      "skin_id": "skin 8",
+      "file_name": "Screenshot 2026-11-12 223010.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 8/Screenshot 2026-11-12 223010.png",
+      "width": 535,
+      "height": 776,
+      "mean_hsv": [
+        70.39,
+        167.29,
+        67.15
+      ],
+      "mean_bgr": [
+        45,
+        35,
+        66
+      ],
+      "file_size_bytes": 588280,
+      "sha256": "3861dbde0b8b42d2cf1e219b8e6b08b666eefb4eb3798cb07e1b9f2994ae8ab1"
+    },
+    {
+      "skin_id": "skin 8",
+      "file_name": "Screenshot 2026-11-12 223016.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 8/Screenshot 2026-11-12 223016.png",
+      "width": 564,
+      "height": 743,
+      "mean_hsv": [
+        75.51,
+        164.53,
+        70.2
+      ],
+      "mean_bgr": [
+        48,
+        36,
+        68
+      ],
+      "file_size_bytes": 614957,
+      "sha256": "95392ecbda2f134c86f21ffdc4b0a7f31986ab8181eddffbdcf1e15c250a2f62"
+    },
+    {
+      "skin_id": "skin 8",
+      "file_name": "Screenshot 2026-11-12 223021.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 8/Screenshot 2026-11-12 223021.png",
+      "width": 591,
+      "height": 755,
+      "mean_hsv": [
+        76.36,
+        170.06,
+        63.16
+      ],
+      "mean_bgr": [
+        38,
+        31,
+        63
+      ],
+      "file_size_bytes": 615289,
+      "sha256": "3dba9c26c85cc97c299b718bb84bddb05ba6e07ada7810948e3a5055dd08ae75"
+    },
+    {
+      "skin_id": "skin 9",
+      "file_name": "Screenshot 2026-11-12 223445.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 9/Screenshot 2026-11-12 223445.png",
+      "width": 683,
+      "height": 816,
+      "mean_hsv": [
+        40.68,
+        201.27,
+        50.42
+      ],
+      "mean_bgr": [
+        11,
+        18,
+        50
+      ],
+      "file_size_bytes": 691361,
+      "sha256": "2363d9a604f411e909c33bb8677a7ec0ff0e7a9a57929a9616d9ec9ad839bd91"
+    },
+    {
+      "skin_id": "skin 9",
+      "file_name": "Screenshot 2026-11-12 223450.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 9/Screenshot 2026-11-12 223450.png",
+      "width": 736,
+      "height": 840,
+      "mean_hsv": [
+        47.3,
+        201.64,
+        44.77
+      ],
+      "mean_bgr": [
+        9,
+        17,
+        45
+      ],
+      "file_size_bytes": 696949,
+      "sha256": "cf6308c163bb910ea9c52b4820ad31b07320c6b207aa12910d8d58aa8bfde5f5"
+    },
+    {
+      "skin_id": "skin 9",
+      "file_name": "Screenshot 2026-11-12 223454.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 9/Screenshot 2026-11-12 223454.png",
+      "width": 692,
+      "height": 809,
+      "mean_hsv": [
+        58.35,
+        203.31,
+        48.8
+      ],
+      "mean_bgr": [
+        10,
+        17,
+        49
+      ],
+      "file_size_bytes": 711636,
+      "sha256": "ae0b76f825bf0813cc52baaed939689c694ddeba6a296e7ca6474e90c94d91bc"
+    },
+    {
+      "skin_id": "skin 9",
+      "file_name": "Screenshot 2026-11-12 223500.png",
+      "relative_path": "database/dataset/HIDDEN/PNG/SKIN/skin 9/Screenshot 2026-11-12 223500.png",
+      "width": 640,
+      "height": 836,
+      "mean_hsv": [
+        44.43,
+        200.37,
+        44.52
+      ],
+      "mean_bgr": [
+        10,
+        16,
+        44
+      ],
+      "file_size_bytes": 619758,
+      "sha256": "b1e63ae723b363faf81ae1ce176fc251eb737294023a92068542b00fc3464103"
+    }
+  ],
+  "audio": [
+    {
+      "file_name": "hidden_basic_attack.wav",
+      "relative_path": "database/dataset/HIDDEN/WAV/hidden_basic_attack.wav",
+      "duration_seconds": 3.97,
+      "sample_rate_hz": 44100,
+      "channels": 2,
+      "peak_amplitude": 9617,
+      "rms_energy": 480.17,
+      "dominant_frequency_hz": 174.06,
+      "spectral_centroid_hz": 8169.18,
+      "energy_dbfs": -36.68,
+      "category": "attack_cue",
+      "sub_category": "blade_slash",
+      "split": "train",
+      "is_positive_leap": false,
+      "file_size_bytes": 700386,
+      "sha256": "aa7eac8cbfcac07b16fd4beeac59a77d248e6535fdee4497f600634bfb1369e0"
+    },
+    {
+      "file_name": "hidden_leap_var1.wav",
+      "relative_path": "database/dataset/HIDDEN/WAV/hidden_leap_var1.wav",
+      "duration_seconds": 3.81,
+      "sample_rate_hz": 44100,
+      "channels": 2,
+      "peak_amplitude": 5225,
+      "rms_energy": 504.16,
+      "dominant_frequency_hz": 216.91,
+      "spectral_centroid_hz": 2796.66,
+      "energy_dbfs": -36.26,
+      "category": "leap_cue",
+      "sub_category": "vocal_and_whoosh",
+      "split": "train",
+      "is_positive_leap": true,
+      "file_size_bytes": 671810,
+      "sha256": "3a9300c9e4f996cad7a6180dfa6cb50209eb05336c106740f82e1a06dfe8d0f6"
+    },
+    {
+      "file_name": "hidden_mark_hit_wall.wav",
+      "relative_path": "database/dataset/HIDDEN/WAV/hidden_mark_hit_wall.wav",
+      "duration_seconds": 4.02,
+      "sample_rate_hz": 44100,
+      "channels": 2,
+      "peak_amplitude": 11181,
+      "rms_energy": 754.04,
+      "dominant_frequency_hz": 8.71,
+      "spectral_centroid_hz": 7224.38,
+      "energy_dbfs": -32.76,
+      "category": "mark_cue",
+      "sub_category": "spear_hit_wall",
+      "split": "val",
+      "is_positive_leap": false,
+      "file_size_bytes": 708678,
+      "sha256": "c29315af8ce816975e1506faec5c47394116767c5bd6582ab3ccd46c89732fe9"
+    },
+    {
+      "file_name": "hidden_mark_no_hit_survivor.wav",
+      "relative_path": "database/dataset/HIDDEN/WAV/hidden_mark_no_hit_survivor.wav",
+      "duration_seconds": 3.97,
+      "sample_rate_hz": 44100,
+      "channels": 2,
+      "peak_amplitude": 7068,
+      "rms_energy": 517.75,
+      "dominant_frequency_hz": 8.31,
+      "spectral_centroid_hz": 5181.13,
+      "energy_dbfs": -36.03,
+      "category": "mark_cue",
+      "sub_category": "spear_miss",
+      "split": "val",
+      "is_positive_leap": false,
+      "file_size_bytes": 700386,
+      "sha256": "5f430e77bfa8dc55c8861ff3f373c61561a6fba29b43f70a1cb2f8b713f61348"
+    },
+    {
+      "file_name": "mark_hit_survivor.wav",
+      "relative_path": "database/dataset/HIDDEN/WAV/mark_hit_survivor.wav",
+      "duration_seconds": 4.48,
+      "sample_rate_hz": 44100,
+      "channels": 2,
+      "peak_amplitude": 17867,
+      "rms_energy": 697.42,
+      "dominant_frequency_hz": 9.15,
+      "spectral_centroid_hz": 7305.81,
+      "energy_dbfs": -33.44,
+      "category": "mark_cue",
+      "sub_category": "spear_hit_survivor",
+      "split": "test",
+      "is_positive_leap": false,
+      "file_size_bytes": 790526,
+      "sha256": "03b2d7268c46d2c3237848cee98375fbcc70161a81fa9348a48036dd59249e06"
+    }
+  ]
+}
