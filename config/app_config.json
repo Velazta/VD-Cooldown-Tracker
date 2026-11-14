@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "app": {
     "name": "Violence District Cooldown Tracker",
     "version": "0.1.0-alpha",
@@ -15,7 +15,8 @@
       "width": 1540,
       "height": 580,
       "enabled": true
-    }
+    },
+    "enabled_on_start": false
   },
   "overlay": {
     "x": 1597,
@@ -30,6 +31,19 @@
     "position": {
       "x": 1597,
       "y": 201
+    }
+  },
+  "manual": {
+    "start_in_manual_mode": true,
+    "reaction_offset": 0.0,
+    "restart_on_repeat": false,
+    "sound_on_ready": false,
+    "hotkeys": {
+      "trigger_ability_1": "Numpad1",
+      "trigger_ability_2": "Numpad2",
+      "trigger_ability_3": "Numpad3",
+      "reset_all": "Numpad0",
+      "toggle_overlay": "Numpad."
     }
   },
   "active_killer_id": "the_hidden"
