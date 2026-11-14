@@ -8,7 +8,7 @@
   "capture": {
     "target_title": "Roblox",
     "backend": "windows_capture",
-    "target_fps": 30,
+    "target_fps": 60,
     "roi": {
       "x": 130,
       "y": 10,

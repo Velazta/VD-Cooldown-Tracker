@@ -1,0 +1,19 @@
+{
+  "model_path": "runs\\detect\\dataset\\runs\\train\\yolov8n_rebuild_e5\\weights\\best.pt",
+  "split_scanned": "train",
+  "images_scanned": 248,
+  "false_positives_found": 1,
+  "items": [
+    {
+      "source_image": "hidden1_mark_skill_nohitsurvivor_f00000.jpg",
+      "crop_file": "fp_hidden1_mark_skill_nohitsurvivor_f00000_box1_conf54.jpg",
+      "confidence": 0.541,
+      "bbox_xyxy": [
+        511,
+        221,
+        552,
+        281
+      ]
+    }
+  ]
+}

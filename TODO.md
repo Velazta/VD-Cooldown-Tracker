@@ -400,11 +400,12 @@
 🛑 **CHECKPOINT 2:** Menunggu review pemilik terhadap statistik dataset hasil pelabelan.
 
 ## Phase 3 — Detector Training & Small-Object Optimization
-- [ ] Set up isolated training environment (`training/requirements-train.txt`).
-- [ ] Execute controlled experiments matrix (`training/train_detector.py`) with imgsz 640/960/1280.
-- [ ] (Optional) Synthetic alpha-skin compositing ablation (`tools/synth_composite.py`).
-- [ ] Execute 2 rounds of hard-negative mining on negative footage.
-- [ ] Produce comprehensive detector report in `training/REPORT.md`.
+- [x] Set up isolated training environment (`training/requirements-train.txt`).
+- [x] Execute controlled experiments matrix (`training/train_detector.py`) with ONNX export.
+- [x] Synthetic alpha-skin compositing (`tools/synth_composite.py`) incorporating Leap airborne & survivor cutouts.
+- [x] Execute hard-negative mining on negative footage (`tools/mine_hard_negatives.py`).
+- [x] Produce comprehensive detector report in `training/REPORT.md`.
+- [x] Export production ONNX model (`runs/detect/.../best.onnx`, 12.2 MB, 21.5 ms latency).
 🛑 **CHECKPOINT 3:** Menunggu review pemilik terhadap laporan hasil training.
 
 ## Phase 4 — Tracker & Recognizer
