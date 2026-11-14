@@ -430,7 +430,7 @@
 # Manual Trigger Companion Milestone (Global Hotkey → Overlay)
 
 ## Phase M0 — Persiapan & Baseline
-- [x] **M0.1** Verifikasi baseline test suite pada branch `feat/manual-detector` (218 test lulus).
+- [x] **M0.1** Verifikasi baseline test suite pada branch `feat/manual-detection` (218 test lulus).
 - [x] **M0.2** Dokumentasikan keputusan pivot arsitektur di `docs/DECISIONS.md` (ADR-001).
 - [x] **M0.3** Update `TODO.md` menandai backlog visi otomatis dan mendaftarkan roadmap Phase M0–M9.
 - [x] **M0.4** Catat spesifikasi lingkungan dan kebijakan dependensi di `docs/ENVIRONMENT.md`.
