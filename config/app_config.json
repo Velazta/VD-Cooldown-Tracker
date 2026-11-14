@@ -19,18 +19,18 @@
     "enabled_on_start": false
   },
   "overlay": {
-    "x": 24,
-    "y": 280,
+    "x": 0,
+    "y": 335,
     "width": 360,
-    "height": 358,
+    "height": 184,
     "opacity": 0.95,
     "visible": true,
     "always_on_top": true,
     "click_through": true,
     "fps_display": true,
     "position": {
-      "x": 24,
-      "y": 280
+      "x": 0,
+      "y": 335
     }
   },
   "manual": {
@@ -43,8 +43,9 @@
       "trigger_ability_2": "]",
       "trigger_ability_3": "Numpad3",
       "reset_all": "P",
-      "toggle_overlay": "'"
+      "toggle_overlay": "'",
+      "toggle_card_picker": "Insert"
     }
   },
-  "active_killer_id": "the_hidden"
+  "active_killer_id": "veil"
 }

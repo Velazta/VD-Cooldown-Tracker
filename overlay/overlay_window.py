@@ -128,8 +128,8 @@ class OverlayWindow(QWidget):
         super().showEvent(event)
         hwnd = int(self.winId())
 
-        # Proteksi agar overlay tidak ikut terekam oleh capture engine
-        set_window_capture_invisible(hwnd)
+        # Diatur agar jendela DAPAT diambil screenshot / direkam (WDA_NONE)
+        set_window_capture_invisible(hwnd, invisible=False)
 
         # Terapkan click-through native Win32 jika diaktifkan
         if self._click_through:

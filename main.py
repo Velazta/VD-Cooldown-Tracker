@@ -42,6 +42,7 @@ from cooldown.cooldown_manager import CooldownManager
 from cooldown.cooldown_state import CooldownState
 from overlay.overlay_window import OverlayWindow
 from overlay.overlay_controller import OverlayController
+from overlay.card_picker_overlay import CardPickerOverlay
 from capture.windows_capture import MSSWindowsCapture
 from capture.capture_interface import CaptureStatus
 from capture.window_helper import set_window_capture_invisible
@@ -102,12 +103,14 @@ class HotkeyRebindDialog(QDialog):
         self.input_ab3 = QLineEdit(current_map.get("trigger_ability_3", "Numpad3"))
         self.input_reset = QLineEdit(current_map.get("reset_all", "Numpad0"))
         self.input_overlay = QLineEdit(current_map.get("toggle_overlay", "Numpad."))
+        self.input_card_picker = QLineEdit(current_map.get("toggle_card_picker", "Insert"))
 
-        form.addRow("Ability 1 (Leap):", self.input_ab1)
-        form.addRow("Ability 2 (Mark):", self.input_ab2)
+        form.addRow("Ability 1:", self.input_ab1)
+        form.addRow("Ability 2:", self.input_ab2)
         form.addRow("Ability 3:", self.input_ab3)
         form.addRow("Reset Semua:", self.input_reset)
         form.addRow("Toggle Overlay:", self.input_overlay)
+        form.addRow("Card Pick Overlay:", self.input_card_picker)
         layout.addLayout(form)
 
         # Action Buttons
@@ -128,6 +131,7 @@ class HotkeyRebindDialog(QDialog):
         self.input_ab3.setText("Numpad3")
         self.input_reset.setText("P")
         self.input_overlay.setText("'")
+        self.input_card_picker.setText("Insert")
 
     def _apply_preset_numpad(self) -> None:
         self.input_ab1.setText("Numpad1")
@@ -135,6 +139,7 @@ class HotkeyRebindDialog(QDialog):
         self.input_ab3.setText("Numpad3")
         self.input_reset.setText("Numpad0")
         self.input_overlay.setText("Numpad.")
+        self.input_card_picker.setText("Insert")
 
     def _apply_preset_laptop(self) -> None:
         self.input_ab1.setText("Alt+1")
@@ -142,6 +147,7 @@ class HotkeyRebindDialog(QDialog):
         self.input_ab3.setText("Alt+3")
         self.input_reset.setText("Alt+0")
         self.input_overlay.setText("Alt+H")
+        self.input_card_picker.setText("Insert")
 
     def _save_and_apply(self) -> None:
         new_map = {
@@ -150,6 +156,7 @@ class HotkeyRebindDialog(QDialog):
             "trigger_ability_3": self.input_ab3.text().strip(),
             "reset_all": self.input_reset.text().strip(),
             "toggle_overlay": self.input_overlay.text().strip(),
+            "toggle_card_picker": self.input_card_picker.text().strip(),
         }
 
         from app.global_hotkeys import parse_hotkey_string
@@ -243,6 +250,11 @@ class CapturePreviewWindow(QMainWindow):
             parent=self,
         )
         self.overlay_controller.overlay_moved.connect(self.on_overlay_moved)
+
+        # 5.5 Inisialisasi CardPickerOverlay (Trigger 'Insert' untuk memilih killer langsung di game)
+        self.card_picker = CardPickerOverlay(db_manager=self.db_manager, parent=None)
+        self.card_picker.set_active_killer(self.config.active_killer_id)
+        self.card_picker.killer_selected.connect(self.on_card_picker_killer_selected)
 
         # Global Hotkey Manager (Win32 ctypes + QAbstractNativeEventFilter)
         self.hotkey_manager = GlobalHotkeyManager(parent=self)
@@ -524,6 +536,14 @@ class CapturePreviewWindow(QMainWindow):
         self.combo_ability.currentIndexChanged.connect(self.on_ability_selection_changed)
 
         self._update_killer_display()
+
+        card_pk_key = self.config.manual.hotkeys.get('toggle_card_picker', 'Insert')
+        self.btn_open_card_picker = QPushButton(f"🎴 Card Pick Carousel ({card_pk_key})")
+        self.btn_open_card_picker.setStyleSheet("background-color: #713F12; color: #FEF08A; font-weight: bold; border: 1px solid #A16207; padding: 5px;")
+        self.btn_open_card_picker.setToolTip("Munculkan carousel pemilihan kartu killer di atas tengah layar (dapat ditrigger dari Roblox dengan tombol Insert).")
+        self.btn_open_card_picker.clicked.connect(lambda: self.card_picker.toggle_picker())
+        killer_layout.addWidget(self.btn_open_card_picker)
+
         right_col.addWidget(killer_group)
 
         # Panel 1.5: Global Hotkey Companion (Manual Trigger Focus)
@@ -918,7 +938,12 @@ class CapturePreviewWindow(QMainWindow):
         lines.append(f"• <b>Reset All:</b> <code>{hk_map.get('reset_all', 'P')}</code>")
         toggle_hk = hk_map.get("toggle_overlay", "'")
         lines.append(f"• <b>Toggle Overlay:</b> <code>{toggle_hk}</code>")
+        picker_hk = hk_map.get("toggle_card_picker", "Insert")
+        lines.append(f"• <b>Pilih Killer:</b> <code>{picker_hk}</code>")
         self.hk_info_label.setText("<br>".join(lines))
+
+        if hasattr(self, "btn_open_card_picker"):
+            self.btn_open_card_picker.setText(f"🎴 Card Pick Carousel ({picker_hk})")
 
         if self.hotkey_manager.failed_actions:
             self.hk_badge.setText("⚠️ HOTKEY CONFLICT")
@@ -980,6 +1005,17 @@ class CapturePreviewWindow(QMainWindow):
                 self.check_overlay_visible.blockSignals(True)
                 self.check_overlay_visible.setChecked(is_visible)
                 self.check_overlay_visible.blockSignals(False)
+        elif action == "toggle_card_picker":
+            if hasattr(self, "card_picker") and self.card_picker is not None:
+                self.card_picker.toggle_picker()
+
+    def on_card_picker_killer_selected(self, killer_id: str) -> None:
+        """Callback saat pengguna memilih killer dari CardPickerOverlay (In-Game / Hotkey Insert)."""
+        logger.info("Card picker selected killer: '%s'", killer_id)
+        for i in range(self.combo_killer.count()):
+            if self.combo_killer.itemData(i) == killer_id:
+                self.combo_killer.setCurrentIndex(i)
+                break
 
     def on_killer_selection_changed(self, index: int) -> None:
         """Event listener saat pengguna mengganti killer aktif di GUI."""
@@ -994,6 +1030,8 @@ class CapturePreviewWindow(QMainWindow):
         self._update_killer_display()
         self._populate_ability_combobox()
         self._refresh_hotkey_ui()
+        if hasattr(self, "card_picker") and self.card_picker is not None:
+            self.card_picker.set_active_killer(self.config.active_killer_id)
         self.combo_killer.clearFocus()
         self.setFocus()
 
@@ -1498,6 +1536,8 @@ class CapturePreviewWindow(QMainWindow):
             self.detection_worker.stop()
         if hasattr(self, "overlay_controller") and self.overlay_controller is not None:
             self.overlay_controller.close()
+        if hasattr(self, "card_picker") and self.card_picker is not None:
+            self.card_picker.close()
         if self.capture_engine.is_running:
             self.capture_engine.stop()
         logger.info("Application cleanly closed.")

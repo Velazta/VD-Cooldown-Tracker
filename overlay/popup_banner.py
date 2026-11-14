@@ -300,13 +300,13 @@ class PopupBannerItem(QWidget):
             self._draw_procedural_banner(painter, w, h)
 
         # 2. Digital Countdown in Black Area (Right side)
-        # Based on analysis of 'example_countdown_time.png':
-        # Rel X: ~58% to 92%, Rel Y: ~62% to 96%
-        target_x = int(w * 0.58)
-        target_y = int(h * 0.62)
-        target_w = int(w * 0.35)
-        target_h = int(h * 0.34)
-        target_rect = QRect(target_x, target_y, target_w, target_h)
+        # Based on exact measurement of 'example_countdown_time.png':
+        # Digit center: X = ~81.1%, Y = ~81.8% of banner dimensions
+        box_w = int(w * 0.24)
+        box_h = int(h * 0.28)
+        target_x = int((w * 0.811) - (box_w / 2.0))
+        target_y = int((h * 0.818) - (box_h / 2.0))
+        target_rect = QRect(target_x, target_y, box_w, box_h)
 
         self._draw_countdown_text(painter, target_rect)
 

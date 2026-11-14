@@ -20,6 +20,7 @@ user32 = ctypes.windll.user32
 dwmapi = ctypes.windll.dwmapi
 
 DWMWA_EXTENDED_FRAME_BOUNDS = 9
+WDA_NONE = 0x00000000
 WDA_EXCLUDEFROMCAPTURE = 0x00000011
 
 
@@ -32,13 +33,14 @@ class RECT(ctypes.Structure):
     ]
 
 
-def set_window_capture_invisible(hwnd: int) -> bool:
+def set_window_capture_invisible(hwnd: int, invisible: bool = True) -> bool:
     """
-    Menginstruksikan Windows OS agar jendela ini TIDAK TERLIHAT oleh screen capture.
-    Mencegah efek rekursif (hall of mirrors) jika tracker berada di atas game.
+    Menginstruksikan Windows OS apakah jendela ini TIDAK TERLIHAT atau TERLIHAT oleh screen capture.
+    Jika invisible=False (WDA_NONE), jendela akan dapat diambil screenshot (PrintScreen / Snipping Tool / OBS).
     """
     try:
-        res = user32.SetWindowDisplayAffinity(wintypes.HWND(hwnd), wintypes.DWORD(WDA_EXCLUDEFROMCAPTURE))
+        affinity = WDA_EXCLUDEFROMCAPTURE if invisible else WDA_NONE
+        res = user32.SetWindowDisplayAffinity(wintypes.HWND(hwnd), wintypes.DWORD(affinity))
         return bool(res)
     except Exception:
         return False
