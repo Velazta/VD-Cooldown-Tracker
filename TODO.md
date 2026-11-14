@@ -409,11 +409,11 @@
 🛑 **CHECKPOINT 3:** Menunggu review pemilik terhadap laporan hasil training.
 
 ## Phase 4 — Tracker & Recognizer
-- [ ] Implement `detection/hidden_tracker.py` (IoU/centroid association + N-frame hold).
-- [ ] Refactor kinematics into `detection/kinematics.py` and rebuild profiles from manual annotations.
-- [ ] Implement `detection/leap_recognizer.py` (sliding-window parabolic fit relative to survivor/ground).
-- [ ] Conduct Mark signature study in `dataset/MARK_SIGNATURE_STUDY.md`.
-- [ ] Implement `detection/mark_recognizer.py` based on empirical study findings.
+- [x] Implement `detection/hidden_tracker.py` (IoU/centroid association + N-frame hold).
+- [x] Refactor kinematics into `detection/kinematics.py` and rebuild profiles (`dataset/trajectory_profiles_v2.json`).
+- [x] Implement `detection/leap_recognizer.py` (sliding-window parabolic fit relative to survivor/ground).
+- [x] Conduct Mark signature study in `dataset/MARK_SIGNATURE_STUDY.md`.
+- [x] Implement `detection/mark_recognizer.py` based on empirical study findings.
 
 ## Phase 5 — Event Validator & Multi-Ability Integration
 - [ ] Implement `detection/event_validator.py` (state machine: IDLE -> CANDIDATE -> CONFIRMED -> REFRACTORY).

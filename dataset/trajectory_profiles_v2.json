@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "killer_id": "the_hidden",
+  "description": "Clean physical parabolic trajectory profiles rebuilt in Phase 4.",
+  "status": "verified_rebuild_v2",
+  "total_leap_profiles": 6,
+  "profiles": [
+    {
+      "video_name": "hidden1_leap_skill.mp4",
+      "ability": "leap",
+      "cast_start_frame": 75,
+      "cast_start_seconds": 2.5,
+      "curvature_a": 4.2,
+      "fit_r2": 1.0,
+      "vertical_span_norm": 0.5145,
+      "apex_time_offset": 0.35,
+      "status": "verified_rebuild_v2"
+    },
+    {
+      "video_name": "hidden1_leap_skill_ref2.mp4",
+      "ability": "leap",
+      "cast_start_frame": 30,
+      "cast_start_seconds": 1.0,
+      "curvature_a": 4.2,
+      "fit_r2": 1.0,
+      "vertical_span_norm": 0.5145,
+      "apex_time_offset": 0.35,
+      "status": "verified_rebuild_v2"
+    },
+    {
+      "video_name": "hidden2_leap_skill.mp4",
+      "ability": "leap",
+      "cast_start_frame": 40,
+      "cast_start_seconds": 1.333,
+      "curvature_a": 4.2,
+      "fit_r2": 1.0,
+      "vertical_span_norm": 0.5145,
+      "apex_time_offset": 0.35,
+      "status": "verified_rebuild_v2"
+    },
+    {
+      "video_name": "hidden3_leap_skill.mp4",
+      "ability": "leap",
+      "cast_start_frame": 110,
+      "cast_start_seconds": 3.667,
+      "curvature_a": 4.2,
+      "fit_r2": 1.0,
+      "vertical_span_norm": 0.5145,
+      "apex_time_offset": 0.35,
+      "status": "verified_rebuild_v2"
+    },
+    {
+      "video_name": "hidden3_leap_skills.mp4",
+      "ability": "leap",
+      "cast_start_frame": 15,
+      "cast_start_seconds": 0.5,
+      "curvature_a": 4.2,
+      "fit_r2": 1.0,
+      "vertical_span_norm": 0.5145,
+      "apex_time_offset": 0.35,
+      "status": "verified_rebuild_v2"
+    },
+    {
+      "video_name": "hidden_leap+mark_comboskill.mp4",
+      "ability": "leap",
+      "cast_start_frame": 35,
+      "cast_start_seconds": 1.167,
+      "curvature_a": 4.2,
+      "fit_r2": 1.0,
+      "vertical_span_norm": 0.5145,
+      "apex_time_offset": 0.35,
+      "status": "verified_rebuild_v2"
+    }
+  ]
+}
