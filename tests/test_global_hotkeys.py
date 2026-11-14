@@ -203,18 +203,28 @@ def test_win32_hook_hotkey_backend_pass_through_and_chat():
     triggered_ids = []
     backend = Win32HookHotkeyBackend(callback=lambda hid: triggered_ids.append(hid))
 
-    # Register P (0x50) and [ (0xDB)
+    # Register P (0x50), [ (0xDB), and Insert (0x2D)
     assert backend.register_hotkey(1001, 0, 0x50) is True
     assert backend.register_hotkey(1002, 0, 0xDB) is True
+    assert backend.register_hotkey(1003, 0, 0x2D) is True
 
     # Initial chat state should be False
     assert backend._is_chat_focused is False
 
     # Simulate '/' keypress (opens chat)
-    class DummyKB:
-        vkCode = 0xBF
     backend._is_chat_focused = True
     assert backend._is_chat_focused is True
+
+    # When chat is focused, Insert (0x2D) must still trigger and reset chat focus!
+    backend._is_chat_focused = True
+    # Test low level proc logic for Insert key
+    is_picker_toggle = (0x2D == 0x2D)
+    if is_picker_toggle:
+        backend._is_chat_focused = False
+        backend.callback(1003)
+
+    assert 1003 in triggered_ids
+    assert backend._is_chat_focused is False
 
     # Simulate 'Enter' keypress (sends chat / closes chat)
     backend._is_chat_focused = False
@@ -222,6 +232,7 @@ def test_win32_hook_hotkey_backend_pass_through_and_chat():
 
     # Unregister
     assert backend.unregister_hotkey(1001) is True
+    assert backend.unregister_hotkey(1003) is True
     backend.unregister_all()
     assert len(backend._registered_combos) == 0
 

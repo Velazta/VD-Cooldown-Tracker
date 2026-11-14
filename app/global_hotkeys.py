@@ -11,6 +11,7 @@ from __future__ import annotations
 import ctypes
 from ctypes import wintypes
 import sys
+import time
 from typing import Callable, Dict, Optional, Set, Tuple
 
 from PySide6.QtCore import QAbstractNativeEventFilter, QCoreApplication, QObject, Signal
@@ -224,6 +225,7 @@ class Win32HookHotkeyBackend(HotkeyBackend):
         self._hook_proc_ref = None
         self._user32 = ctypes.windll.user32 if sys.platform == "win32" else None
         self._is_chat_focused: bool = False
+        self._chat_focused_time: float = 0.0
         if sys.platform == "win32":
             self._install_hook()
 
@@ -249,8 +251,27 @@ class Win32HookHotkeyBackend(HotkeyBackend):
             buff = ctypes.create_unicode_buffer(length + 1)
             self._user32.GetWindowTextW(hwnd, buff, length + 1)
             title = buff.value.lower()
-            return ("roblox" in title) or ("violence district" in title) or ("tracker" in title)
-        return True
+            if any(k in title for k in ("roblox", "violence district", "tracker")):
+                return True
+
+        # Process name verification for headless or custom titled windows
+        try:
+            pid = wintypes.DWORD()
+            self._user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+            if pid.value > 0:
+                h_proc = ctypes.windll.kernel32.OpenProcess(0x1000, False, pid.value)
+                if h_proc:
+                    p_buff = ctypes.create_unicode_buffer(512)
+                    size = wintypes.DWORD(512)
+                    ctypes.windll.kernel32.QueryFullProcessImageNameW(h_proc, 0, p_buff, ctypes.byref(size))
+                    ctypes.windll.kernel32.CloseHandle(h_proc)
+                    proc_name = p_buff.value.lower()
+                    if any(k in proc_name for k in ("roblox", "python")):
+                        return True
+        except Exception:
+            pass
+
+        return False
 
     def _get_current_modifiers(self) -> int:
         if self._user32 is None:
@@ -272,18 +293,35 @@ class Win32HookHotkeyBackend(HotkeyBackend):
                 kb = KBDLLHOOKSTRUCT.from_address(lParam)
                 vk = kb.vkCode
 
+                # Auto-reset chat mode if mouse was clicked (in Roblox, clicking unfocuses chat)
+                # or if chat has been inactive for more than 8 seconds
+                if self._is_chat_focused:
+                    if self._user32 is not None:
+                        lmb_down = bool(self._user32.GetAsyncKeyState(0x01) & 0x8000)
+                        rmb_down = bool(self._user32.GetAsyncKeyState(0x02) & 0x8000)
+                        if lmb_down or rmb_down:
+                            self._is_chat_focused = False
+                    if (time.monotonic() - self._chat_focused_time) > 8.0:
+                        self._is_chat_focused = False
+
                 # Track chat state in Roblox
                 if vk == 0xBF:  # '/' opens chat
                     self._is_chat_focused = True
+                    self._chat_focused_time = time.monotonic()
                 elif vk in (0x0D, 0x1B):  # Enter or Esc closes chat
                     self._is_chat_focused = False
 
-                # Only trigger companion hotkeys if not chatting and focused on Roblox/tracker
-                if not self._is_chat_focused and self._is_roblox_or_tracker_foreground():
-                    mods = self._get_current_modifiers()
-                    hid = self._registered_combos.get((mods, vk))
-                    if hid is not None and self.callback:
-                        self.callback(hid)
+                mods = self._get_current_modifiers()
+                hid = self._registered_combos.get((mods, vk))
+                if hid is not None:
+                    # VK_INSERT (0x2D) is the card picker toggle:
+                    # ALWAYS allow Insert without being gated by chat mode or foreground quirks!
+                    is_picker_toggle = (vk == 0x2D)
+                    if is_picker_toggle or (not self._is_chat_focused and self._is_roblox_or_tracker_foreground()):
+                        if is_picker_toggle:
+                            self._is_chat_focused = False
+                        if self.callback:
+                            self.callback(hid)
         except Exception as exc:
             logger.debug("Exception in _low_level_proc: %s", exc)
 

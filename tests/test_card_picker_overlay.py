@@ -142,6 +142,28 @@ class TestCardPickerOverlay(unittest.TestCase):
         self.picker.set_active_killer("the_killer")
         self.picker.repaint()
 
+    def test_toggle_picker_multiple_times_consecutive_matches(self) -> None:
+        """Memastikan overlay dapat dibuka, ditutup dengan Enter, dan dibuka kembali berkali-kali."""
+        # Match 1: Munculkan picker
+        self.picker.toggle_picker()
+        self.assertTrue(self.picker.isVisible())
+
+        # Match 1: Konfirmasi Enter -> overlay menutup
+        self.picker.confirm_selection()
+        self.picker._on_pos_anim_finished()
+        self.assertFalse(self.picker.isVisible())
+        self.assertFalse(self.picker._is_dismissing)
+
+        # Match 2: Munculkan picker lagi via toggle_picker
+        self.picker.toggle_picker()
+        self.assertTrue(self.picker.isVisible())
+        self.assertFalse(self.picker._is_dismissing)
+
+        # Match 2: Tutup kembali
+        self.picker.confirm_selection()
+        self.picker._on_pos_anim_finished()
+        self.assertFalse(self.picker.isVisible())
+
 
 if __name__ == "__main__":
     unittest.main()

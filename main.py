@@ -1033,7 +1033,8 @@ class CapturePreviewWindow(QMainWindow):
         if hasattr(self, "card_picker") and self.card_picker is not None:
             self.card_picker.set_active_killer(self.config.active_killer_id)
         self.combo_killer.clearFocus()
-        self.setFocus()
+        if self.isActiveWindow():
+            self.setFocus()
 
     def on_ability_selection_changed(self, index: int) -> None:
         """Event listener saat pengguna mengganti kemampuan aktif di GUI."""

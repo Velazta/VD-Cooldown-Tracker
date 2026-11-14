@@ -8,8 +8,10 @@ and confirms via Enter or click.
 
 from __future__ import annotations
 
+import ctypes
 import math
 from pathlib import Path
+import sys
 from typing import Dict, List, Optional, Tuple
 
 from PySide6.QtCore import (
@@ -85,6 +87,7 @@ class CardPickerOverlay(QWidget):
         self._anim_pos = QPropertyAnimation(self, b"pos", self)
         self._anim_pos.finished.connect(self._on_pos_anim_finished)
         self._is_dismissing = False
+        self._prev_foreground_hwnd: Optional[int] = None
 
         # Cache of loaded card pixmaps
         self._card_pixmaps: Dict[str, QPixmap] = {}
@@ -202,7 +205,10 @@ class CardPickerOverlay(QWidget):
 
         chosen_killer = self._killers[self._current_index]
         logger.info("CardPickerOverlay selected killer: '%s' (%s)", chosen_killer.name, chosen_killer.id)
-        self.killer_selected.emit(chosen_killer.id)
+        try:
+            self.killer_selected.emit(chosen_killer.id)
+        except Exception as exc:
+            logger.error("Error emitting killer_selected: %s", exc)
         self.slide_out_and_hide()
 
     # =========================================================================
@@ -227,9 +233,33 @@ class CardPickerOverlay(QWidget):
         start_pos = QPoint(target_x, -self.height() - 20)
         end_pos = QPoint(target_x, target_y)
 
+        if sys.platform == "win32":
+            try:
+                user32 = ctypes.windll.user32
+                fg = user32.GetForegroundWindow()
+                if fg != int(self.winId()):
+                    self._prev_foreground_hwnd = fg
+            except Exception:
+                pass
+
         self.move(start_pos)
         self.show()
         self.raise_()
+
+        if sys.platform == "win32":
+            try:
+                hwnd = int(self.winId())
+                HWND_TOPMOST = -1
+                SWP_NOMOVE = 0x0002
+                SWP_NOSIZE = 0x0001
+                SWP_SHOWWINDOW = 0x0040
+                user32 = ctypes.windll.user32
+                user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
+                user32.SetForegroundWindow(hwnd)
+                user32.BringWindowToTop(hwnd)
+            except Exception as exc:
+                logger.debug("Win32 topmost elevation error: %s", exc)
+
         self.activateWindow()
         self.setFocus()
 
@@ -263,6 +293,12 @@ class CardPickerOverlay(QWidget):
         if self._is_dismissing:
             self.hide()
             self._is_dismissing = False
+            if sys.platform == "win32" and getattr(self, "_prev_foreground_hwnd", None):
+                try:
+                    ctypes.windll.user32.SetForegroundWindow(self._prev_foreground_hwnd)
+                except Exception:
+                    pass
+                self._prev_foreground_hwnd = None
             self.picker_closed.emit()
 
     def toggle_picker(self) -> None:
