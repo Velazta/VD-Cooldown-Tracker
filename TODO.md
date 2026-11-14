@@ -385,16 +385,17 @@
 
 ## Phase 1 — Data Collection & Live Domain Extraction
 - [ ] 👤 HUMAN: Record new gameplay footage across $\ge 6$ skins, varying distances, and $\ge 10$ minutes hard negatives.
-- [ ] Agent: Implement Extraction v2 (`tools/extract_v2.py`) with exact live ROI cropping.
-- [ ] Agent: Implement leak-free video-level split generator (`tools/make_splits.py` -> `dataset/splits.json`).
-- [ ] Agent: Implement event ground-truth validator (`tools/validate_temporal.py`).
-- [ ] 👤 HUMAN: Annotate `cast_start_frame` in `temporal_annotations.json`.
+- [x] Agent: Implement Extraction v2 (`tools/extract_v2.py`) with exact live ROI cropping.
+- [x] Agent: Implement leak-free video-level split generator (`tools/make_splits.py` -> `dataset/splits.json`).
+- [x] Agent: Implement event ground-truth validator (`tools/validate_temporal.py`) and event scrubber (`tools/annotate_events.py`).
+- [ ] 👤 HUMAN: Annotate `cast_start_frame` in `temporal_annotations.json` for any newly added videos.
 
 ## Phase 2 — Manual Labeling & Quality Gate
-- [ ] Lock 2-class schema in `training/classes.yaml` (`0: hidden`, `1: survivor`).
-- [ ] Prepare local annotation workspace (Label Studio / CVAT).
-- [ ] 👤 HUMAN: Manual annotation and correction of entity bounding boxes.
-- [ ] Implement dataset validator (`tools/validate_yolo_dataset.py`).
+- [x] Lock 2-class schema in `training/classes.yaml` (`0: hidden`, `1: survivor`).
+- [x] Author comprehensive labeling guide in `docs/LABELING_GUIDE.md` with visual references (airborne leap poses & survivor distinction).
+- [x] Implement zero-dependency native desktop annotator `tools/annotate_yolo.py`.
+- [x] Implement dataset validator (`tools/validate_yolo_dataset.py`) and generate `training/data.yaml`.
+- [ ] 👤 HUMAN: Manual annotation and correction of entity bounding boxes using `tools/annotate_yolo.py`.
 - [ ] 👤 HUMAN: Quality gate review of 100 random overlay samples ($\ge 95\%$ accuracy).
 🛑 **CHECKPOINT 2:** Menunggu review pemilik terhadap statistik dataset hasil pelabelan.
 

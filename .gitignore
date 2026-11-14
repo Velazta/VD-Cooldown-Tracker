@@ -27,5 +27,7 @@ dataset/extracted/*/*/*.jpg
 dataset/roi_samples/
 dataset/yolo_dataset/images/
 dataset/yolo_dataset/labels/
+dataset/yolo/images/
+dataset/yolo/labels/
 dataset/runs/
 *.pt

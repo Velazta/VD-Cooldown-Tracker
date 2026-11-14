@@ -10,33 +10,99 @@
       "active_leap_window": {
         "start_frame": 75,
         "end_frame": 165,
-        "start_seconds": 2.50,
-        "end_seconds": 5.50
+        "start_seconds": 2.5,
+        "end_seconds": 5.5
       },
       "phases": [
-        {"phase": "idle_pre_leap", "start_frame": 0, "end_frame": 74, "is_leap": false},
-        {"phase": "leap_windup", "start_frame": 75, "end_frame": 86, "is_leap": true},
-        {"phase": "leap_airborne", "start_frame": 87, "end_frame": 145, "is_leap": true},
-        {"phase": "leap_landing", "start_frame": 146, "end_frame": 165, "is_leap": true},
-        {"phase": "recovery_post_leap", "start_frame": 166, "end_frame": 166, "is_leap": false}
+        {
+          "phase": "idle_pre_leap",
+          "start_frame": 0,
+          "end_frame": 74,
+          "is_leap": false
+        },
+        {
+          "phase": "leap_windup",
+          "start_frame": 75,
+          "end_frame": 86,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_airborne",
+          "start_frame": 87,
+          "end_frame": 145,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_landing",
+          "start_frame": 146,
+          "end_frame": 165,
+          "is_leap": true
+        },
+        {
+          "phase": "recovery_post_leap",
+          "start_frame": 166,
+          "end_frame": 166,
+          "is_leap": false
+        }
+      ],
+      "events": [
+        {
+          "ability": "leap",
+          "cast_start_frame": 75,
+          "cast_start_seconds": 2.5,
+          "outcome": "completed"
+        }
       ]
     },
     "hidden1_leap_skill_ref2.mp4": {
       "fps": 30.0,
       "total_frames": 129,
-      "duration_seconds": 4.30,
+      "duration_seconds": 4.3,
       "active_leap_window": {
         "start_frame": 15,
         "end_frame": 55,
-        "start_seconds": 0.50,
+        "start_seconds": 0.5,
         "end_seconds": 1.83
       },
       "phases": [
-        {"phase": "idle_pre_leap", "start_frame": 0, "end_frame": 14, "is_leap": false},
-        {"phase": "leap_windup", "start_frame": 15, "end_frame": 24, "is_leap": true},
-        {"phase": "leap_airborne", "start_frame": 25, "end_frame": 42, "is_leap": true},
-        {"phase": "leap_landing", "start_frame": 43, "end_frame": 55, "is_leap": true},
-        {"phase": "recovery_post_leap", "start_frame": 56, "end_frame": 128, "is_leap": false}
+        {
+          "phase": "idle_pre_leap",
+          "start_frame": 0,
+          "end_frame": 14,
+          "is_leap": false
+        },
+        {
+          "phase": "leap_windup",
+          "start_frame": 15,
+          "end_frame": 24,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_airborne",
+          "start_frame": 25,
+          "end_frame": 42,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_landing",
+          "start_frame": 43,
+          "end_frame": 55,
+          "is_leap": true
+        },
+        {
+          "phase": "recovery_post_leap",
+          "start_frame": 56,
+          "end_frame": 128,
+          "is_leap": false
+        }
+      ],
+      "events": [
+        {
+          "ability": "leap",
+          "cast_start_frame": 30,
+          "cast_start_seconds": 1.0,
+          "outcome": "completed"
+        }
       ]
     },
     "hidden2_leap_skill.mp4": {
@@ -47,32 +113,98 @@
         "start_frame": 55,
         "end_frame": 120,
         "start_seconds": 1.83,
-        "end_seconds": 4.00
+        "end_seconds": 4.0
       },
       "phases": [
-        {"phase": "idle_pre_leap", "start_frame": 0, "end_frame": 54, "is_leap": false},
-        {"phase": "leap_windup", "start_frame": 55, "end_frame": 68, "is_leap": true},
-        {"phase": "leap_airborne", "start_frame": 69, "end_frame": 100, "is_leap": true},
-        {"phase": "leap_landing", "start_frame": 101, "end_frame": 120, "is_leap": true},
-        {"phase": "recovery_post_leap", "start_frame": 121, "end_frame": 156, "is_leap": false}
+        {
+          "phase": "idle_pre_leap",
+          "start_frame": 0,
+          "end_frame": 54,
+          "is_leap": false
+        },
+        {
+          "phase": "leap_windup",
+          "start_frame": 55,
+          "end_frame": 68,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_airborne",
+          "start_frame": 69,
+          "end_frame": 100,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_landing",
+          "start_frame": 101,
+          "end_frame": 120,
+          "is_leap": true
+        },
+        {
+          "phase": "recovery_post_leap",
+          "start_frame": 121,
+          "end_frame": 156,
+          "is_leap": false
+        }
+      ],
+      "events": [
+        {
+          "ability": "leap",
+          "cast_start_frame": 40,
+          "cast_start_seconds": 1.33,
+          "outcome": "completed"
+        }
       ]
     },
     "hidden3_leap_skill.mp4": {
       "fps": 30.0,
       "total_frames": 408,
-      "duration_seconds": 13.60,
+      "duration_seconds": 13.6,
       "active_leap_window": {
         "start_frame": 270,
         "end_frame": 340,
-        "start_seconds": 9.00,
+        "start_seconds": 9.0,
         "end_seconds": 11.33
       },
       "phases": [
-        {"phase": "idle_pre_leap", "start_frame": 0, "end_frame": 269, "is_leap": false},
-        {"phase": "leap_windup", "start_frame": 270, "end_frame": 285, "is_leap": true},
-        {"phase": "leap_airborne", "start_frame": 286, "end_frame": 320, "is_leap": true},
-        {"phase": "leap_landing", "start_frame": 321, "end_frame": 340, "is_leap": true},
-        {"phase": "recovery_post_leap", "start_frame": 341, "end_frame": 407, "is_leap": false}
+        {
+          "phase": "idle_pre_leap",
+          "start_frame": 0,
+          "end_frame": 269,
+          "is_leap": false
+        },
+        {
+          "phase": "leap_windup",
+          "start_frame": 270,
+          "end_frame": 285,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_airborne",
+          "start_frame": 286,
+          "end_frame": 320,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_landing",
+          "start_frame": 321,
+          "end_frame": 340,
+          "is_leap": true
+        },
+        {
+          "phase": "recovery_post_leap",
+          "start_frame": 341,
+          "end_frame": 407,
+          "is_leap": false
+        }
+      ],
+      "events": [
+        {
+          "ability": "leap",
+          "cast_start_frame": 110,
+          "cast_start_seconds": 3.67,
+          "outcome": "completed"
+        }
       ]
     },
     "hidden3_leap_skills.mp4": {
@@ -86,17 +218,50 @@
         "end_seconds": 1.83
       },
       "phases": [
-        {"phase": "idle_pre_leap", "start_frame": 0, "end_frame": 0, "is_leap": false},
-        {"phase": "leap_windup", "start_frame": 1, "end_frame": 10, "is_leap": true},
-        {"phase": "leap_airborne", "start_frame": 11, "end_frame": 40, "is_leap": true},
-        {"phase": "leap_landing", "start_frame": 41, "end_frame": 55, "is_leap": true},
-        {"phase": "recovery_post_leap", "start_frame": 56, "end_frame": 76, "is_leap": false}
+        {
+          "phase": "idle_pre_leap",
+          "start_frame": 0,
+          "end_frame": 0,
+          "is_leap": false
+        },
+        {
+          "phase": "leap_windup",
+          "start_frame": 1,
+          "end_frame": 10,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_airborne",
+          "start_frame": 11,
+          "end_frame": 40,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_landing",
+          "start_frame": 41,
+          "end_frame": 55,
+          "is_leap": true
+        },
+        {
+          "phase": "recovery_post_leap",
+          "start_frame": 56,
+          "end_frame": 76,
+          "is_leap": false
+        }
+      ],
+      "events": [
+        {
+          "ability": "leap",
+          "cast_start_frame": 15,
+          "cast_start_seconds": 0.5,
+          "outcome": "completed"
+        }
       ]
     },
     "hidden_leap+mark_comboskill.mp4": {
       "fps": 30.0,
       "total_frames": 258,
-      "duration_seconds": 8.60,
+      "duration_seconds": 8.6,
       "active_leap_window": {
         "start_frame": 157,
         "end_frame": 230,
@@ -104,12 +269,158 @@
         "end_seconds": 7.67
       },
       "phases": [
-        {"phase": "mark_pre_combo", "start_frame": 0, "end_frame": 156, "is_leap": false},
-        {"phase": "leap_windup", "start_frame": 157, "end_frame": 168, "is_leap": true},
-        {"phase": "leap_airborne", "start_frame": 169, "end_frame": 205, "is_leap": true},
-        {"phase": "leap_landing", "start_frame": 206, "end_frame": 230, "is_leap": true},
-        {"phase": "recovery_post_leap", "start_frame": 231, "end_frame": 257, "is_leap": false}
+        {
+          "phase": "mark_pre_combo",
+          "start_frame": 0,
+          "end_frame": 156,
+          "is_leap": false
+        },
+        {
+          "phase": "leap_windup",
+          "start_frame": 157,
+          "end_frame": 168,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_airborne",
+          "start_frame": 169,
+          "end_frame": 205,
+          "is_leap": true
+        },
+        {
+          "phase": "leap_landing",
+          "start_frame": 206,
+          "end_frame": 230,
+          "is_leap": true
+        },
+        {
+          "phase": "recovery_post_leap",
+          "start_frame": 231,
+          "end_frame": 257,
+          "is_leap": false
+        }
+      ],
+      "events": [
+        {
+          "ability": "leap",
+          "cast_start_frame": 35,
+          "cast_start_seconds": 1.17,
+          "outcome": "completed"
+        },
+        {
+          "ability": "mark",
+          "cast_start_frame": 140,
+          "cast_start_seconds": 4.67,
+          "outcome": "completed"
+        }
       ]
+    },
+    "hidden1_basic_hit.mp4": {
+      "fps": 60.0,
+      "total_frames": 164,
+      "duration_seconds": 2.73,
+      "events": []
+    },
+    "hidden1_basic_hit_survivor.mp4": {
+      "fps": 60.0,
+      "total_frames": 338,
+      "duration_seconds": 5.63,
+      "events": []
+    },
+    "hidden1_basic_hit_wall.mp4": {
+      "fps": 30.0,
+      "total_frames": 133,
+      "duration_seconds": 4.43,
+      "events": []
+    },
+    "hidden1_mark_skill_hitsurvivor.mp4": {
+      "fps": 30.0,
+      "total_frames": 143,
+      "duration_seconds": 4.77,
+      "events": [
+        {
+          "ability": "mark",
+          "cast_start_frame": 40,
+          "cast_start_seconds": 1.33,
+          "outcome": "hit"
+        }
+      ]
+    },
+    "hidden1_mark_skill_nohitsurvivor.mp4": {
+      "fps": 30.0,
+      "total_frames": 139,
+      "duration_seconds": 4.63,
+      "events": [
+        {
+          "ability": "mark",
+          "cast_start_frame": 35,
+          "cast_start_seconds": 1.17,
+          "outcome": "miss"
+        }
+      ]
+    },
+    "hidden2_mark_skill.mp4": {
+      "fps": 30.0,
+      "total_frames": 134,
+      "duration_seconds": 4.47,
+      "events": [
+        {
+          "ability": "mark",
+          "cast_start_frame": 40,
+          "cast_start_seconds": 1.33,
+          "outcome": "completed"
+        }
+      ]
+    },
+    "hidden_chasing+mark_skill.mp4": {
+      "fps": 30.0,
+      "total_frames": 225,
+      "duration_seconds": 7.5,
+      "events": [
+        {
+          "ability": "mark",
+          "cast_start_frame": 120,
+          "cast_start_seconds": 4.0,
+          "outcome": "completed"
+        }
+      ]
+    },
+    "hidden_chasing2_skill.mp4": {
+      "fps": 30.0,
+      "total_frames": 1418,
+      "duration_seconds": 47.27,
+      "events": []
+    },
+    "hidden_chasing_skill.mp4": {
+      "fps": 30.0,
+      "total_frames": 1006,
+      "duration_seconds": 33.53,
+      "events": []
+    },
+    "hidden_mark_skill_ref2.mp4": {
+      "fps": 30.0,
+      "total_frames": 126,
+      "duration_seconds": 4.2,
+      "events": [
+        {
+          "ability": "mark",
+          "cast_start_frame": 35,
+          "cast_start_seconds": 1.17,
+          "outcome": "completed"
+        }
+      ]
+    },
+    "hidden_movement_chasing.mp4": {
+      "fps": 30.0,
+      "total_frames": 304,
+      "duration_seconds": 10.13,
+      "events": []
+    },
+    "hidden_movement_chasing2.mp4": {
+      "fps": 30.0,
+      "total_frames": 142,
+      "duration_seconds": 4.73,
+      "events": []
     }
   }
 }

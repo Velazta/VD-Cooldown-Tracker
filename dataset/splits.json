@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "split_strategy": "by_video_leak_free",
+  "total_videos": 18,
+  "unseen_test_skin_prefixes": [
+    "hidden3_"
+  ],
+  "counts": {
+    "train": 10,
+    "val": 3,
+    "test": 5
+  },
+  "splits": {
+    "train": [
+      "hidden1_basic_hit.mp4",
+      "hidden1_basic_hit_wall.mp4",
+      "hidden1_leap_skill.mp4",
+      "hidden1_mark_skill_hitsurvivor.mp4",
+      "hidden1_mark_skill_nohitsurvivor.mp4",
+      "hidden_chasing_skill.mp4",
+      "hidden_leap+mark_comboskill.mp4",
+      "hidden_mark_skill_ref2.mp4",
+      "hidden_movement_chasing.mp4",
+      "hidden_movement_chasing2.mp4"
+    ],
+    "val": [
+      "hidden2_leap_skill.mp4",
+      "hidden_chasing+mark_skill.mp4",
+      "hidden_chasing2_skill.mp4"
+    ],
+    "test": [
+      "hidden1_basic_hit_survivor.mp4",
+      "hidden1_leap_skill_ref2.mp4",
+      "hidden2_mark_skill.mp4",
+      "hidden3_leap_skill.mp4",
+      "hidden3_leap_skills.mp4"
+    ]
+  },
+  "video_to_split": {
+    "hidden_leap+mark_comboskill.mp4": "train",
+    "hidden1_leap_skill.mp4": "train",
+    "hidden1_mark_skill_hitsurvivor.mp4": "train",
+    "hidden_mark_skill_ref2.mp4": "train",
+    "hidden1_mark_skill_nohitsurvivor.mp4": "train",
+    "hidden1_basic_hit_wall.mp4": "train",
+    "hidden1_basic_hit.mp4": "train",
+    "hidden_chasing_skill.mp4": "train",
+    "hidden_movement_chasing2.mp4": "train",
+    "hidden_movement_chasing.mp4": "train",
+    "hidden2_leap_skill.mp4": "val",
+    "hidden_chasing+mark_skill.mp4": "val",
+    "hidden_chasing2_skill.mp4": "val",
+    "hidden3_leap_skill.mp4": "test",
+    "hidden3_leap_skills.mp4": "test",
+    "hidden1_leap_skill_ref2.mp4": "test",
+    "hidden2_mark_skill.mp4": "test",
+    "hidden1_basic_hit_survivor.mp4": "test"
+  }
+}

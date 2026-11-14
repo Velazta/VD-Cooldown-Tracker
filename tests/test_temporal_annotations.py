@@ -34,16 +34,18 @@ class TestTemporalAnnotations(unittest.TestCase):
         self.assertIn("videos", data)
 
         videos = data["videos"]
-        self.assertEqual(len(videos), 6)  # 6 rekaman Leap
+        self.assertGreaterEqual(len(videos), 6)  # Minimal 6 rekaman Leap, sekarang 18 video
 
+        leap_videos_count = 0
         for vname, vdata in videos.items():
             fps = vdata["fps"]
             total_fc = vdata["total_frames"]
-            self.assertEqual(fps, 30.0)
+            self.assertIn(fps, (30.0, 60.0))
             self.assertGreater(total_fc, 0)
 
-            phases = vdata["phases"]
-            self.assertGreater(len(phases), 0)
+            phases = vdata.get("phases", [])
+            if not phases:
+                continue
 
             # Verifikasi kontinuitas rentang frame
             current_frame = 0
@@ -55,11 +57,14 @@ class TestTemporalAnnotations(unittest.TestCase):
             # Pastikan frame terakhir mencapai total_frames - 1
             self.assertEqual(phases[-1]["end_frame"], total_fc - 1)
 
-            # Pastikan fase Leap ada dan valid
+            # Cek jika video ini mengandung fase Leap
             leap_phases = [p for p in phases if p.get("is_leap")]
-            self.assertGreater(len(leap_phases), 0)
-            for lp in leap_phases:
-                self.assertIn(lp["phase"], ("leap_windup", "leap_airborne", "leap_landing"))
+            if leap_phases:
+                leap_videos_count += 1
+                for lp in leap_phases:
+                    self.assertIn(lp["phase"], ("leap_windup", "leap_airborne", "leap_landing"))
+
+        self.assertEqual(leap_videos_count, 6)
 
     def test_extracted_manifest_phases_and_label_integrity(self) -> None:
         """Memastikan manifest hasil ekstraksi memisahkan fase Leap dari pre-idle / recovery."""

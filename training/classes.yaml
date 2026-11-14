@@ -1,0 +1,8 @@
+# YOLO Entity Classification Schema (Rebuild v2)
+# Locked for Violence District Cooldown Tracker
+# Defines entity detection classes only (action recognition is handled temporally by Tracker & Recognizer)
+
+nc: 2
+names:
+  0: hidden    # Seluruh badan The Hidden (semua varian skin, semua pose/fase: grounded, airborne, mark)
+  1: survivor  # Karakter survivor (hard negative untuk mencegah misidentifikasi survivor perekam / kawan)
