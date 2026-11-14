@@ -365,3 +365,62 @@
 - [ ] Document supported capture modes.
 - [ ] Document known limitations.
 - [ ] Prepare final demonstration.
+
+
+---
+
+# Detector Rebuild Roadmap (The Hidden: Leap & Mark)
+
+## Phase 0 — Freeze & Audit (Completed)
+- [x] Create branch `feat/detector-rebuild` (Task 0.1).
+- [x] Implement label and bounding box audit tool in `tools/audit_labels.py` (Task 0.2).
+- [x] Add unit test suite in `tests/test_audit_labels.py` (Task 0.2).
+- [x] Execute audit and generate `dataset/DATA_AUDIT_REPORT.md` validating findings A–O (Task 0.2b).
+- [x] Quarantine legacy MOG2 bounding boxes and labels to `dataset/legacy_mog2/` with warning README (Task 0.3).
+- [x] Refactor `tools/spatial_annotator.py` docstring as draft pre-annotation only and eliminate silent class 3 fallback bug (Task 0.4).
+- [x] Mark `dataset/trajectory_profiles.json` and `dataset/templates/the_hidden/` as `invalid_mog2_source` (Task 0.5).
+- [x] Update `RISK.md` and `TODO.md` with audit findings A–O (Task 0.6).
+
+🛑 **CHECKPOINT 0:** Menunggu konfirmasi pemilik terhadap target (Bagian 2) dan scope (The Hidden saja).
+
+## Phase 1 — Data Collection & Live Domain Extraction
+- [ ] 👤 HUMAN: Record new gameplay footage across $\ge 6$ skins, varying distances, and $\ge 10$ minutes hard negatives.
+- [ ] Agent: Implement Extraction v2 (`tools/extract_v2.py`) with exact live ROI cropping.
+- [ ] Agent: Implement leak-free video-level split generator (`tools/make_splits.py` -> `dataset/splits.json`).
+- [ ] Agent: Implement event ground-truth validator (`tools/validate_temporal.py`).
+- [ ] 👤 HUMAN: Annotate `cast_start_frame` in `temporal_annotations.json`.
+
+## Phase 2 — Manual Labeling & Quality Gate
+- [ ] Lock 2-class schema in `training/classes.yaml` (`0: hidden`, `1: survivor`).
+- [ ] Prepare local annotation workspace (Label Studio / CVAT).
+- [ ] 👤 HUMAN: Manual annotation and correction of entity bounding boxes.
+- [ ] Implement dataset validator (`tools/validate_yolo_dataset.py`).
+- [ ] 👤 HUMAN: Quality gate review of 100 random overlay samples ($\ge 95\%$ accuracy).
+🛑 **CHECKPOINT 2:** Menunggu review pemilik terhadap statistik dataset hasil pelabelan.
+
+## Phase 3 — Detector Training & Small-Object Optimization
+- [ ] Set up isolated training environment (`training/requirements-train.txt`).
+- [ ] Execute controlled experiments matrix (`training/train_detector.py`) with imgsz 640/960/1280.
+- [ ] (Optional) Synthetic alpha-skin compositing ablation (`tools/synth_composite.py`).
+- [ ] Execute 2 rounds of hard-negative mining on negative footage.
+- [ ] Produce comprehensive detector report in `training/REPORT.md`.
+🛑 **CHECKPOINT 3:** Menunggu review pemilik terhadap laporan hasil training.
+
+## Phase 4 — Tracker & Recognizer
+- [ ] Implement `detection/hidden_tracker.py` (IoU/centroid association + N-frame hold).
+- [ ] Refactor kinematics into `detection/kinematics.py` and rebuild profiles from manual annotations.
+- [ ] Implement `detection/leap_recognizer.py` (sliding-window parabolic fit relative to survivor/ground).
+- [ ] Conduct Mark signature study in `dataset/MARK_SIGNATURE_STUDY.md`.
+- [ ] Implement `detection/mark_recognizer.py` based on empirical study findings.
+
+## Phase 5 — Event Validator & Multi-Ability Integration
+- [ ] Implement `detection/event_validator.py` (state machine: IDLE -> CANDIDATE -> CONFIRMED -> REFRACTORY).
+- [ ] Implement `CooldownBank` supporting simultaneous tracking of Leap and Mark.
+- [ ] Implement asynchronous background `DetectorService` (`detection/detector_service.py`).
+- [ ] Implement decision audit logger (`logs/detections.jsonl`).
+
+## Phase 6 — Replay Evaluation & Live Testing
+- [ ] Implement end-to-end replay evaluator (`tools/evaluate_pipeline.py`).
+- [ ] Run ablation study and generate `dataset/WEEK3_EVAL_REPORT.md`.
+- [ ] 👤 HUMAN: Live in-game testing across 10 matches.
+🛑 **CHECKPOINT 6:** Evaluasi kelulusan akhir terhadap kriteria target.

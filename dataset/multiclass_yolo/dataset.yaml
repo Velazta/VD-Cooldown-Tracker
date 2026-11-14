@@ -1,0 +1,5 @@
+path: D:/KULIAH/CODINGAN/OverlayToolsVD/dataset/multiclass_yolo
+train: images/train
+val: images/val
+nc: 3
+names: ['hidden_grounded', 'hidden_leap_airborne', 'hidden_mark_stab']

@@ -4550,5 +4550,7 @@
         }
       ]
     }
-  ]
+  ],
+  "status": "invalid_mog2_source",
+  "invalidation_reason": "Calculated from legacy MOG2 bounding boxes that suffered from survivor/background contamination. Must be rebuilt from manual annotations."
 }

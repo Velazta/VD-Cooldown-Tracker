@@ -1,17 +1,20 @@
-"""Spatial Bounding Box Annotator & Killer ROI Extractor.
+"""Draft Pre-Annotation Tool & Proposal Generator (MOG2 Heuristic).
 
-Violence District Cooldown Tracker — Week 3 (Day 16)
-Detects, bounds, and normalizes Killer bounding boxes (x, y, w, h) across action sequences.
-Exports:
-- dataset/annotations/bounding_boxes.json (Structured spatial bounding box manifest)
-- dataset/extracted/labels/ (Standard YOLO-format normalized coordinate text files)
-- dataset/extracted/killer_rois/ (Cropped bounding box image patches for template baseline)
+Violence District Cooldown Tracker — Detector Rebuild (Phase 0 Refactor)
+
+IMPORTANT NOTICE:
+This tool produces DRAFT PRE-ANNOTATIONS ONLY. It is NOT ground truth.
+Bounding boxes are generated via MOG2 motion heuristics and are subject to
+false positives (survivor body, background walls, projectile effects).
+All output from this tool MUST be manually verified and corrected by a human
+before being used for model training or evaluation.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import warnings
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -19,18 +22,15 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 
-
-CLASS_MAP: Dict[str, int] = {
-    "leap_airborne": 0,
-    "leap_windup": 1,
-    "leap_landing": 2,
-    "negative_action": 3,
-    "idle_pre_leap": 3,
-    "recovery_post_leap": 3,
-    "basic_attack": 3,
-    "mark_action": 3,
-    "chasing_movement": 3,
+# Revised draft class mapping (Draft proposals only; not to be used as ground truth)
+DRAFT_CLASS_MAP: Dict[str, int] = {
+    "the_hidden": 0,
+    "killer": 0,
+    "survivor": 1,
+    "unassigned": -1,
 }
+# Backward compatibility alias with deprecation warning
+CLASS_MAP = DRAFT_CLASS_MAP
 
 
 @dataclass
@@ -92,6 +92,12 @@ class SpatialAnnotator:
         self.yolo_labels_dir = Path(yolo_labels_dir).resolve()
         self.min_contour_area = min_contour_area
         self.max_contour_area_pct = max_contour_area_pct
+
+        warnings.warn(
+            "SpatialAnnotator generates DRAFT pre-annotations only, NOT ground truth.",
+            UserWarning,
+            stacklevel=2,
+        )
 
     def detect_killer_bbox(
         self,
@@ -199,7 +205,8 @@ class SpatialAnnotator:
                 bbox = self.detect_killer_bbox(frame, fgbg)
                 phase = f_info.get("phase", "unknown")
                 label = f_info.get("label", "unknown")
-                class_id = CLASS_MAP.get(phase, CLASS_MAP.get(label, 3))
+                # Hindari fallback diam-diam ke kelas 3 (bug lama temuan D)
+                class_id = CLASS_MAP.get(phase, CLASS_MAP.get(label, 0 if ("leap" in phase or "mark" in phase) else -1))
 
                 has_det = bbox is not None
                 if has_det and bbox:

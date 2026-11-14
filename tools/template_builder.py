@@ -48,7 +48,16 @@ class TemplateBuilder:
         bounding_boxes_path: Path = Path("dataset/annotations/bounding_boxes.json"),
         output_dir: Path = Path("dataset/templates/the_hidden"),
     ) -> None:
-        self.bounding_boxes_path = Path(bounding_boxes_path).resolve()
+        p = Path(bounding_boxes_path)
+        if not p.exists() and Path("dataset/legacy_mog2/bounding_boxes.json").exists():
+            import warnings
+            warnings.warn(
+                "TemplateBuilder reading legacy MOG2 bounding boxes! Marked invalid_mog2_source.",
+                UserWarning,
+                stacklevel=2,
+            )
+            p = Path("dataset/legacy_mog2/bounding_boxes.json")
+        self.bounding_boxes_path = p.resolve()
         self.output_dir = Path(output_dir).resolve()
 
     def build_templates(self) -> TemplateManifest:

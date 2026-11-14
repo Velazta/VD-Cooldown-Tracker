@@ -87,27 +87,30 @@ def build_entity_dataset(
         dummy_bg[:] = (30, 28, 24)
         bg_sources.append(dummy_bg)
 
-    # 2. Kumpulkan SEMUA 52 Skin Killer The Hidden
+    # 2. Kumpulkan CUTOUT ASLI THE HIDDEN SAJA (Membawa Pisau, Pink Blindfold, atau Topi Fedora)
     killer_cutouts: List[np.ndarray] = []
-    skin_dir = PROJECT_ROOT / "database" / "dataset" / "HIDDEN" / "PNG" / "SKIN"
-    if skin_dir.exists():
-        for sp in skin_dir.glob("*/*.png"):
-            simg = cv2.imread(str(sp))
-            if simg is not None:
-                cropped = clean_crop_alpha(simg)
-                if cropped is not None and cropped.shape[0] > 40 and cropped.shape[1] > 20:
-                    killer_cutouts.append(cropped)
 
-    # Tambahkan template in-game The Hidden
+    # A. User-uploaded verified The Hidden images
+    user_dir = Path("C:/Users/Lenovo/.gemini/antigravity/brain/40af1f6c-8f5e-4028-adc3-2c5fc22e9300/.user_uploaded")
+    for up_name in [
+        "media_1794581792709_641305e9.png", # The Hidden Green Leap (Top Hat & Knife)
+        "media_1794581792710_b9f458d2.png", # The Hidden Pink Leap 1 (Blindfold & Knife)
+        "media_1794581792712_2204fe7d.png", # The Hidden Pink Leap 2 (Blindfold & Knife)
+        "media_1794577878322_e9a6d7c6.png", # The Hidden Green Leap 2
+    ]:
+        up_p = user_dir / up_name
+        if up_p.exists():
+            c = cv2.imread(str(up_p))
+            if c is not None:
+                killer_cutouts.append(clean_crop_alpha(c))
+
+    # B. Verified The Hidden templates ASLI (HANYA yang membawa pisau, BUKAN survivor baju putih)
     t_hidden = PROJECT_ROOT / "dataset" / "templates" / "the_hidden"
     for name in [
         "template_idle_pre_leap_var1.png",
         "template_idle_pre_leap_var2.png",
-        "template_leap_airborne_var1.png",
-        "template_leap_airborne_var2.png",
         "template_mark_solo_var1.png",
         "template_mark_solo_var2.png",
-        "template_hit_survivor_var1.png",
         "template_hit_wall_var1.png",
     ]:
         p = t_hidden / name
@@ -116,22 +119,35 @@ def build_entity_dataset(
             if c is not None:
                 killer_cutouts.append(clean_crop_alpha(c))
 
-    # Tambahkan user-uploaded Leap images (green outline dan pink skin)
-    user_dir = Path("C:/Users/Lenovo/.gemini/antigravity/brain/40af1f6c-8f5e-4028-adc3-2c5fc22e9300/.user_uploaded")
-    for up_name in [
-        "media_1794581792709_641305e9.png", # green leap
-        "media_1794581792710_b9f458d2.png", # pink leap 1
-        "media_1794581792712_2204fe7d.png", # pink leap 2
-        "media_1794577878322_e9a6d7c6.png", # green leap 2
-    ]:
-        up_p = user_dir / up_name
-        if up_p.exists():
-            c = cv2.imread(str(up_p))
+    # C. Referensi pose The Hidden (Pink blindfold dengan pisau)
+    ref_dir = Path("C:/Users/Lenovo/.gemini/antigravity/brain/40af1f6c-8f5e-4028-adc3-2c5fc22e9300/references")
+    for rname in ["pose_case1_idle_stay.png", "pose_case4_mark_stab_db.png", "ref_case2_walk_chase.png"]:
+        rp = ref_dir / rname
+        if rp.exists():
+            c = cv2.imread(str(rp))
             if c is not None:
                 killer_cutouts.append(clean_crop_alpha(c))
 
-    # 3. Kumpulkan Survivor Cutouts
+    # D. Verified cutouts The Hidden dari dataset/killer_cutouts/ (termasuk leap2_0, leap3_0, mark5_1, mark6_1)
+    k_dir = PROJECT_ROOT / "dataset" / "killer_cutouts"
+    if k_dir.exists():
+        for kp in k_dir.glob("*.jpg"):
+            c = cv2.imread(str(kp))
+            if c is not None:
+                killer_cutouts.append(clean_crop_alpha(c))
+
+    # 3. Kumpulkan SURVIVOR (TERMASUK BAJU PUTIH & VEIL SPECTATOR) SEBAGAI KELAS 1 (NEGATIF KERAS)
     survivor_cutouts: List[np.ndarray] = []
+    
+    # A. Survivor baju putih (dari leap4 dan template salah lama), laptop photos
+    # Masukkan template lama yang salah (baju putih) ke kelas SURVIVOR agar model belajar ini BUKAN killer!
+    for wrong_name in ["template_leap_airborne_var1.png", "template_leap_airborne_var2.png", "template_hit_survivor_var1.png"]:
+        wp = t_hidden / wrong_name
+        if wp.exists():
+            wc = cv2.imread(str(wp))
+            if wc is not None:
+                survivor_cutouts.append(clean_crop_alpha(wc))
+
     surv_dir = PROJECT_ROOT / "dataset" / "survivor_cutouts"
     if surv_dir.exists():
         for sp in surv_dir.glob("*.png"):
@@ -139,7 +155,26 @@ def build_entity_dataset(
             if simg is not None and simg.shape[0] > 40 and simg.shape[1] > 20:
                 survivor_cutouts.append(clean_crop_alpha(simg))
 
-    print(f"Dataset Assets: Killer Cutouts={len(killer_cutouts)}, Survivor Cutouts={len(survivor_cutouts)}, Backgrounds={len(bg_sources)}")
+    # B. Veil / Spectator mode screenshots dari database (Negatif keras agar tidak disangka The Hidden)
+    skin_dir = PROJECT_ROOT / "database" / "dataset" / "HIDDEN" / "PNG" / "SKIN"
+    if skin_dir.exists():
+        for sp in skin_dir.glob("*/*.png"):
+            simg = cv2.imread(str(sp))
+            if simg is not None:
+                cropped = clean_crop_alpha(simg)
+                if cropped is not None and cropped.shape[0] > 40 and cropped.shape[1] > 20:
+                    survivor_cutouts.append(cropped)
+
+    # 4. Kumpulkan Hard Negative Distractors (batu/tembok/tanah: leap2_1, leap3_1, leap3_2, mark5_0, mark6_0)
+    hard_negatives: List[np.ndarray] = []
+    hn_dir = PROJECT_ROOT / "dataset" / "hard_negatives"
+    if hn_dir.exists():
+        for hnp in hn_dir.glob("*.jpg"):
+            himg = cv2.imread(str(hnp))
+            if himg is not None:
+                hard_negatives.append(himg)
+
+    print(f"Dataset Assets: Killer Cutouts={len(killer_cutouts)}, Survivor Cutouts={len(survivor_cutouts)}, Hard Negatives={len(hard_negatives)}, Backgrounds={len(bg_sources)}")
 
     def generate_single_sample(split: str, sample_idx: int) -> None:
         bg_raw = random.choice(bg_sources)
@@ -154,6 +189,18 @@ def build_entity_dataset(
             with open(OUTPUT_DIR / "labels" / split / lbl_fn, "w") as fp:
                 pass
             return
+
+        # Tempel hard negative distractor (batu, tembok, rumput) ke background tanpa label (agar model tidak false detect)
+        if hard_negatives and random.random() < 0.40:
+            hn_crop = random.choice(hard_negatives).copy()
+            hnh, hnw = hn_crop.shape[:2]
+            scale_hn = random.uniform(0.5, 1.2)
+            nhnw = max(20, min(target_w - 20, int(hnw * scale_hn)))
+            nhnh = max(20, min(target_h - 20, int(hnh * scale_hn)))
+            hn_resized = cv2.resize(hn_crop, (nhnw, nhnh), interpolation=cv2.INTER_AREA)
+            hn_x = random.randint(0, target_w - nhnw)
+            hn_y = random.randint(0, target_h - nhnh)
+            canvas[hn_y:hn_y+nhnh, hn_x:hn_x+nhnw] = hn_resized
 
         labels_to_write: List[str] = []
 

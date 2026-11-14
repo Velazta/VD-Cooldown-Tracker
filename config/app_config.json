@@ -10,10 +10,10 @@
     "backend": "windows_capture",
     "target_fps": 30,
     "roi": {
-      "x": 140,
-      "y": 0,
-      "width": 1660,
-      "height": 840,
+      "x": 130,
+      "y": 10,
+      "width": 1540,
+      "height": 580,
       "enabled": true
     }
   },

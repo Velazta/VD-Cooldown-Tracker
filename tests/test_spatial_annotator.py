@@ -26,8 +26,14 @@ class TestSpatialAnnotator(unittest.TestCase):
     """Test suite untuk SpatialAnnotator."""
 
     def setUp(self) -> None:
-        self.manifest_file = PROJECT_ROOT / "dataset" / "annotations" / "bounding_boxes.json"
-        self.yolo_dir = PROJECT_ROOT / "dataset" / "extracted" / "labels"
+        # Cek path legacy_mog2 jika annotations lama sudah dipindahkan sesuai Phase 0
+        self.manifest_file = PROJECT_ROOT / "dataset" / "legacy_mog2" / "bounding_boxes.json"
+        if not self.manifest_file.exists():
+            self.manifest_file = PROJECT_ROOT / "dataset" / "annotations" / "bounding_boxes.json"
+
+        self.yolo_dir = PROJECT_ROOT / "dataset" / "legacy_mog2" / "labels"
+        if not self.yolo_dir.exists():
+            self.yolo_dir = PROJECT_ROOT / "dataset" / "extracted" / "labels"
 
     def test_bounding_boxes_manifest_validity(self) -> None:
         """Memastikan manifest bounding box memuat anotasi spasial dengan koordinat ternormalisasi yang valid."""

@@ -143,5 +143,7 @@
       "aspect_ratio": 1.119,
       "relative_path": "templates/the_hidden/template_idle_pre_leap_var2.png"
     }
-  ]
+  ],
+  "status": "invalid_mog2_source",
+  "invalidation_reason": "Extracted using MOG2 bounding box proposals that included survivor white-shirt and wall crops. Must be rebuilt from manual annotations."
 }

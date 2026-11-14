@@ -59,7 +59,20 @@ class DatasetAnnotator:
         train_ratio: float = 0.80,
         random_seed: int = 42,
     ) -> None:
-        self.annotations_json = annotations_json or (PROJECT_ROOT / "dataset" / "annotations" / "bounding_boxes.json")
+        import warnings
+        if annotations_json is not None:
+            self.annotations_json = Path(annotations_json).resolve()
+        else:
+            legacy_p = PROJECT_ROOT / "dataset" / "legacy_mog2" / "bounding_boxes.json"
+            if legacy_p.exists():
+                warnings.warn(
+                    "DatasetAnnotator reading legacy MOG2 bounding boxes! Coarse draft proposal only.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                self.annotations_json = legacy_p
+            else:
+                self.annotations_json = PROJECT_ROOT / "dataset" / "annotations" / "bounding_boxes.json"
         self.output_dir = output_dir or (PROJECT_ROOT / "dataset" / "yolo_dataset")
         self.train_ratio = train_ratio
         self.random_seed = random_seed
