@@ -151,7 +151,7 @@ class ManualSettings:
         "trigger_ability_3": "Numpad3",
         "reset_all": "Numpad0",
         "toggle_overlay": "Numpad.",
-        "toggle_card_picker": "Insert",
+        "toggle_card_picker": "=",
     })
 
     def to_dict(self) -> Dict[str, Any]:

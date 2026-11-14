@@ -103,7 +103,7 @@ class HotkeyRebindDialog(QDialog):
         self.input_ab3 = QLineEdit(current_map.get("trigger_ability_3", "Numpad3"))
         self.input_reset = QLineEdit(current_map.get("reset_all", "Numpad0"))
         self.input_overlay = QLineEdit(current_map.get("toggle_overlay", "Numpad."))
-        self.input_card_picker = QLineEdit(current_map.get("toggle_card_picker", "Insert"))
+        self.input_card_picker = QLineEdit(current_map.get("toggle_card_picker", "="))
 
         form.addRow("Ability 1:", self.input_ab1)
         form.addRow("Ability 2:", self.input_ab2)
@@ -131,7 +131,7 @@ class HotkeyRebindDialog(QDialog):
         self.input_ab3.setText("Numpad3")
         self.input_reset.setText("P")
         self.input_overlay.setText("'")
-        self.input_card_picker.setText("Insert")
+        self.input_card_picker.setText("=")
 
     def _apply_preset_numpad(self) -> None:
         self.input_ab1.setText("Numpad1")
@@ -139,7 +139,7 @@ class HotkeyRebindDialog(QDialog):
         self.input_ab3.setText("Numpad3")
         self.input_reset.setText("Numpad0")
         self.input_overlay.setText("Numpad.")
-        self.input_card_picker.setText("Insert")
+        self.input_card_picker.setText("=")
 
     def _apply_preset_laptop(self) -> None:
         self.input_ab1.setText("Alt+1")
@@ -147,7 +147,7 @@ class HotkeyRebindDialog(QDialog):
         self.input_ab3.setText("Alt+3")
         self.input_reset.setText("Alt+0")
         self.input_overlay.setText("Alt+H")
-        self.input_card_picker.setText("Insert")
+        self.input_card_picker.setText("=")
 
     def _save_and_apply(self) -> None:
         new_map = {
@@ -537,10 +537,10 @@ class CapturePreviewWindow(QMainWindow):
 
         self._update_killer_display()
 
-        card_pk_key = self.config.manual.hotkeys.get('toggle_card_picker', 'Insert')
+        card_pk_key = self.config.manual.hotkeys.get('toggle_card_picker', '=')
         self.btn_open_card_picker = QPushButton(f"🎴 Card Pick Carousel ({card_pk_key})")
         self.btn_open_card_picker.setStyleSheet("background-color: #713F12; color: #FEF08A; font-weight: bold; border: 1px solid #A16207; padding: 5px;")
-        self.btn_open_card_picker.setToolTip("Munculkan carousel pemilihan kartu killer di atas tengah layar (dapat ditrigger dari Roblox dengan tombol Insert).")
+        self.btn_open_card_picker.setToolTip(f"Munculkan carousel pemilihan kartu killer di atas tengah layar (dapat ditrigger dari Roblox dengan tombol {card_pk_key}).")
         self.btn_open_card_picker.clicked.connect(lambda: self.card_picker.toggle_picker())
         killer_layout.addWidget(self.btn_open_card_picker)
 
@@ -938,7 +938,7 @@ class CapturePreviewWindow(QMainWindow):
         lines.append(f"• <b>Reset All:</b> <code>{hk_map.get('reset_all', 'P')}</code>")
         toggle_hk = hk_map.get("toggle_overlay", "'")
         lines.append(f"• <b>Toggle Overlay:</b> <code>{toggle_hk}</code>")
-        picker_hk = hk_map.get("toggle_card_picker", "Insert")
+        picker_hk = hk_map.get("toggle_card_picker", "=")
         lines.append(f"• <b>Pilih Killer:</b> <code>{picker_hk}</code>")
         self.hk_info_label.setText("<br>".join(lines))
 

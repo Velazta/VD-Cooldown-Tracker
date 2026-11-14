@@ -1,5 +1,6 @@
 """Unit tests for global hotkey management (app/global_hotkeys.py)."""
 
+import sys
 import pytest
 
 from app.global_hotkeys import (
@@ -203,10 +204,11 @@ def test_win32_hook_hotkey_backend_pass_through_and_chat():
     triggered_ids = []
     backend = Win32HookHotkeyBackend(callback=lambda hid: triggered_ids.append(hid))
 
-    # Register P (0x50), [ (0xDB), and Insert (0x2D)
+    # Register P (0x50), [ (0xDB), and '=' (0xBB)
     assert backend.register_hotkey(1001, 0, 0x50) is True
     assert backend.register_hotkey(1002, 0, 0xDB) is True
-    assert backend.register_hotkey(1003, 0, 0x2D) is True
+    assert backend.register_hotkey(1003, 0, 0xBB) is True
+    backend.unrestricted_hids.add(1003)
 
     # Initial chat state should be False
     assert backend._is_chat_focused is False
@@ -215,13 +217,12 @@ def test_win32_hook_hotkey_backend_pass_through_and_chat():
     backend._is_chat_focused = True
     assert backend._is_chat_focused is True
 
-    # When chat is focused, Insert (0x2D) must still trigger and reset chat focus!
+    # When chat is focused, '=' (0xBB) must still trigger and reset chat focus!
     backend._is_chat_focused = True
-    # Test low level proc logic for Insert key
-    is_picker_toggle = (0x2D == 0x2D)
-    if is_picker_toggle:
-        backend._is_chat_focused = False
-        backend.callback(1003)
+    is_picker_toggle = (1003 in backend.unrestricted_hids) or (0xBB in (0xBB, 0x2D))
+    assert is_picker_toggle is True
+    backend._is_chat_focused = False
+    backend.callback(1003)
 
     assert 1003 in triggered_ids
     assert backend._is_chat_focused is False
@@ -229,6 +230,14 @@ def test_win32_hook_hotkey_backend_pass_through_and_chat():
     # Simulate 'Enter' keypress (sends chat / closes chat)
     backend._is_chat_focused = False
     assert backend._is_chat_focused is False
+
+    # Verify 64-bit CallNextHookEx doesn't crash with OverflowError on Windows
+    if sys.platform == "win32" and backend._user32 is not None:
+        try:
+            large_lparam = 0x0000023C190406E0
+            backend._user32.CallNextHookEx(None, 0, 0x0100, large_lparam)
+        except OverflowError:
+            assert False, "CallNextHookEx failed with OverflowError on 64-bit pointer!"
 
     # Unregister
     assert backend.unregister_hotkey(1001) is True

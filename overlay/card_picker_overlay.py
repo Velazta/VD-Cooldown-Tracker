@@ -12,6 +12,7 @@ import ctypes
 import math
 from pathlib import Path
 import sys
+import time
 from typing import Dict, List, Optional, Tuple
 
 from PySide6.QtCore import (
@@ -88,6 +89,7 @@ class CardPickerOverlay(QWidget):
         self._anim_pos.finished.connect(self._on_pos_anim_finished)
         self._is_dismissing = False
         self._prev_foreground_hwnd: Optional[int] = None
+        self._last_toggle_time: float = 0.0
 
         # Cache of loaded card pixmaps
         self._card_pixmaps: Dict[str, QPixmap] = {}
@@ -302,7 +304,13 @@ class CardPickerOverlay(QWidget):
             self.picker_closed.emit()
 
     def toggle_picker(self) -> None:
-        """Toggles between open and closed state."""
+        """Toggles between open and closed state with anti-spam debounce."""
+        now = time.monotonic()
+        if (now - self._last_toggle_time) < 0.40:
+            logger.debug("toggle_picker debounced (anti-spam)")
+            return
+        self._last_toggle_time = now
+
         if self.isVisible() and not self._is_dismissing:
             self.slide_out_and_hide()
         else:
@@ -323,7 +331,7 @@ class CardPickerOverlay(QWidget):
         elif key in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
             self.confirm_selection()
             event.accept()
-        elif key in (Qt.Key.Key_Escape, Qt.Key.Key_Insert):
+        elif key == Qt.Key.Key_Escape:
             self.slide_out_and_hide()
             event.accept()
         else:

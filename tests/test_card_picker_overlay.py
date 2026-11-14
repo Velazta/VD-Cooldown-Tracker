@@ -154,12 +154,14 @@ class TestCardPickerOverlay(unittest.TestCase):
         self.assertFalse(self.picker.isVisible())
         self.assertFalse(self.picker._is_dismissing)
 
-        # Match 2: Munculkan picker lagi via toggle_picker
+        # Match 2: Munculkan picker lagi via toggle_picker (reset debounce timer untuk unit test)
+        self.picker._last_toggle_time = 0.0
         self.picker.toggle_picker()
         self.assertTrue(self.picker.isVisible())
         self.assertFalse(self.picker._is_dismissing)
 
         # Match 2: Tutup kembali
+        self.picker._last_toggle_time = 0.0
         self.picker.confirm_selection()
         self.picker._on_pos_anim_finished()
         self.assertFalse(self.picker.isVisible())

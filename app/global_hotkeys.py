@@ -221,6 +221,8 @@ class Win32HookHotkeyBackend(HotkeyBackend):
     def __init__(self, callback: Optional[Callable[[int], None]] = None) -> None:
         self.callback = callback
         self._registered_combos: Dict[Tuple[int, int], int] = {}  # (mod, vk) -> hotkey_id
+        self._last_trigger_times: Dict[int, float] = {}
+        self.unrestricted_hids: Set[int] = set()
         self._hook = None
         self._hook_proc_ref = None
         self._user32 = ctypes.windll.user32 if sys.platform == "win32" else None
@@ -231,6 +233,27 @@ class Win32HookHotkeyBackend(HotkeyBackend):
 
     def _install_hook(self) -> None:
         if self._hook is None and self._user32 is not None:
+            # Explicitly configure 64-bit argument and return types to prevent
+            # "OverflowError: int too long to convert" when passing 64-bit lParam/WPARAM
+            self._user32.CallNextHookEx.argtypes = [
+                wintypes.HHOOK,
+                ctypes.c_int,
+                wintypes.WPARAM,
+                wintypes.LPARAM,
+            ]
+            self._user32.CallNextHookEx.restype = ctypes.c_longlong
+
+            self._user32.SetWindowsHookExW.argtypes = [
+                ctypes.c_int,
+                HOOKPROC,
+                wintypes.HINSTANCE,
+                wintypes.DWORD,
+            ]
+            self._user32.SetWindowsHookExW.restype = wintypes.HHOOK
+
+            self._user32.UnhookWindowsHookEx.argtypes = [wintypes.HHOOK]
+            self._user32.UnhookWindowsHookEx.restype = wintypes.BOOL
+
             self._hook_proc_ref = HOOKPROC(self._low_level_proc)
             self._hook = self._user32.SetWindowsHookExW(WH_KEYBOARD_LL, self._hook_proc_ref, None, 0)
             if self._hook:
@@ -314,19 +337,29 @@ class Win32HookHotkeyBackend(HotkeyBackend):
                 mods = self._get_current_modifiers()
                 hid = self._registered_combos.get((mods, vk))
                 if hid is not None:
-                    # VK_INSERT (0x2D) is the card picker toggle:
-                    # ALWAYS allow Insert without being gated by chat mode or foreground quirks!
-                    is_picker_toggle = (vk == 0x2D)
-                    if is_picker_toggle or (not self._is_chat_focused and self._is_roblox_or_tracker_foreground()):
-                        if is_picker_toggle:
-                            self._is_chat_focused = False
-                        if self.callback:
-                            self.callback(hid)
+                    # Debounce / Anti-spam: ignore rapid auto-repeat within 350ms
+                    now = time.monotonic()
+                    last_t = self._last_trigger_times.get(hid, 0.0)
+                    if (now - last_t) >= 0.35:
+                        # VK_OEM_PLUS (0xBB = '=') and VK_INSERT (0x2D) are card picker toggles:
+                        # ALWAYS allow without being gated by chat mode or foreground quirks!
+                        is_picker_toggle = (hid in self.unrestricted_hids) or (vk in (0xBB, 0x2D))
+                        if is_picker_toggle or (not self._is_chat_focused and self._is_roblox_or_tracker_foreground()):
+                            if is_picker_toggle:
+                                self._is_chat_focused = False
+                            self._last_trigger_times[hid] = now
+                            if self.callback:
+                                self.callback(hid)
         except Exception as exc:
             logger.debug("Exception in _low_level_proc: %s", exc)
 
         # ALWAYS pass through the keystroke so Roblox and in-game chat receive it!
-        return self._user32.CallNextHookEx(None, nCode, wParam, lParam)
+        if self._user32 is not None:
+            try:
+                return self._user32.CallNextHookEx(None, nCode, wParam, lParam)
+            except Exception as exc:
+                logger.debug("Exception in CallNextHookEx: %s", exc)
+        return 0
 
     def register_hotkey(self, hotkey_id: int, modifiers: int, vk: int) -> bool:
         norm_mod = modifiers & ~MOD_NOREPEAT
@@ -343,6 +376,8 @@ class Win32HookHotkeyBackend(HotkeyBackend):
 
     def unregister_all(self) -> None:
         self._registered_combos.clear()
+        self._last_trigger_times.clear()
+        self.unrestricted_hids.clear()
         if self._hook and self._user32 is not None:
             self._user32.UnhookWindowsHookEx(self._hook)
             self._hook = None
@@ -529,6 +564,8 @@ class GlobalHotkeyManager(QObject):
             if success:
                 self._action_to_id[action] = hid
                 self._id_to_action[hid] = action
+                if action == "toggle_card_picker" and hasattr(self.backend, "unrestricted_hids"):
+                    self.backend.unrestricted_hids.add(hid)
                 results[action] = True
                 logger.info("Registered global hotkey '%s' -> '%s' (id=%d)", action, key_str, hid)
             else:
