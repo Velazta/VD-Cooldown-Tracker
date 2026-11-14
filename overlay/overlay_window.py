@@ -110,7 +110,7 @@ class OverlayWindow(QWidget):
 
         # Layout internal untuk menampung widget indikator cooldown (Day 11)
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(8, 8, 8, 8)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
 
         logger.info(
@@ -158,6 +158,11 @@ class OverlayWindow(QWidget):
         # Tampilkan ulang jendela untuk merefresh window flags
         self.show()
 
+        # Propagate calibration mode to child widgets
+        for child in self.findChildren(QWidget):
+            if hasattr(child, "set_calibration_mode"):
+                child.set_calibration_mode(not enabled)
+
         # Repaint untuk menampilkan/menyembunyikan border kalibrasi
         self.update()
         logger.info("Overlay click-through set to %s (HWND: %s)", enabled, hwnd)
@@ -195,6 +200,15 @@ class OverlayWindow(QWidget):
     def set_overlay_size(self, width: int, height: int) -> None:
         """Mengatur dimensi jendela overlay."""
         self.resize(max(80, int(width)), max(80, int(height)))
+
+    def set_slot_count(self, count: int) -> None:
+        """Menyesuaikan tinggi jendela overlay berdasarkan jumlah ability killer aktif."""
+        slot_h = 174
+        target_h = max(180, 10 + (count * slot_h))
+        target_w = max(350, self.width())
+        if self.height() != target_h or self.width() != target_w:
+            self.resize(target_w, target_h)
+            logger.debug("OverlayWindow resized to (%d, %d) for %d slots.", target_w, target_h, count)
 
     # =========================================================================
     # Kontrol Interaksi Drag & Move (Hanya Aktif saat Click-Through Dinonaktifkan)

@@ -19,18 +19,18 @@
     "enabled_on_start": false
   },
   "overlay": {
-    "x": 753,
-    "y": 0,
-    "width": 220,
-    "height": 220,
-    "opacity": 0.9,
-    "visible": false,
+    "x": 24,
+    "y": 280,
+    "width": 360,
+    "height": 358,
+    "opacity": 0.95,
+    "visible": true,
     "always_on_top": true,
     "click_through": true,
     "fps_display": true,
     "position": {
-      "x": 753,
-      "y": 0
+      "x": 24,
+      "y": 280
     }
   },
   "manual": {

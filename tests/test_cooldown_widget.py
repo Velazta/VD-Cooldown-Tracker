@@ -115,6 +115,64 @@ class TestCooldownWidget(unittest.TestCase):
         self.assertEqual(self.widget.snapshot.state, CooldownState.DISABLED)
         self.widget.repaint()
 
+    def test_popup_banner_path_mapping(self) -> None:
+        """Memastikan template banner untuk setiap killer dan skill terpetakan dengan benar."""
+        from overlay.popup_banner import resolve_banner_path, BANNER_FILE_MAP
+
+        self.assertIn(("the_hidden", "leap"), BANNER_FILE_MAP)
+        self.assertIn(("the_hidden", "mark"), BANNER_FILE_MAP)
+        self.assertIn(("the_slasher", "lake_mist"), BANNER_FILE_MAP)
+        self.assertIn(("the_slasher", "pursuit"), BANNER_FILE_MAP)
+        self.assertIn(("the_butcher", "your_heart_is_mine"), BANNER_FILE_MAP)
+        self.assertIn(("veil", "through_the_veil"), BANNER_FILE_MAP)
+
+        leap_path = resolve_banner_path("the_hidden", "leap")
+        self.assertTrue(leap_path.exists(), f"Path not found: {leap_path}")
+
+    def test_multi_slot_snapshots_and_reset(self) -> None:
+        """Memastikan multi-snapshot membuat PopupBannerItem terpisah dan reset_banners bekerja."""
+        snap1 = CooldownSnapshot(
+            killer_id="the_hidden",
+            ability_id="leap",
+            ability_name="Leap",
+            state=CooldownState.COOLDOWN,
+            remaining_seconds=22.4,
+            total_cooldown_seconds=25.0,
+            progress=22.4 / 25.0,
+            trigger_type="on_cast_start",
+        )
+        snap2 = CooldownSnapshot(
+            killer_id="the_hidden",
+            ability_id="mark",
+            ability_name="Mark",
+            state=CooldownState.READY,
+            remaining_seconds=0.0,
+            total_cooldown_seconds=30.0,
+            progress=0.0,
+            trigger_type="on_cast_start",
+        )
+
+        self.widget.show()
+        self.widget.update_snapshots([snap1, snap2])
+        self.assertEqual(len(self.widget._banner_items), 2)
+
+        # Slot 0 (Leap - COOLDOWN) should be in banner_items
+        slot0 = self.widget._banner_items["leap"]
+        self.assertEqual(slot0.ability_id, "leap")
+        self.assertFalse(slot0.isHidden())
+
+        # Slot 1 (Mark - READY) should also be created
+        slot1 = self.widget._banner_items["mark"]
+        self.assertEqual(slot1.ability_id, "mark")
+
+        # Repaint with offscreen buffer
+        self.widget.repaint()
+
+        # Trigger reset_banners
+        self.widget.reset_banners()
+        # Repaint after reset
+        self.widget.repaint()
+
 
 if __name__ == "__main__":
     unittest.main()

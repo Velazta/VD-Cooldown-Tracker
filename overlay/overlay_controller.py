@@ -121,7 +121,14 @@ class OverlayController(QObject):
         Jika False: Click-through diaktifkan kembali untuk gameplay mode.
         """
         self.overlay_window.set_click_through(not enabled)
+        if hasattr(self.overlay_window, "set_calibration_mode"):
+            self.overlay_window.set_calibration_mode(enabled)
         logger.info("Overlay calibration mode set to: %s", enabled)
+
+    def reset_banners(self) -> None:
+        """Memicu slide-out animasi penutupan segera untuk seluruh banner aktif."""
+        if hasattr(self.cooldown_widget, "reset_banners"):
+            self.cooldown_widget.reset_banners()
 
     def on_state_changed(self, snapshot: CooldownSnapshot) -> None:
         """Callback listener saat terjadi transisi status di CooldownManager."""

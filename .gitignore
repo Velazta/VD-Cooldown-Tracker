@@ -31,3 +31,7 @@ dataset/yolo/images/
 dataset/yolo/labels/
 dataset/runs/
 *.pt
+
+# Scratch and video references
+scratch/
+*.mov

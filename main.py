@@ -908,12 +908,18 @@ class CapturePreviewWindow(QMainWindow):
     def _refresh_hotkey_ui(self) -> None:
         """Memperbarui tampilan daftar hotkey dan teks tombol pemicu manual di GUI."""
         hk_map = self.config.manual.hotkeys
-        self.hk_info_label.setText(
-            f"• <b>Ability 1 (Leap):</b> <code>{hk_map.get('trigger_ability_1', 'Numpad1')}</code><br>"
-            f"• <b>Ability 2 (Mark):</b> <code>{hk_map.get('trigger_ability_2', 'Numpad2')}</code><br>"
-            f"• <b>Reset All:</b> <code>{hk_map.get('reset_all', 'Numpad0')}</code><br>"
-            f"• <b>Toggle Overlay:</b> <code>{hk_map.get('toggle_overlay', 'Numpad.')}</code>"
-        )
+        killer = self.database.get_killer(self.config.active_killer_id) if (hasattr(self, 'database') and self.database) else None
+        ab1_name = killer.abilities[0].name if killer and len(killer.abilities) >= 1 else "Ability 1"
+        ab2_name = killer.abilities[1].name if killer and len(killer.abilities) >= 2 else "Ability 2"
+
+        lines = [f"• <b>{ab1_name}:</b> <code>{hk_map.get('trigger_ability_1', '[')}</code>"]
+        if killer and len(killer.abilities) >= 2:
+            lines.append(f"• <b>{ab2_name}:</b> <code>{hk_map.get('trigger_ability_2', ']')}</code>")
+        lines.append(f"• <b>Reset All:</b> <code>{hk_map.get('reset_all', 'P')}</code>")
+        toggle_hk = hk_map.get("toggle_overlay", "'")
+        lines.append(f"• <b>Toggle Overlay:</b> <code>{toggle_hk}</code>")
+        self.hk_info_label.setText("<br>".join(lines))
+
         if self.hotkey_manager.failed_actions:
             self.hk_badge.setText("⚠️ HOTKEY CONFLICT")
             self.hk_badge.setStyleSheet(
@@ -925,8 +931,12 @@ class CapturePreviewWindow(QMainWindow):
                 "background-color: #14381C; color: #4ADE80; border-radius: 4px; padding: 2px 6px; font-weight: bold; font-size: 10px;"
             )
 
-        self.btn_manual_ab1.setText(f"⚡ Leap ({hk_map.get('trigger_ability_1', '[')})")
-        self.btn_manual_ab2.setText(f"🎯 Mark ({hk_map.get('trigger_ability_2', ']')})")
+        self.btn_manual_ab1.setText(f"⚡ {ab1_name} ({hk_map.get('trigger_ability_1', '[')})")
+        if killer and len(killer.abilities) >= 2:
+            self.btn_manual_ab2.setVisible(True)
+            self.btn_manual_ab2.setText(f"🎯 {ab2_name} ({hk_map.get('trigger_ability_2', ']')})")
+        else:
+            self.btn_manual_ab2.setVisible(False)
         self.btn_manual_reset.setText(f"🔄 Reset ({hk_map.get('reset_all', 'P')})")
 
     def on_open_hotkey_rebind(self) -> None:
@@ -962,6 +972,8 @@ class CapturePreviewWindow(QMainWindow):
                 self.cooldown_bank.trigger(ab_id, offset=offset, source="hotkey", restart_on_repeat=restart)
         elif action == "reset_all":
             self.cooldown_bank.reset()
+            if hasattr(self, "overlay_controller"):
+                self.overlay_controller.reset_banners()
         elif action == "toggle_overlay":
             is_visible = self.overlay_controller.toggle_overlay()
             if hasattr(self, "check_overlay_visible"):
@@ -981,6 +993,7 @@ class CapturePreviewWindow(QMainWindow):
         self.overlay_controller.update_widget()
         self._update_killer_display()
         self._populate_ability_combobox()
+        self._refresh_hotkey_ui()
         self.combo_killer.clearFocus()
         self.setFocus()
 
@@ -1058,6 +1071,8 @@ class CapturePreviewWindow(QMainWindow):
         logger.info("Resetting cooldown timer back to READY.")
         self.cooldown_manager.reset()
         self.cooldown_bank.reset()
+        if hasattr(self, "overlay_controller") and self.overlay_controller is not None:
+            self.overlay_controller.reset_banners()
 
     def on_toggle_auto_detection(self, checked: bool) -> None:
         """Mengaktifkan atau menonaktifkan proses inferensi detektor background."""

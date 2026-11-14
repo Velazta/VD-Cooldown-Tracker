@@ -48,8 +48,8 @@ class TestSettingsManager(unittest.TestCase):
             self.assertIsInstance(cfg, AppConfig)
             self.assertEqual(cfg.app.name, "Violence District Cooldown Tracker")
             self.assertEqual(cfg.schema_version, 2)
-            self.assertEqual(cfg.overlay.x, 100)
-            self.assertEqual(cfg.overlay.y, 100)
+            self.assertEqual(cfg.overlay.x, 24)
+            self.assertEqual(cfg.overlay.y, 280)
         finally:
             tmp_path.unlink(missing_ok=True)
 
@@ -128,15 +128,15 @@ class TestSettingsManager(unittest.TestCase):
 
     def test_overlay_settings_defaults(self):
         ovl = OverlaySettings()
-        self.assertEqual(ovl.x, 100)
-        self.assertEqual(ovl.y, 100)
-        self.assertEqual(ovl.width, 220)
-        self.assertEqual(ovl.height, 220)
+        self.assertEqual(ovl.x, 24)
+        self.assertEqual(ovl.y, 280)
+        self.assertEqual(ovl.width, 360)
+        self.assertEqual(ovl.height, 360)
         self.assertAlmostEqual(ovl.opacity, 0.95, places=2)
         self.assertTrue(ovl.visible)
         self.assertTrue(ovl.always_on_top)
         self.assertTrue(ovl.click_through)
-        self.assertEqual(ovl.position, {"x": 100, "y": 100})
+        self.assertEqual(ovl.position, {"x": 24, "y": 280})
 
     def test_overlay_settings_serialization_roundtrip(self):
         ovl = OverlaySettings(

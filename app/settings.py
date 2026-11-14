@@ -60,16 +60,16 @@ class CaptureSettings:
 
 @dataclass
 class OverlaySettings:
-    x: int = 100
-    y: int = 100
-    width: int = 220
-    height: int = 220
+    x: int = 24
+    y: int = 280
+    width: int = 360
+    height: int = 360
     opacity: float = 0.95
     visible: bool = True
     always_on_top: bool = True
     click_through: bool = True
     fps_display: bool = True
-    position: Dict[str, int] = field(default_factory=lambda: {"x": 100, "y": 100})
+    position: Dict[str, int] = field(default_factory=lambda: {"x": 24, "y": 280})
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialisasi model OverlaySettings ke dictionary terstruktur."""
@@ -97,10 +97,10 @@ class OverlaySettings:
             pos = {}
 
         # Mendukung koordinat flat (x, y) dan struktur position dict ({"x": ..., "y": ...})
-        x_val = data.get("x", pos.get("x", 100))
-        y_val = data.get("y", pos.get("y", 100))
-        width_val = data.get("width", 220)
-        height_val = data.get("height", 220)
+        x_val = data.get("x", pos.get("x", 24))
+        y_val = data.get("y", pos.get("y", 280))
+        width_val = data.get("width", 360)
+        height_val = data.get("height", 360)
         opacity_val = data.get("opacity", 0.95)
         visible_val = data.get("visible", True)
         always_on_top_val = data.get("always_on_top", True)
@@ -111,13 +111,13 @@ class OverlaySettings:
             x_int = max(0, int(x_val))
             y_int = max(0, int(y_val))
         except (ValueError, TypeError):
-            x_int, y_int = 100, 100
+            x_int, y_int = 24, 280
 
         try:
             w_int = max(60, min(1920, int(width_val)))
             h_int = max(60, min(1080, int(height_val)))
         except (ValueError, TypeError):
-            w_int, h_int = 220, 220
+            w_int, h_int = 360, 360
 
         try:
             op_flt = max(0.2, min(1.0, float(opacity_val)))
