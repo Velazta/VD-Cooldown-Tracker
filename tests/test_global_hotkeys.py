@@ -125,3 +125,36 @@ def test_global_hotkey_manager_signal_dispatch():
 
     manager.unregister_all()
     assert len(manager._action_to_id) == 0
+
+
+def test_hotkey_rebind_dialog_presets():
+    """Test HotkeyRebindDialog preset buttons and field population."""
+    from PySide6.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])
+    from main import CapturePreviewWindow, HotkeyRebindDialog
+    from app.settings import SettingsManager
+    from database.database_manager import DatabaseManager
+
+    settings = SettingsManager()
+    db = DatabaseManager()
+    win = CapturePreviewWindow(settings_manager=settings, db_manager=db)
+
+    dialog = HotkeyRebindDialog(win)
+
+    # Test Laptop preset
+    dialog._apply_preset_laptop()
+    assert dialog.input_ab1.text() == "Alt+1"
+    assert dialog.input_ab2.text() == "Alt+2"
+    assert dialog.input_reset.text() == "Alt+0"
+    assert dialog.input_overlay.text() == "Alt+H"
+
+    # Test Numpad preset
+    dialog._apply_preset_numpad()
+    assert dialog.input_ab1.text() == "Numpad1"
+    assert dialog.input_ab2.text() == "Numpad2"
+    assert dialog.input_reset.text() == "Numpad0"
+    assert dialog.input_overlay.text() == "Numpad."
+
+    dialog.close()
+    win.close()
+

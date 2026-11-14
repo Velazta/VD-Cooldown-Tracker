@@ -26,7 +26,8 @@ import numpy as np
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QLabel, QVBoxLayout, QHBoxLayout,
     QWidget, QPushButton, QFrame, QLineEdit, QMessageBox,
-    QSpinBox, QDoubleSpinBox, QFormLayout, QGroupBox, QCheckBox, QComboBox
+    QSpinBox, QDoubleSpinBox, QFormLayout, QGroupBox, QCheckBox, QComboBox,
+    QDialog
 )
 from PySide6.QtCore import Qt, QTimer, QEvent
 from PySide6.QtGui import QImage, QPixmap, QFont
@@ -51,6 +52,123 @@ from detection.detection_worker import DetectionWorker
 from detection.audio_monitor import AudioMonitor
 
 logger = get_logger("gui")
+
+
+class HotkeyRebindDialog(QDialog):
+    """Dialog untuk mengatur kombinasi tombol global hotkey secara interaktif."""
+
+    def __init__(self, parent: "CapturePreviewWindow") -> None:
+        super().__init__(parent)
+        self.parent_window = parent
+        self.setWindowTitle("Pengaturan Tombol Hotkey Global")
+        self.setFixedWidth(380)
+        self.setStyleSheet(parent.styleSheet())
+        self.setup_ui()
+
+    def setup_ui(self) -> None:
+        layout = QVBoxLayout(self)
+        layout.setSpacing(10)
+
+        info = QLabel(
+            "<b>Atur Tombol Pemicu Global (OS-Level)</b><br>"
+            "<small style='color: #94A3B8;'>Tombol ini bekerja saat Roblox sedang fokus.<br>"
+            "Format: <code>Numpad1</code>, <code>Alt+1</code>, <code>Ctrl+1</code>, <code>Numpad.</code>, dll.</small>"
+        )
+        info.setWordWrap(True)
+        layout.addWidget(info)
+
+        # Preset Buttons
+        preset_row = QHBoxLayout()
+        btn_preset_numpad = QPushButton("Preset Numpad")
+        btn_preset_numpad.clicked.connect(self._apply_preset_numpad)
+        preset_row.addWidget(btn_preset_numpad)
+
+        btn_preset_laptop = QPushButton("Preset Laptop (Alt)")
+        btn_preset_laptop.clicked.connect(self._apply_preset_laptop)
+        preset_row.addWidget(btn_preset_laptop)
+        layout.addLayout(preset_row)
+
+        form = QFormLayout()
+        form.setLabelAlignment(Qt.AlignRight)
+
+        current_map = self.parent_window.config.manual.hotkeys
+        self.input_ab1 = QLineEdit(current_map.get("trigger_ability_1", "Numpad1"))
+        self.input_ab2 = QLineEdit(current_map.get("trigger_ability_2", "Numpad2"))
+        self.input_ab3 = QLineEdit(current_map.get("trigger_ability_3", "Numpad3"))
+        self.input_reset = QLineEdit(current_map.get("reset_all", "Numpad0"))
+        self.input_overlay = QLineEdit(current_map.get("toggle_overlay", "Numpad."))
+
+        form.addRow("Ability 1 (Leap):", self.input_ab1)
+        form.addRow("Ability 2 (Mark):", self.input_ab2)
+        form.addRow("Ability 3:", self.input_ab3)
+        form.addRow("Reset Semua:", self.input_reset)
+        form.addRow("Toggle Overlay:", self.input_overlay)
+        layout.addLayout(form)
+
+        # Action Buttons
+        btn_row = QHBoxLayout()
+        btn_save = QPushButton("💾 Simpan & Terapkan")
+        btn_save.setStyleSheet("background-color: #14532D; color: #86EFAC; font-weight: bold; padding: 6px 14px;")
+        btn_save.clicked.connect(self._save_and_apply)
+        btn_row.addWidget(btn_save)
+
+        btn_cancel = QPushButton("Batal")
+        btn_cancel.clicked.connect(self.reject)
+        btn_row.addWidget(btn_cancel)
+        layout.addLayout(btn_row)
+
+    def _apply_preset_numpad(self) -> None:
+        self.input_ab1.setText("Numpad1")
+        self.input_ab2.setText("Numpad2")
+        self.input_ab3.setText("Numpad3")
+        self.input_reset.setText("Numpad0")
+        self.input_overlay.setText("Numpad.")
+
+    def _apply_preset_laptop(self) -> None:
+        self.input_ab1.setText("Alt+1")
+        self.input_ab2.setText("Alt+2")
+        self.input_ab3.setText("Alt+3")
+        self.input_reset.setText("Alt+0")
+        self.input_overlay.setText("Alt+H")
+
+    def _save_and_apply(self) -> None:
+        new_map = {
+            "trigger_ability_1": self.input_ab1.text().strip(),
+            "trigger_ability_2": self.input_ab2.text().strip(),
+            "trigger_ability_3": self.input_ab3.text().strip(),
+            "reset_all": self.input_reset.text().strip(),
+            "toggle_overlay": self.input_overlay.text().strip(),
+        }
+
+        from app.global_hotkeys import parse_hotkey_string
+        for action, key_str in new_map.items():
+            if not key_str:
+                QMessageBox.warning(self, "Input Kosong", f"Tombol untuk '{action}' tidak boleh kosong.")
+                return
+            try:
+                parse_hotkey_string(key_str)
+            except ValueError as err:
+                QMessageBox.warning(self, "Tombol Tidak Valid", f"Kombinasi '{key_str}' tidak valid:\n{err}")
+                return
+
+        seen = {}
+        for action, key_str in new_map.items():
+            norm = key_str.lower()
+            if norm in seen:
+                QMessageBox.warning(
+                    self,
+                    "Tombol Bentrok",
+                    f"Tombol '{key_str}' dipakai lebih dari satu aksi ('{seen[norm]}' dan '{action}')."
+                )
+                return
+            seen[norm] = action
+
+        self.parent_window.config.manual.hotkeys = new_map
+        self.parent_window.settings_manager.save(self.parent_window.config)
+        self.parent_window.hotkey_results = self.parent_window.hotkey_manager.register_actions(new_map)
+        self.parent_window._refresh_hotkey_ui()
+        self.accept()
+        QMessageBox.information(self, "Berhasil", "Pengaturan tombol hotkey berhasil disimpan dan diaktifkan!")
 
 
 class CapturePreviewWindow(QMainWindow):
@@ -422,6 +540,11 @@ class CapturePreviewWindow(QMainWindow):
         self.hk_info_label.setStyleSheet("background-color: #16161A; border: 1px solid #282830; border-radius: 4px; padding: 6px; font-size: 11px;")
         hk_layout.addWidget(self.hk_info_label)
 
+        self.btn_rebind = QPushButton("⚙️ Ubah Tombol Hotkey")
+        self.btn_rebind.setStyleSheet("background-color: #1E293B; color: #93C5FD; border: 1px solid #334155; font-weight: bold; padding: 4px 10px;")
+        self.btn_rebind.clicked.connect(self.on_open_hotkey_rebind)
+        hk_layout.addWidget(self.btn_rebind)
+
         manual_btns_row = QHBoxLayout()
         self.btn_manual_ab1 = QPushButton("⚡ Leap (Num1)")
         self.btn_manual_ab1.setStyleSheet("background-color: #1E3A8A; color: #93C5FD; font-weight: bold;")
@@ -768,6 +891,35 @@ class CapturePreviewWindow(QMainWindow):
         self.overlay_controller.set_sound_on_ready(checked)
         self.settings_manager.save(self.config)
         logger.debug("Sound on ready toggled: %s", checked)
+
+    def _refresh_hotkey_ui(self) -> None:
+        """Memperbarui tampilan daftar hotkey dan teks tombol pemicu manual di GUI."""
+        hk_map = self.config.manual.hotkeys
+        self.hk_info_label.setText(
+            f"• <b>Ability 1 (Leap):</b> <code>{hk_map.get('trigger_ability_1', 'Numpad1')}</code><br>"
+            f"• <b>Ability 2 (Mark):</b> <code>{hk_map.get('trigger_ability_2', 'Numpad2')}</code><br>"
+            f"• <b>Reset All:</b> <code>{hk_map.get('reset_all', 'Numpad0')}</code><br>"
+            f"• <b>Toggle Overlay:</b> <code>{hk_map.get('toggle_overlay', 'Numpad.')}</code>"
+        )
+        if self.hotkey_manager.failed_actions:
+            self.hk_badge.setText("⚠️ HOTKEY CONFLICT")
+            self.hk_badge.setStyleSheet(
+                "background-color: #78350F; color: #FDE047; border-radius: 4px; padding: 2px 6px; font-weight: bold; font-size: 10px;"
+            )
+        else:
+            self.hk_badge.setText("● ACTIVE (OS Level)")
+            self.hk_badge.setStyleSheet(
+                "background-color: #14381C; color: #4ADE80; border-radius: 4px; padding: 2px 6px; font-weight: bold; font-size: 10px;"
+            )
+
+        self.btn_manual_ab1.setText(f"⚡ Leap ({hk_map.get('trigger_ability_1', 'Num1')})")
+        self.btn_manual_ab2.setText(f"🎯 Mark ({hk_map.get('trigger_ability_2', 'Num2')})")
+        self.btn_manual_reset.setText(f"🔄 Reset ({hk_map.get('reset_all', 'Num0')})")
+
+    def on_open_hotkey_rebind(self) -> None:
+        """Membuka dialog konfigurasi hotkey kustom."""
+        dialog = HotkeyRebindDialog(self)
+        dialog.exec()
 
     def on_global_hotkey_action(self, action: str) -> None:
         """Handler pemicuan aksi dari GlobalHotkeyManager (Win32 OS-level hotkey).
