@@ -148,6 +148,14 @@ def test_hotkey_rebind_dialog_presets():
     assert dialog.input_reset.text() == "Alt+0"
     assert dialog.input_overlay.text() == "Alt+H"
 
+    # Test Bracket preset
+    dialog._apply_preset_bracket()
+    assert dialog.input_ab1.text() == "["
+    assert dialog.input_ab2.text() == "]"
+    assert dialog.input_ab3.text() == "Numpad3"
+    assert dialog.input_reset.text() == "P"
+    assert dialog.input_overlay.text() == "'"
+
     # Test Numpad preset
     dialog._apply_preset_numpad()
     assert dialog.input_ab1.text() == "Numpad1"
@@ -157,4 +165,33 @@ def test_hotkey_rebind_dialog_presets():
 
     dialog.close()
     win.close()
+
+
+def test_parse_hotkey_bracket_and_symbols():
+    """Verify parsing of bracket, quote, semicolon, slash, and backslash symbols."""
+    # Bracket keys
+    mod, vk = parse_hotkey_string("[")
+    assert (mod & ~MOD_NOREPEAT) == 0 and vk == 0xDB
+    mod, vk = parse_hotkey_string("]")
+    assert (mod & ~MOD_NOREPEAT) == 0 and vk == 0xDD
+
+    # Quote and P
+    mod, vk = parse_hotkey_string("'")
+    assert (mod & ~MOD_NOREPEAT) == 0 and vk == 0xDE
+    mod, vk = parse_hotkey_string("P")
+    assert (mod & ~MOD_NOREPEAT) == 0 and vk == 0x50
+
+    # User requested configuration
+    user_config = {
+        "trigger_ability_1": "[",
+        "trigger_ability_2": "]",
+        "trigger_ability_3": "Numpad3",
+        "reset_all": "P",
+        "toggle_overlay": "'",
+    }
+    backend = FakeHotkeyBackend()
+    manager = GlobalHotkeyManager(backend=backend)
+    results = manager.register_actions(user_config)
+    assert all(results.values())
+    assert len(manager.failed_actions) == 0
 

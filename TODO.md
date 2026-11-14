@@ -465,7 +465,7 @@
 - [x] **M4.6** Perbarui `tests/demo_overlay.py` dan tambahkan automated tests visual snapshot.
 
 ## Phase M5 — Integrasi Mode Manual sebagai Default
-- [ ] **M5.1** Pastikan start aplikasi tidak memicu screen capture atau modul heavy CV (`capture.enabled_on_start: false`).
+- [x] **M5.1** Pastikan start aplikasi tidak memicu screen capture atau modul heavy CV (`capture.enabled_on_start: false`, auto-detection disabled by default).
 - [ ] **M5.2** Tata ulang UI utama: panel killer & ability, status pendaftaran hotkey, pengaturan offset reaksi, dan toggle overlay (pindahkan tab capture ke bagian Lanjutan).
 - [ ] **M5.3** Profil utilisasi CPU (<1%) dan RAM (<50 MB) pada mode manual saat idle dan saat countdown aktif.
 

@@ -79,6 +79,11 @@ class HotkeyRebindDialog(QDialog):
 
         # Preset Buttons
         preset_row = QHBoxLayout()
+        btn_preset_bracket = QPushButton("Preset [ ]")
+        btn_preset_bracket.setToolTip("Gunakan tombol [ (Leap), ] (Mark), P (Reset), ' (Overlay)")
+        btn_preset_bracket.clicked.connect(self._apply_preset_bracket)
+        preset_row.addWidget(btn_preset_bracket)
+
         btn_preset_numpad = QPushButton("Preset Numpad")
         btn_preset_numpad.clicked.connect(self._apply_preset_numpad)
         preset_row.addWidget(btn_preset_numpad)
@@ -116,6 +121,13 @@ class HotkeyRebindDialog(QDialog):
         btn_cancel.clicked.connect(self.reject)
         btn_row.addWidget(btn_cancel)
         layout.addLayout(btn_row)
+
+    def _apply_preset_bracket(self) -> None:
+        self.input_ab1.setText("[")
+        self.input_ab2.setText("]")
+        self.input_ab3.setText("Numpad3")
+        self.input_reset.setText("P")
+        self.input_overlay.setText("'")
 
     def _apply_preset_numpad(self) -> None:
         self.input_ab1.setText("Numpad1")
@@ -247,6 +259,7 @@ class CapturePreviewWindow(QMainWindow):
             confidence_threshold=0.54,
             parent=self,
         )
+        self.detection_worker.set_enabled(False)
         self.detection_worker.ability_detected.connect(self.on_auto_ability_detected)
         self.detection_worker.telemetry_updated.connect(self.on_detector_telemetry_updated)
         self.detection_worker.target_tracked.connect(self.on_target_tracked)
@@ -546,17 +559,17 @@ class CapturePreviewWindow(QMainWindow):
         hk_layout.addWidget(self.btn_rebind)
 
         manual_btns_row = QHBoxLayout()
-        self.btn_manual_ab1 = QPushButton("⚡ Leap (Num1)")
+        self.btn_manual_ab1 = QPushButton(f"⚡ Leap ({hk_map.get('trigger_ability_1', '[')})")
         self.btn_manual_ab1.setStyleSheet("background-color: #1E3A8A; color: #93C5FD; font-weight: bold;")
         self.btn_manual_ab1.clicked.connect(lambda: self.on_global_hotkey_action("trigger_ability_1"))
         manual_btns_row.addWidget(self.btn_manual_ab1)
 
-        self.btn_manual_ab2 = QPushButton("🎯 Mark (Num2)")
+        self.btn_manual_ab2 = QPushButton(f"🎯 Mark ({hk_map.get('trigger_ability_2', ']')})")
         self.btn_manual_ab2.setStyleSheet("background-color: #701A75; color: #F0ABFC; font-weight: bold;")
         self.btn_manual_ab2.clicked.connect(lambda: self.on_global_hotkey_action("trigger_ability_2"))
         manual_btns_row.addWidget(self.btn_manual_ab2)
 
-        self.btn_manual_reset = QPushButton("🔄 Reset (Num0)")
+        self.btn_manual_reset = QPushButton(f"🔄 Reset ({hk_map.get('reset_all', 'P')})")
         self.btn_manual_reset.setStyleSheet("background-color: #4C1D24; color: #FCA5A5; font-weight: bold;")
         self.btn_manual_reset.clicked.connect(lambda: self.on_global_hotkey_action("reset_all"))
         manual_btns_row.addWidget(self.btn_manual_reset)
@@ -635,16 +648,16 @@ class CapturePreviewWindow(QMainWindow):
 
         detect_top_row = QHBoxLayout()
         self.check_auto_detect = QCheckBox("⚡ Aktifkan Auto-Detection")
-        self.check_auto_detect.setChecked(True)
+        self.check_auto_detect.setChecked(False)
         self.check_auto_detect.toggled.connect(self.on_toggle_auto_detection)
         detect_top_row.addWidget(self.check_auto_detect)
         detect_top_row.addStretch()
 
-        self.detector_badge = QLabel("READY")
+        self.detector_badge = QLabel("OFF")
         self.detector_badge.setStyleSheet("""
-            background-color: #14381C;
-            color: #4ADE80;
-            border: 1px solid #16A34A;
+            background-color: #1F2937;
+            color: #9CA3AF;
+            border: 1px solid #374151;
             border-radius: 4px;
             padding: 2px 6px;
             font-size: 10px;
@@ -912,9 +925,9 @@ class CapturePreviewWindow(QMainWindow):
                 "background-color: #14381C; color: #4ADE80; border-radius: 4px; padding: 2px 6px; font-weight: bold; font-size: 10px;"
             )
 
-        self.btn_manual_ab1.setText(f"⚡ Leap ({hk_map.get('trigger_ability_1', 'Num1')})")
-        self.btn_manual_ab2.setText(f"🎯 Mark ({hk_map.get('trigger_ability_2', 'Num2')})")
-        self.btn_manual_reset.setText(f"🔄 Reset ({hk_map.get('reset_all', 'Num0')})")
+        self.btn_manual_ab1.setText(f"⚡ Leap ({hk_map.get('trigger_ability_1', '[')})")
+        self.btn_manual_ab2.setText(f"🎯 Mark ({hk_map.get('trigger_ability_2', ']')})")
+        self.btn_manual_reset.setText(f"🔄 Reset ({hk_map.get('reset_all', 'P')})")
 
     def on_open_hotkey_rebind(self) -> None:
         """Membuka dialog konfigurasi hotkey kustom."""

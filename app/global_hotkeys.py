@@ -98,6 +98,22 @@ VK_MAPPING: Dict[str, int] = {
     "minus": 0xBD,
     "=": 0xBB,
     "plus": 0xBB,
+    "[": 0xDB,
+    "bracketleft": 0xDB,
+    "]": 0xDD,
+    "bracketright": 0xDD,
+    "'": 0xDE,
+    "quote": 0xDE,
+    "apostrophe": 0xDE,
+    '"': 0xDE,
+    ";": 0xBA,
+    "semicolon": 0xBA,
+    "/": 0xBF,
+    "slash": 0xBF,
+    "\\": 0xDC,
+    "backslash": 0xDC,
+    "`": 0xC0,
+    "backquote": 0xC0,
 }
 
 # Add standard numbers '0'-'9' (0x30 - 0x39)

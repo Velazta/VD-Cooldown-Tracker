@@ -331,17 +331,20 @@ class TestMainAppIntegration(unittest.TestCase):
     def test_auto_detection_integration_wiring(self) -> None:
         """Verify DetectionWorker integration into main GUI window and auto-cooldown trigger."""
         self.assertTrue(hasattr(self.window, "detection_worker"))
-        self.assertTrue(self.window.check_auto_detect.isChecked())
+        # Auto-detection is turned OFF by default in manual companion mode
+        self.assertFalse(self.window.check_auto_detect.isChecked())
+        self.assertFalse(self.window.detection_worker.is_enabled)
+        self.assertIn("OFF", self.window.detector_badge.text())
+
+        # Toggle auto-detection on
+        self.window.check_auto_detect.setChecked(True)
         self.assertTrue(self.window.detection_worker.is_enabled)
+        self.assertIn("ACTIVE", self.window.detector_badge.text())
 
         # Toggle auto-detection off
         self.window.check_auto_detect.setChecked(False)
         self.assertFalse(self.window.detection_worker.is_enabled)
         self.assertIn("DISABLED", self.window.detector_badge.text())
-
-        # Toggle auto-detection on
-        self.window.check_auto_detect.setChecked(True)
-        self.assertTrue(self.window.detection_worker.is_enabled)
 
         # Test simulated auto-detection event arrival
         event = AbilityEvent(
