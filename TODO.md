@@ -1,13 +1,14 @@
 # TODO — Violence District Cooldown Tracker
 
 > Update this file only after work has actually been implemented and tested.  
-> Current milestone: **Week 1 — Foundation & Technical Feasibility (9–15 November 2026).**
+> Current milestone: **Manual Trigger Companion (Global Hotkey → Transparent Overlay).**
 
 ## Status Legend
 - [ ] Not started
 - [x] Completed and verified
 - [~] In progress
 - [!] Blocked / needs investigation
+- [⏸] Ditunda (Backlog - Phase M9)
 
 # Week 1 — Foundation & Technical Feasibility
 
@@ -384,20 +385,19 @@
 🛑 **CHECKPOINT 0:** Menunggu konfirmasi pemilik terhadap target (Bagian 2) dan scope (The Hidden saja).
 
 ## Phase 1 — Data Collection & Live Domain Extraction
-- [ ] 👤 HUMAN: Record new gameplay footage across $\ge 6$ skins, varying distances, and $\ge 10$ minutes hard negatives.
+- [⏸] 👤 HUMAN: Record new gameplay footage across $\ge 6$ skins (ditunda ke Backlog Phase M9).
 - [x] Agent: Implement Extraction v2 (`tools/extract_v2.py`) with exact live ROI cropping.
 - [x] Agent: Implement leak-free video-level split generator (`tools/make_splits.py` -> `dataset/splits.json`).
 - [x] Agent: Implement event ground-truth validator (`tools/validate_temporal.py`) and event scrubber (`tools/annotate_events.py`).
-- [ ] 👤 HUMAN: Annotate `cast_start_frame` in `temporal_annotations.json` for any newly added videos.
+- [⏸] 👤 HUMAN: Annotate `cast_start_frame` in `temporal_annotations.json` (ditunda ke Backlog Phase M9).
 
 ## Phase 2 — Manual Labeling & Quality Gate
 - [x] Lock 2-class schema in `training/classes.yaml` (`0: hidden`, `1: survivor`).
 - [x] Author comprehensive labeling guide in `docs/LABELING_GUIDE.md` with visual references (airborne leap poses & survivor distinction).
 - [x] Implement zero-dependency native desktop annotator `tools/annotate_yolo.py`.
 - [x] Implement dataset validator (`tools/validate_yolo_dataset.py`) and generate `training/data.yaml`.
-- [ ] 👤 HUMAN: Manual annotation and correction of entity bounding boxes using `tools/annotate_yolo.py`.
-- [ ] 👤 HUMAN: Quality gate review of 100 random overlay samples ($\ge 95\%$ accuracy).
-🛑 **CHECKPOINT 2:** Menunggu review pemilik terhadap statistik dataset hasil pelabelan.
+- [⏸] 👤 HUMAN: Manual annotation and correction of entity bounding boxes using `tools/annotate_yolo.py` (ditunda ke Backlog Phase M9).
+- [⏸] 👤 HUMAN: Quality gate review of 100 random overlay samples (ditunda ke Backlog Phase M9).
 
 ## Phase 3 — Detector Training & Small-Object Optimization
 - [x] Set up isolated training environment (`training/requirements-train.txt`).
@@ -406,7 +406,6 @@
 - [x] Execute hard-negative mining on negative footage (`tools/mine_hard_negatives.py`).
 - [x] Produce comprehensive detector report in `training/REPORT.md`.
 - [x] Export production ONNX model (`runs/detect/.../best.onnx`, 12.2 MB, 21.5 ms latency).
-🛑 **CHECKPOINT 3:** Menunggu review pemilik terhadap laporan hasil training.
 
 ## Phase 4 — Tracker & Recognizer
 - [x] Implement `detection/hidden_tracker.py` (IoU/centroid association + N-frame hold).
@@ -424,5 +423,68 @@
 ## Phase 6 — Replay Evaluation & Live Testing
 - [x] Implement end-to-end replay evaluator (`tools/evaluate_pipeline.py`).
 - [x] Run replay evaluation and generate `dataset/WEEK3_EVAL_REPORT.md` (100% precision, 0.0 FP/10min on unseen test videos).
-- [ ] 👤 HUMAN: Live in-game testing across 10 matches.
-🛑 **CHECKPOINT 6:** Evaluasi kelulusan akhir terhadap kriteria target.
+- [⏸] 👤 HUMAN: Live in-game testing across 10 matches (ditunda ke Backlog Phase M9).
+
+---
+
+# Manual Trigger Companion Milestone (Global Hotkey → Overlay)
+
+## Phase M0 — Persiapan & Baseline
+- [x] **M0.1** Verifikasi baseline test suite pada branch `feat/manual-detector` (218 test lulus).
+- [x] **M0.2** Dokumentasikan keputusan pivot arsitektur di `docs/DECISIONS.md` (ADR-001).
+- [x] **M0.3** Update `TODO.md` menandai backlog visi otomatis dan mendaftarkan roadmap Phase M0–M9.
+- [x] **M0.4** Catat spesifikasi lingkungan dan kebijakan dependensi di `docs/ENVIRONMENT.md`.
+
+## Phase M1 — Inti Multi-Ability & Overrides
+- [ ] **M1.1** Sempurnakan `CooldownBank` di `cooldown/cooldown_bank.py` (`load_killer`, `trigger`, `reset`, `snapshots`, `add_listener`).
+- [ ] **M1.2** Tambahkan dukungan `elapsed_offset` (reaction offset) pada `CooldownManager` tanpa mengubah perilaku baseline.
+- [ ] **M1.3** Implementasi `database/overrides.py` untuk memuat dan menggabungkan `config/user_overrides.json` dengan database bawaan.
+- [ ] **M1.4** Tulis automated unit tests di `tests/test_cooldown_bank.py` dan `tests/test_overrides.py` (konkurensi multi-ability, offset, duplikat, override durasi).
+
+## Phase M2 — Settings v2 & Validasi
+- [ ] **M2.1** Tingkatkan `schema_version` ke 2 pada `app/settings.py` dengan migrasi otomatis dari v1 (`manual.hotkeys`, `manual.reaction_offset`, `manual.restart_on_repeat`, `manual.sound_on_ready`, `manual.start_in_manual_mode: true`, `capture.enabled_on_start: false`, default `the_hidden`).
+- [ ] **M2.2** Validasi format tombol dan batas offset (fallback aman jika file rusak).
+- [ ] **M2.3** Tulis automated tests di `tests/test_settings.py` untuk migrasi v1->v2 dan validasi.
+
+## Phase M3 — Global Hotkeys via Win32 ctypes
+- [ ] **M3.1** Buat `app/global_hotkeys.py` dengan interface `HotkeyBackend`, `Win32HotkeyBackend` (`ctypes` + `user32.RegisterHotKey` dengan `MOD_NOREPEAT`), dan `FakeHotkeyBackend`.
+- [ ] **M3.2** Tangkap event OS `WM_HOTKEY` (0x0312) via `QAbstractNativeEventFilter` pada GUI thread Qt dan pancarkan signal trigger.
+- [ ] **M3.3** Implementasi parser kombinasi tombol string (`"Numpad1"`, `"Numpad2"`, `"Numpad0"`, `"Alt+1"`, dll.) ke virtual-key code Win32 dan deteksi duplikasi.
+- [ ] **M3.4** Tangani kegagalan registrasi hotkey dengan notifikasi ramah pengguna di UI tanpa crash.
+- [ ] **M3.5** Dukung dialog/flow rebind hotkey pada settings UI dengan tetap mempertahankan F1–F4 fallback.
+- [ ] **M3.6** Pastikan pelepasan hotkey bersih saat aplikasi ditutup (`UnregisterHotKey`) dan cegah registrasi ganda.
+- [ ] Automated tests di `tests/test_global_hotkeys.py`.
+🛑 **CHECKPOINT M3:** Pengujian manual pemicuan hotkey Numpad 1 (Leap), Numpad 2 (Mark), dan Numpad 0 (Reset) saat Roblox sedang aktif/fokus.
+
+## Phase M4 — Overlay v2 Multi-Ability
+- [ ] **M4.1** Perluas `overlay/cooldown_widget.py` dan `overlay/overlay_controller.py` untuk merender seluruh ability aktif killer terpilih secara stacked.
+- [ ] **M4.2** Visualisasi status warna: Siap (hijau), Cooldown (merah/aksen), Peringatan < 5 detik (kuning), dan animasi kedip saat selesai.
+- [ ] **M4.3** Bunyi notifikasi audio opsional saat cooldown siap (`winsound.Beep` atau `QApplication.beep`) berdasarkan setting `sound_on_ready`.
+- [ ] **M4.4** Verifikasi flag jendela transparent, click-through, dan non-activating (`WS_EX_NOACTIVATE`) agar Roblox tidak pernah kehilangan fokus.
+- [ ] **M4.5** Pastikan posisi dan skala overlay tersimpan dengan benar pada multi-monitor / DPI scaling.
+- [ ] **M4.6** Perbarui `tests/demo_overlay.py` dan tambahkan automated tests visual snapshot.
+
+## Phase M5 — Integrasi Mode Manual sebagai Default
+- [ ] **M5.1** Pastikan start aplikasi tidak memicu screen capture atau modul heavy CV (`capture.enabled_on_start: false`).
+- [ ] **M5.2** Tata ulang UI utama: panel killer & ability, status pendaftaran hotkey, pengaturan offset reaksi, dan toggle overlay (pindahkan tab capture ke bagian Lanjutan).
+- [ ] **M5.3** Profil utilisasi CPU (<1%) dan RAM (<50 MB) pada mode manual saat idle dan saat countdown aktif.
+
+## Phase M6 — Kalibrasi Cooldown & User Overrides UI
+- [ ] **M6.1** Antarmuka edit durasi per-ability, tombol "Reset ke Default", penanda `verified`, dan input catatan sumber.
+- [ ] **M6.2** Simpan data kustom ke `config/user_overrides.json` tanpa merusak database bawaan.
+- [ ] **M6.3** Indikator status sumber durasi pada UI (`DB (bawaan)` vs `Pengguna (override)`).
+- [ ] **M6.4** Dokumentasi panduan kalibrasi manual (stopwatch / rekaman frame) di README.
+
+## Phase M7 — Mini Floating Click Panel (Opsional)
+- [ ] Jendela mini floating always-on-top dengan flag `WS_EX_NOACTIVATE` untuk klik mouse alternatif.
+
+## Phase M8 — Pengerasan, Audit & Rilis
+- [ ] **M8.1** Uji ketahanan long-run (zero timer drift, buka-tutup bersih).
+- [ ] **M8.2** Event logger audit ringkas di `logs/manual_triggers.jsonl`.
+- [ ] **M8.3** Dokumentasi lengkap cara penggunaan di `README.md` dan batasan mode tampilan (Windowed/Borderless).
+- [ ] **M8.4** Evaluasi pembungkusan executable mandiri (`.exe`) dengan konfirmasi pengguna.
+- [ ] **M8.5** Pembaruan `RISK.md`.
+🛑 **CHECKPOINT M8:** Uji coba bermain 3 pertandingan langsung di Roblox.
+
+## Phase M9 — Backlog Deteksi Otomatis (Vision/YOLO)
+- [⏸] Pipeline deteksi otomatis berbasis YOLO, tracking kinematis, audio loopback, dan replay pipeline ditunda hingga tersedianya rekaman dataset komprehensif dan waktu pelabelan manual.
