@@ -70,6 +70,12 @@ class TestDatabaseManager(unittest.TestCase):
         self.assertEqual(slasher.get_ability("lake_mist").cooldown_seconds, 60.0)
         self.assertEqual(slasher.get_ability("pursuit").cooldown_seconds, 60.0)
 
+        # Query The Butcher
+        butcher = self.manager.get_killer("the_butcher")
+        self.assertIsNotNone(butcher)
+        self.assertEqual(butcher.get_ability("your_heart_is_mine").cooldown_seconds, 15.0)
+        self.assertEqual(butcher.get_ability("tendons").cooldown_seconds, 45.0)
+
     def test_missing_file_raises_not_found(self):
         """Memastikan error DatabaseNotFoundError dilempar jika file tidak ada."""
         fake_path = Path("database/non_existent_file_12345.json")

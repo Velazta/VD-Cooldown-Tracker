@@ -172,6 +172,35 @@
           "description": "Kecepatan bertambah selama 22 detik dan dapat menembus rintangan. Memicu cooldown 60 detik."
         }
       ]
+    },
+    {
+      "id": "the_butcher",
+      "name": "The Butcher",
+      "description": "Killer pengendali jarak menengah dari tempat penjagalan tua (Revenge Never Tasted This Sweet). Menggunakan rantai kait untuk Silence & menarik survivor, serta memasang perangkap baja.",
+      "abilities": [
+        {
+          "id": "your_heart_is_mine",
+          "name": "Your Heart Is Mine",
+          "cooldown_seconds": 15.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Windup & Cast Chain (50 studs)",
+          "detection_method": "pose_sequence",
+          "description": "Melempar rantai berkait sejauh 50 studs mengait survivor. Memberikan efek Silence, membatasi pergerakan survivor, dan bisa ditarik ulang. Cooldown 15 detik."
+        },
+        {
+          "id": "tendons",
+          "name": "Tendons (Steel Trap)",
+          "cooldown_seconds": 45.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Place Steel Trap",
+          "detection_method": "pose_sequence",
+          "description": "Memasang perangkap jebakan baja di lantai yang melumpuhkan dan mengungkap survivor. Cooldown 45 detik untuk meregenerasi trap."
+        }
+      ]
     }
   ]
 }

@@ -175,7 +175,16 @@ def test_cooldown_bank_loads_all_database_killers():
     killers = db.load().killers
     assert len(killers) >= 7
 
-    expected_ids = {"the_hidden", "veil", "the_killer", "the_stalker", "the_abysswalker", "the_masked", "the_slasher"}
+    expected_ids = {
+        "the_hidden",
+        "veil",
+        "the_killer",
+        "the_stalker",
+        "the_abysswalker",
+        "the_masked",
+        "the_slasher",
+        "the_butcher",
+    }
     found_ids = {k.id for k in killers}
     assert expected_ids.issubset(found_ids)
 

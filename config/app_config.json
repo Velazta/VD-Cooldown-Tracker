@@ -24,7 +24,7 @@
     "width": 220,
     "height": 220,
     "opacity": 0.9,
-    "visible": true,
+    "visible": false,
     "always_on_top": true,
     "click_through": true,
     "fps_display": true,
