@@ -28,7 +28,11 @@ class TestSettingsManager(unittest.TestCase):
         self.assertFalse(cfg.capture.enabled_on_start)
         self.assertGreater(cfg.capture.roi.width, 0)
         self.assertGreater(cfg.capture.roi.height, 0)
-        self.assertIn(cfg.active_killer_id, ["the_hidden", "veil"])
+        valid_killers = [
+            "the_hidden", "veil", "the_killer", "the_stalker",
+            "the_abysswalker", "the_masked", "the_slasher", "the_butcher"
+        ]
+        self.assertIn(cfg.active_killer_id, valid_killers)
         self.assertIsInstance(cfg.overlay, OverlaySettings)
         self.assertGreaterEqual(cfg.overlay.width, 60)
         self.assertGreaterEqual(cfg.overlay.height, 60)

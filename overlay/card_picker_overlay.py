@@ -99,8 +99,8 @@ class CardPickerOverlay(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
-        # Dimensions: 1040 x 420
-        self.resize(1040, 420)
+        # Dimensions: 1040 x 290 (Pure floating cards, zero background, zero bottom text)
+        self.resize(1040, 290)
 
         # Hover states for arrows
         self._hover_arrow: Optional[str] = None  # "left" or "right"
@@ -361,17 +361,7 @@ class CardPickerOverlay(QWidget):
         h = self.height()
         cx = w // 2
 
-        # 1. Soft Backdrop Pill for contrast
-        backdrop_rect = QRectF(10.0, 5.0, w - 20.0, h - 10.0)
-        grad = QLinearGradient(0, 0, 0, h)
-        grad.setColorAt(0.0, QColor(8, 8, 12, 235))
-        grad.setColorAt(0.7, QColor(14, 14, 20, 245))
-        grad.setColorAt(1.0, QColor(6, 6, 8, 250))
-        painter.setBrush(grad)
-        painter.setPen(QPen(QColor(45, 45, 60, 180), 1.5))
-        painter.drawRoundedRect(backdrop_rect, 16.0, 16.0)
-
-        # 2. Draw Cards in Carousel (Draw far outer first, then sides, center last)
+        # Draw Cards in Carousel (Pure floating cards, zero background)
         # Relative slots: -2, -1, 0, 1, 2
         active_idx = self._target_index if self._anim_slide.state() == QPropertyAnimation.State.Running else self._current_index
         n = len(self._killers)
@@ -383,7 +373,6 @@ class CardPickerOverlay(QWidget):
             killer = self._killers[k_idx]
 
             # Calculate horizontal position with animated slide offset
-            # Base spacing: center is 0, slot 1 is +280, slot -1 is -280
             slot_effective = rel_slot + self._slide_offset
             card_x = cx + (slot_effective * 280.0)
 
@@ -397,20 +386,16 @@ class CardPickerOverlay(QWidget):
 
             card_w = int(245.0 * scale)
             card_h = int(260.0 * scale)
-            card_y = int(20.0 + (dist * 26.0))
+            card_y = int(14.0 + (dist * 20.0))
 
             rect = QRect(int(card_x - (card_w / 2.0)), card_y, card_w, card_h)
             is_center = (rel_slot == 0 and abs(self._slide_offset) < 0.35)
 
             self._draw_single_card(painter, killer, rect, opacity, is_center)
 
-        # 3. Draw Left and Right Navigation Arrows
-        self._draw_nav_arrow(painter, "left", QRect(36, 110, 48, 64))
-        self._draw_nav_arrow(painter, "right", QRect(w - 84, 110, 48, 64))
-
-        # 4. Draw Selected Killer Info (Name, Abilities, and Instruction Pill)
-        current_killer = self._killers[active_idx]
-        self._draw_bottom_info_panel(painter, current_killer, cx, h)
+        # Draw Left and Right Navigation Arrows
+        self._draw_nav_arrow(painter, "left", QRect(36, 105, 48, 64))
+        self._draw_nav_arrow(painter, "right", QRect(w - 84, 105, 48, 64))
 
         painter.end()
 
@@ -504,33 +489,3 @@ class CardPickerOverlay(QWidget):
         # Vertical adjustment for visual centering of unicode chevron
         adj_rect = rect.translated(0, -3)
         painter.drawText(adj_rect, Qt.AlignCenter, symbol)
-
-    def _draw_bottom_info_panel(self, painter: QPainter, killer: KillerConfig, cx: int, h: int) -> None:
-        """Draws killer name, ability breakdown, and instruction pill below the carousel."""
-        # 1. Killer Name Title
-        painter.setFont(QFont("Segoe UI Black", 15, QFont.Bold))
-        painter.setPen(QColor(248, 250, 252))
-        name_rect = QRect(cx - 300, 285, 600, 28)
-        painter.drawText(name_rect, Qt.AlignCenter, killer.name.upper())
-
-        # 2. Abilities summary
-        ab_texts = []
-        for ab in killer.abilities:
-            ab_texts.append(f"{ab.name} ({ab.cooldown_seconds:.0f}s)")
-        ab_summary = "  •  ".join(ab_texts) if ab_texts else "No abilities registered"
-
-        painter.setFont(QFont("Segoe UI", 10, QFont.DemiBold))
-        painter.setPen(QColor(245, 158, 11))  # Amber gold
-        ab_rect = QRect(cx - 350, 314, 700, 22)
-        painter.drawText(ab_rect, Qt.AlignCenter, ab_summary)
-
-        # 3. Instruction Badge Pill
-        pill_rect = QRect(cx - 240, 345, 480, 28)
-        painter.setBrush(QColor(18, 18, 26, 210))
-        painter.setPen(QPen(QColor(60, 60, 80, 160), 1.0))
-        painter.drawRoundedRect(pill_rect, 14, 14)
-
-        painter.setFont(QFont("Segoe UI", 9, QFont.Bold))
-        painter.setPen(QColor(203, 213, 225))
-        instruction_text = "[ENTER] PILIH KILLER    |    [← / →] GESER    |    [ESC] TUTUP"
-        painter.drawText(pill_rect, Qt.AlignCenter, instruction_text)

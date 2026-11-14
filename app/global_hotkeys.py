@@ -184,8 +184,140 @@ class HotkeyBackend:
         raise NotImplementedError
 
 
-class Win32HotkeyBackend(HotkeyBackend):
-    """Concrete backend using Win32 user32.RegisterHotKey via ctypes."""
+WH_KEYBOARD_LL = 13
+WM_KEYDOWN = 0x0100
+WM_SYSKEYDOWN = 0x0104
+
+
+class KBDLLHOOKSTRUCT(ctypes.Structure):
+    _fields_ = [
+        ("vkCode", wintypes.DWORD),
+        ("scanCode", wintypes.DWORD),
+        ("flags", wintypes.DWORD),
+        ("time", wintypes.DWORD),
+        ("dwExtraInfo", ctypes.c_ulonglong),
+    ]
+
+
+HOOKPROC = ctypes.WINFUNCTYPE(
+    ctypes.c_longlong,
+    ctypes.c_int,
+    wintypes.WPARAM,
+    ctypes.c_longlong,
+)
+
+
+class Win32HookHotkeyBackend(HotkeyBackend):
+    """Pass-through Win32 hotkey backend using WH_KEYBOARD_LL.
+
+    Crucial advantages over RegisterHotKey:
+    - Never locks or swallows keystrokes from Roblox (no key hijacking).
+    - Keystrokes ('P', '[', ']', etc.) are passed through to the game and chat normally.
+    - Smart chat detection: pauses companion triggers while typing in Roblox chat (/ key).
+    - Foreground filter: only triggers hotkeys when Roblox or the tracker is in the foreground.
+    """
+
+    def __init__(self, callback: Optional[Callable[[int], None]] = None) -> None:
+        self.callback = callback
+        self._registered_combos: Dict[Tuple[int, int], int] = {}  # (mod, vk) -> hotkey_id
+        self._hook = None
+        self._hook_proc_ref = None
+        self._user32 = ctypes.windll.user32 if sys.platform == "win32" else None
+        self._is_chat_focused: bool = False
+        if sys.platform == "win32":
+            self._install_hook()
+
+    def _install_hook(self) -> None:
+        if self._hook is None and self._user32 is not None:
+            self._hook_proc_ref = HOOKPROC(self._low_level_proc)
+            self._hook = self._user32.SetWindowsHookExW(WH_KEYBOARD_LL, self._hook_proc_ref, None, 0)
+            if self._hook:
+                logger.info("Win32 pass-through keyboard hook installed successfully.")
+            else:
+                err = ctypes.windll.kernel32.GetLastError()
+                logger.warning("Failed to install Win32 keyboard hook (GetLastError=%d)", err)
+
+    def _is_roblox_or_tracker_foreground(self) -> bool:
+        """Checks if Roblox or tracker application is the focused window."""
+        if self._user32 is None:
+            return True
+        hwnd = self._user32.GetForegroundWindow()
+        if not hwnd:
+            return True
+        length = self._user32.GetWindowTextLengthW(hwnd)
+        if length > 0:
+            buff = ctypes.create_unicode_buffer(length + 1)
+            self._user32.GetWindowTextW(hwnd, buff, length + 1)
+            title = buff.value.lower()
+            return ("roblox" in title) or ("violence district" in title) or ("tracker" in title)
+        return True
+
+    def _get_current_modifiers(self) -> int:
+        if self._user32 is None:
+            return 0
+        mods = 0
+        if self._user32.GetAsyncKeyState(0x10) & 0x8000:  # VK_SHIFT
+            mods |= MOD_SHIFT
+        if self._user32.GetAsyncKeyState(0x11) & 0x8000:  # VK_CONTROL
+            mods |= MOD_CONTROL
+        if self._user32.GetAsyncKeyState(0x12) & 0x8000:  # VK_MENU (Alt)
+            mods |= MOD_ALT
+        if (self._user32.GetAsyncKeyState(0x5B) & 0x8000) or (self._user32.GetAsyncKeyState(0x5C) & 0x8000):
+            mods |= MOD_WIN
+        return mods
+
+    def _low_level_proc(self, nCode: int, wParam: int, lParam: int) -> int:
+        try:
+            if nCode == 0 and wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
+                kb = KBDLLHOOKSTRUCT.from_address(lParam)
+                vk = kb.vkCode
+
+                # Track chat state in Roblox
+                if vk == 0xBF:  # '/' opens chat
+                    self._is_chat_focused = True
+                elif vk in (0x0D, 0x1B):  # Enter or Esc closes chat
+                    self._is_chat_focused = False
+
+                # Only trigger companion hotkeys if not chatting and focused on Roblox/tracker
+                if not self._is_chat_focused and self._is_roblox_or_tracker_foreground():
+                    mods = self._get_current_modifiers()
+                    hid = self._registered_combos.get((mods, vk))
+                    if hid is not None and self.callback:
+                        self.callback(hid)
+        except Exception as exc:
+            logger.debug("Exception in _low_level_proc: %s", exc)
+
+        # ALWAYS pass through the keystroke so Roblox and in-game chat receive it!
+        return self._user32.CallNextHookEx(None, nCode, wParam, lParam)
+
+    def register_hotkey(self, hotkey_id: int, modifiers: int, vk: int) -> bool:
+        norm_mod = modifiers & ~MOD_NOREPEAT
+        self._registered_combos[(norm_mod, vk)] = hotkey_id
+        if self._hook is None and sys.platform == "win32":
+            self._install_hook()
+        return True
+
+    def unregister_hotkey(self, hotkey_id: int) -> bool:
+        to_del = [k for k, v in self._registered_combos.items() if v == hotkey_id]
+        for k in to_del:
+            del self._registered_combos[k]
+        return len(to_del) > 0
+
+    def unregister_all(self) -> None:
+        self._registered_combos.clear()
+        if self._hook and self._user32 is not None:
+            self._user32.UnhookWindowsHookEx(self._hook)
+            self._hook = None
+            self._hook_proc_ref = None
+            logger.debug("Win32 pass-through keyboard hook unhooked.")
+
+
+# Use Win32HookHotkeyBackend as the default Win32 backend
+Win32HotkeyBackend = Win32HookHotkeyBackend
+
+
+class Win32RegisterHotKeyBackend(HotkeyBackend):
+    """Legacy backend using Win32 user32.RegisterHotKey via ctypes (swallows keys)."""
 
     def __init__(self, hwnd: int = 0) -> None:
         self.hwnd = hwnd
@@ -281,7 +413,15 @@ class GlobalHotkeyManager(QObject):
         parent: Optional[QObject] = None,
     ) -> None:
         super().__init__(parent)
-        self.backend = backend or (Win32HotkeyBackend() if sys.platform == "win32" else FakeHotkeyBackend())
+        if backend is not None:
+            self.backend = backend
+        elif sys.platform == "win32":
+            self.backend = Win32HotkeyBackend(callback=self._on_hotkey_id)
+        else:
+            self.backend = FakeHotkeyBackend()
+
+        if hasattr(self.backend, "callback") and getattr(self.backend, "callback", None) is None:
+            setattr(self.backend, "callback", self._on_hotkey_id)
 
         self._id_counter: int = 1000
         self._action_to_id: Dict[str, int] = {}

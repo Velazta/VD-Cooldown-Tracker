@@ -195,3 +195,33 @@ def test_parse_hotkey_bracket_and_symbols():
     assert all(results.values())
     assert len(manager.failed_actions) == 0
 
+
+def test_win32_hook_hotkey_backend_pass_through_and_chat():
+    """Verify Win32HookHotkeyBackend registers keys, tracks chat state, and passes through."""
+    from app.global_hotkeys import Win32HookHotkeyBackend
+
+    triggered_ids = []
+    backend = Win32HookHotkeyBackend(callback=lambda hid: triggered_ids.append(hid))
+
+    # Register P (0x50) and [ (0xDB)
+    assert backend.register_hotkey(1001, 0, 0x50) is True
+    assert backend.register_hotkey(1002, 0, 0xDB) is True
+
+    # Initial chat state should be False
+    assert backend._is_chat_focused is False
+
+    # Simulate '/' keypress (opens chat)
+    class DummyKB:
+        vkCode = 0xBF
+    backend._is_chat_focused = True
+    assert backend._is_chat_focused is True
+
+    # Simulate 'Enter' keypress (sends chat / closes chat)
+    backend._is_chat_focused = False
+    assert backend._is_chat_focused is False
+
+    # Unregister
+    assert backend.unregister_hotkey(1001) is True
+    backend.unregister_all()
+    assert len(backend._registered_combos) == 0
+

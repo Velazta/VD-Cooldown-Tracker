@@ -22,7 +22,7 @@
     "x": 0,
     "y": 335,
     "width": 360,
-    "height": 184,
+    "height": 358,
     "opacity": 0.95,
     "visible": true,
     "always_on_top": true,
@@ -47,5 +47,5 @@
       "toggle_card_picker": "Insert"
     }
   },
-  "active_killer_id": "veil"
+  "active_killer_id": "the_butcher"
 }

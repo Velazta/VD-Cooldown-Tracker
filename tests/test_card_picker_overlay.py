@@ -41,7 +41,7 @@ class TestCardPickerOverlay(unittest.TestCase):
 
     def setUp(self) -> None:
         self.picker = CardPickerOverlay(db_manager=self.db)
-        self.picker.resize(1040, 420)
+        self.picker.resize(1040, 290)
 
     def tearDown(self) -> None:
         self.picker.close()
@@ -50,7 +50,7 @@ class TestCardPickerOverlay(unittest.TestCase):
         """Memastikan overlay memuat daftar killer lengkap dari DatabaseManager."""
         self.assertGreaterEqual(len(self.picker._killers), 7)
         self.assertEqual(self.picker.width(), 1040)
-        self.assertEqual(self.picker.height(), 420)
+        self.assertEqual(self.picker.height(), 290)
         self.assertFalse(self.picker.isVisible())
 
     def test_card_assets_mapped(self) -> None:
