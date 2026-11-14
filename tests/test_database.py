@@ -51,8 +51,24 @@ class TestDatabaseManager(unittest.TestCase):
         self.assertIsNotNone(veil)
         spear = veil.get_ability("through_the_veil")
         self.assertIsNotNone(spear)
-        self.assertEqual(spear.cooldown_seconds, 20.0)
+        self.assertEqual(spear.cooldown_seconds, 40.0)
         self.assertEqual(spear.trigger_type, "on_release")
+
+        # Query The Killer
+        killer_obj = self.manager.get_killer("the_killer")
+        self.assertIsNotNone(killer_obj)
+        self.assertEqual(killer_obj.get_ability("frenzy").cooldown_seconds, 15.0)
+
+        # Query The Stalker
+        stalker = self.manager.get_killer("the_stalker")
+        self.assertIsNotNone(stalker)
+        self.assertEqual(stalker.get_ability("evils_grasp").cooldown_seconds, 40.0)
+
+        # Query The Slasher
+        slasher = self.manager.get_killer("the_slasher")
+        self.assertIsNotNone(slasher)
+        self.assertEqual(slasher.get_ability("lake_mist").cooldown_seconds, 60.0)
+        self.assertEqual(slasher.get_ability("pursuit").cooldown_seconds, 60.0)
 
     def test_missing_file_raises_not_found(self):
         """Memastikan error DatabaseNotFoundError dilempar jika file tidak ada."""

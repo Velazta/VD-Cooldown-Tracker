@@ -167,3 +167,25 @@ def test_cooldown_bank_snapshots_and_listeners(hidden_killer_config):
     assert snaps["leap"].state == CooldownState.READY
     assert snaps["mark"].state == CooldownState.COOLDOWN
 
+
+def test_cooldown_bank_loads_all_database_killers():
+    """Verify that every single killer in killerDatabase.json loads into CooldownBank and triggers correctly."""
+    from database.database_manager import DatabaseManager
+    db = DatabaseManager()
+    killers = db.load().killers
+    assert len(killers) >= 7
+
+    expected_ids = {"the_hidden", "veil", "the_killer", "the_stalker", "the_abysswalker", "the_masked", "the_slasher"}
+    found_ids = {k.id for k in killers}
+    assert expected_ids.issubset(found_ids)
+
+    for k in killers:
+        bank = CooldownBank()
+        bank.set_killer(k)
+        assert len(bank.managers) == len(k.abilities)
+        for ab in k.abilities:
+            assert bank.trigger(ab.id) is True
+            snap = bank.get_snapshot(ab.id)
+            assert snap.state == CooldownState.COOLDOWN
+            assert snap.total_cooldown_seconds == ab.cooldown_seconds
+

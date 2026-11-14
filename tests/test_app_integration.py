@@ -106,7 +106,7 @@ class TestMainAppIntegration(unittest.TestCase):
         # Verify ability display updated with Veil's ability
         abilities_text = self.window.abilities_container.text()
         self.assertIn("Through The Veil", abilities_text)
-        self.assertIn("20.0s", abilities_text)
+        self.assertIn("40.0s", abilities_text)
 
     def test_save_roi_config_persists_changes(self) -> None:
         """Verify changing spinbox and clicking save persists coordinates."""
