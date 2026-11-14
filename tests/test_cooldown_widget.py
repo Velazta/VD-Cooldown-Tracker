@@ -125,9 +125,17 @@ class TestCooldownWidget(unittest.TestCase):
         self.assertIn(("the_slasher", "pursuit"), BANNER_FILE_MAP)
         self.assertIn(("the_butcher", "your_heart_is_mine"), BANNER_FILE_MAP)
         self.assertIn(("veil", "through_the_veil"), BANNER_FILE_MAP)
+        self.assertIn(("the_masked", "mask_duration"), BANNER_FILE_MAP)
+        self.assertIn(("the_masked", "mask_swap"), BANNER_FILE_MAP)
 
         leap_path = resolve_banner_path("the_hidden", "leap")
         self.assertTrue(leap_path.exists(), f"Path not found: {leap_path}")
+
+        mask_path1 = resolve_banner_path("the_masked", "mask_duration")
+        self.assertTrue(mask_path1.exists(), f"Path not found: {mask_path1}")
+
+        mask_path2 = resolve_banner_path("the_masked", "mask_swap")
+        self.assertTrue(mask_path2.exists(), f"Path not found: {mask_path2}")
 
     def test_multi_slot_snapshots_and_reset(self) -> None:
         """Memastikan multi-snapshot membuat PopupBannerItem terpisah dan reset_banners bekerja."""

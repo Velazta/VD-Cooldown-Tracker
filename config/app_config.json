@@ -44,8 +44,8 @@
       "trigger_ability_3": "Numpad3",
       "reset_all": "P",
       "toggle_overlay": "'",
-      "toggle_card_picker": "Insert"
+      "toggle_card_picker": "="
     }
   },
-  "active_killer_id": "the_slasher"
+  "active_killer_id": "the_masked"
 }
