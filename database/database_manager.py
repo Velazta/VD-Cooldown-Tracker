@@ -39,6 +39,8 @@ class AbilityConfig:
     interact_input: str = ""                # Tombol/interaksi trigger (E Button, Right Click, dll)
     detection_method: str = "pose_sequence" # 'pose_sequence', 'pose_release', 'visual_indicator'
     description: str = ""
+    source: str = "db"                      # 'db' (bawaan) atau 'user' (override pengguna)
+    notes: str = ""                         # Catatan verifikasi / sumber cooldown
 
     def validate(self) -> None:
         """Memvalidasi integritas data kemampuan."""
@@ -55,6 +57,10 @@ class AbilityConfig:
                 f"trigger_type '{self.trigger_type}' pada '{self.id}' tidak valid. "
                 "Pilihan: 'on_cast_start', 'on_release', 'passive'."
             )
+        if self.source not in ("db", "user"):
+            raise DatabaseValidationError(
+                f"source '{self.source}' pada '{self.id}' tidak valid. Pilihan: 'db', 'user'."
+            )
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "AbilityConfig":
@@ -70,7 +76,9 @@ class AbilityConfig:
             trigger_type=str(data.get("trigger_type", "on_cast_start")).strip(),
             interact_input=str(data.get("interact_input", "")).strip(),
             detection_method=str(data.get("detection_method", "pose_sequence")).strip(),
-            description=str(data.get("description", "")).strip()
+            description=str(data.get("description", "")).strip(),
+            source=str(data.get("source", "db")).strip().lower() or "db",
+            notes=str(data.get("notes", "")).strip(),
         )
         ability.validate()
         return ability

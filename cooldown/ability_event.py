@@ -36,6 +36,7 @@ class AbilityEvent:
     timestamp: float
     confidence: float = 1.0
     source: str = "manual"
+    elapsed_offset: float = 0.0
 
     # Himpunan tipe event dan sumber yang diizinkan
     VALID_EVENT_TYPES: ClassVar[Set[str]] = {"cast_start", "release", "cancel"}
@@ -78,6 +79,11 @@ class AbilityEvent:
                 f"source '{self.source}' tidak valid. Pilihan: {sorted(self.VALID_SOURCES)}"
             )
 
+        if not isinstance(self.elapsed_offset, (int, float)) or self.elapsed_offset < 0.0:
+            raise InvalidAbilityEventError(
+                f"elapsed_offset harus berupa angka float >= 0.0 (diterima: {self.elapsed_offset})."
+            )
+
     @classmethod
     def create(
         cls,
@@ -87,6 +93,7 @@ class AbilityEvent:
         timestamp: float | None = None,
         confidence: float = 1.0,
         source: str = "manual",
+        elapsed_offset: float = 0.0,
     ) -> AbilityEvent:
         """Helper factory untuk instansiasi AbilityEvent dengan timestamp monotonic otomatis."""
         ts = timestamp if timestamp is not None else time.monotonic()
@@ -97,4 +104,5 @@ class AbilityEvent:
             timestamp=float(ts),
             confidence=float(confidence),
             source=source,
+            elapsed_offset=float(elapsed_offset),
         )

@@ -153,11 +153,12 @@ class CooldownManager:
             return False
 
         trigger_type = self._ability.trigger_type
+        offset = float(getattr(event, "elapsed_offset", 0.0))
 
         # 3. Penanganan Berdasarkan trigger_type
         if trigger_type == "on_cast_start":
             if event.event_type == "cast_start":
-                self._start_cooldown(event.timestamp)
+                self._start_cooldown(event.timestamp, elapsed_offset=offset)
                 return True
             # Event release diabaikan untuk kemampuan on_cast_start
             return False
@@ -174,7 +175,7 @@ class CooldownManager:
             elif event.event_type == "release":
                 # Mulai cooldown saat release dilepaskan
                 if self._state in (CooldownState.WAITING_FOR_RELEASE, CooldownState.READY):
-                    self._start_cooldown(event.timestamp)
+                    self._start_cooldown(event.timestamp, elapsed_offset=offset)
                     return True
                 return False
 
@@ -242,18 +243,53 @@ class CooldownManager:
             interact_input=self._ability.interact_input,
         )
 
-    def _start_cooldown(self, trigger_timestamp: float) -> None:
-        """Memulai hitungan mundur cooldown berbasis timestamp absolut."""
+    def trigger(
+        self,
+        elapsed_offset: float = 0.0,
+        source: str = "manual",
+        restart_on_repeat: bool = False,
+    ) -> bool:
+        """Memicu cooldown secara manual.
+        
+        Pada mode manual, penekanan tombol langsung memulai hitungan mundur.
+        Jika kemampuan sedang cooldown:
+            - jika restart_on_repeat=False (default): pemicuan ditekan/diabaikan.
+            - jika restart_on_repeat=True: cooldown dimulai ulang dari awal.
+        """
+        if self._ability is None or not self._killer_id:
+            logger.warning("Trigger ignored: No active ability loaded.")
+            return False
+
+        if not self._ability.enabled:
+            logger.debug("Trigger ignored: Ability '%s' is disabled.", self._ability.id)
+            return False
+
+        self._check_and_update_expiry()
+
+        if self._state == CooldownState.COOLDOWN:
+            if not restart_on_repeat:
+                logger.debug("Duplicate trigger suppressed for '%s' (active cooldown).", self._ability.id)
+                return False
+            logger.info("Restart on repeat triggered for '%s'.", self._ability.id)
+
+        now = self._time_func()
+        self._start_cooldown(now, elapsed_offset=elapsed_offset)
+        return True
+
+    def _start_cooldown(self, trigger_timestamp: float, elapsed_offset: float = 0.0) -> None:
+        """Memulai hitungan mundur cooldown berbasis timestamp absolut dengan dukungan offset reaksi."""
         assert self._ability is not None
         duration = float(self._ability.cooldown_seconds)
-        self._start_timestamp = trigger_timestamp
-        self._end_timestamp = trigger_timestamp + duration
+        offset = max(0.0, min(float(elapsed_offset), duration))
+        self._start_timestamp = trigger_timestamp - offset
+        self._end_timestamp = trigger_timestamp + duration - offset
         self._state = CooldownState.COOLDOWN
 
         logger.info(
-            "Cooldown STARTED for '%s'. Duration: %.1fs | End Timestamp: %.2f",
+            "Cooldown STARTED for '%s'. Duration: %.1fs (offset: %.2fs) | End Timestamp: %.2f",
             self._ability.id,
             duration,
+            offset,
             self._end_timestamp,
         )
         self._notify_listeners()

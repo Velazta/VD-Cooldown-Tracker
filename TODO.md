@@ -436,10 +436,10 @@
 - [x] **M0.4** Catat spesifikasi lingkungan dan kebijakan dependensi di `docs/ENVIRONMENT.md`.
 
 ## Phase M1 — Inti Multi-Ability & Overrides
-- [ ] **M1.1** Sempurnakan `CooldownBank` di `cooldown/cooldown_bank.py` (`load_killer`, `trigger`, `reset`, `snapshots`, `add_listener`).
-- [ ] **M1.2** Tambahkan dukungan `elapsed_offset` (reaction offset) pada `CooldownManager` tanpa mengubah perilaku baseline.
-- [ ] **M1.3** Implementasi `database/overrides.py` untuk memuat dan menggabungkan `config/user_overrides.json` dengan database bawaan.
-- [ ] **M1.4** Tulis automated unit tests di `tests/test_cooldown_bank.py` dan `tests/test_overrides.py` (konkurensi multi-ability, offset, duplikat, override durasi).
+- [x] **M1.1** Sempurnakan `CooldownBank` di `cooldown/cooldown_bank.py` (`load_killer`, `trigger`, `reset`, `snapshots`, `add_listener`).
+- [x] **M1.2** Tambahkan dukungan `elapsed_offset` (reaction offset) pada `CooldownManager` tanpa mengubah perilaku baseline.
+- [x] **M1.3** Implementasi `database/overrides.py` untuk memuat dan menggabungkan `config/user_overrides.json` dengan database bawaan.
+- [x] **M1.4** Tulis automated unit tests di `tests/test_cooldown_bank.py` dan `tests/test_overrides.py` (konkurensi multi-ability, offset, duplikat, override durasi).
 
 ## Phase M2 — Settings v2 & Validasi
 - [ ] **M2.1** Tingkatkan `schema_version` ke 2 pada `app/settings.py` dengan migrasi otomatis dari v1 (`manual.hotkeys`, `manual.reaction_offset`, `manual.restart_on_repeat`, `manual.sound_on_ready`, `manual.start_in_manual_mode: true`, `capture.enabled_on_start: false`, default `the_hidden`).
