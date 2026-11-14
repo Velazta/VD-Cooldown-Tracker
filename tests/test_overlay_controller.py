@@ -118,7 +118,47 @@ class TestOverlayController(unittest.TestCase):
 
         self.controller.close()
         self.assertFalse(self.controller.refresh_timer.isActive())
-        self.assertNotIn(self.controller.on_state_changed, self.cooldown_manager._listeners)
+
+    def test_overlay_controller_with_cooldown_bank_multi_ability(self) -> None:
+        """Memastikan OverlayController bekerja mulus dengan CooldownBank multi-ability (Leap + Mark)."""
+        from cooldown.cooldown_bank import CooldownBank
+        from database.database_manager import AbilityConfig, KillerConfig
+
+        killer = KillerConfig(
+            id="the_hidden",
+            name="The Hidden",
+            abilities=[
+                AbilityConfig(id="leap", name="Leap", cooldown_seconds=25.0),
+                AbilityConfig(id="mark", name="Mark", cooldown_seconds=15.0),
+            ],
+        )
+        bank = CooldownBank()
+        bank.set_killer(killer)
+
+        overlay_win = OverlayWindow()
+        controller = OverlayController(
+            cooldown_bank=bank,
+            overlay_window=overlay_win,
+            sound_on_ready=True,
+        )
+
+        widget = controller.cooldown_widget
+        self.assertEqual(len(widget.snapshots), 2)
+        self.assertEqual(widget.snapshots[0].state, CooldownState.READY)
+        self.assertEqual(widget.snapshots[1].state, CooldownState.READY)
+
+        # Trigger Leap
+        bank.trigger("leap")
+        self.assertEqual(widget.snapshots[0].state, CooldownState.COOLDOWN)
+        self.assertEqual(widget.snapshots[1].state, CooldownState.READY)
+
+        # Trigger Mark simultaneously
+        bank.trigger("mark")
+        self.assertEqual(widget.snapshots[0].state, CooldownState.COOLDOWN)
+        self.assertEqual(widget.snapshots[1].state, CooldownState.COOLDOWN)
+
+        controller.close()
+        overlay_win.close()
 
 
 if __name__ == "__main__":

@@ -24,6 +24,7 @@ logger = get_logger("overlay.window")
 GWL_EXSTYLE = -20
 WS_EX_TRANSPARENT = 0x00000020
 WS_EX_LAYERED = 0x00080000
+WS_EX_NOACTIVATE = 0x08000000
 
 # Setup 64-bit safe Win32 API calls
 user32 = ctypes.windll.user32
@@ -53,9 +54,9 @@ def apply_native_click_through(hwnd: int, enable: bool) -> bool:
         hwnd_val = wintypes.HWND(hwnd)
         style = GetWindowLong(hwnd_val, GWL_EXSTYLE)
         if enable:
-            new_style = style | WS_EX_TRANSPARENT | WS_EX_LAYERED
+            new_style = style | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE
         else:
-            new_style = (style & ~WS_EX_TRANSPARENT) | WS_EX_LAYERED
+            new_style = (style & ~WS_EX_TRANSPARENT) | WS_EX_LAYERED | WS_EX_NOACTIVATE
 
         if new_style != style:
             SetWindowLong(hwnd_val, GWL_EXSTYLE, new_style)

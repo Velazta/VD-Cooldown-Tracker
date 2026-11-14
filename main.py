@@ -26,15 +26,17 @@ import numpy as np
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QLabel, QVBoxLayout, QHBoxLayout,
     QWidget, QPushButton, QFrame, QLineEdit, QMessageBox,
-    QSpinBox, QFormLayout, QGroupBox, QCheckBox, QComboBox
+    QSpinBox, QDoubleSpinBox, QFormLayout, QGroupBox, QCheckBox, QComboBox
 )
 from PySide6.QtCore import Qt, QTimer, QEvent
 from PySide6.QtGui import QImage, QPixmap, QFont
 
 from app.logger import setup_logging, get_logger
 from app.settings import SettingsManager, AppConfig
+from app.global_hotkeys import GlobalHotkeyManager
 from database.database_manager import DatabaseManager, KillerConfig
 from cooldown.ability_event import AbilityEvent
+from cooldown.cooldown_bank import CooldownBank
 from cooldown.cooldown_manager import CooldownManager
 from cooldown.cooldown_state import CooldownState
 from overlay.overlay_window import OverlayWindow
@@ -87,8 +89,11 @@ class CapturePreviewWindow(QMainWindow):
         )
         self._telemetry_tick_counter = 0
 
-        # 5. Inisialisasi Cooldown Manager & Overlay Controller (Week 2 Integration)
-        self.cooldown_manager = CooldownManager()
+        # 5. Inisialisasi Cooldown Bank, Overlay Controller & Global Hotkeys (Manual Milestone)
+        self.cooldown_bank = CooldownBank()
+        self.cooldown_bank.load_killer(self.config.active_killer_id, db_manager=self.db_manager)
+        self.cooldown_manager = self.cooldown_bank.get_manager("leap") or CooldownManager()
+
         ovl_cfg = self.config.overlay
         self.overlay_window = OverlayWindow(
             x=ovl_cfg.x,
@@ -100,12 +105,20 @@ class CapturePreviewWindow(QMainWindow):
             always_on_top=ovl_cfg.always_on_top,
         )
         self.overlay_controller = OverlayController(
+            cooldown_bank=self.cooldown_bank,
             cooldown_manager=self.cooldown_manager,
             overlay_window=self.overlay_window,
             refresh_fps=30,
+            sound_on_ready=self.config.manual.sound_on_ready,
             parent=self,
         )
         self.overlay_controller.overlay_moved.connect(self.on_overlay_moved)
+
+        # Global Hotkey Manager (Win32 ctypes + QAbstractNativeEventFilter)
+        self.hotkey_manager = GlobalHotkeyManager(parent=self)
+        self.hotkey_manager.action_triggered.connect(self.on_global_hotkey_action)
+        self.hotkey_manager.install_event_filter()
+        self.hotkey_results = self.hotkey_manager.register_actions(self.config.manual.hotkeys)
 
         # 6. Inisialisasi Detection Worker & Audio Monitor (Multi-Modal Pipeline)
         self.audio_monitor = AudioMonitor(parent=self)
@@ -381,6 +394,69 @@ class CapturePreviewWindow(QMainWindow):
 
         self._update_killer_display()
         right_col.addWidget(killer_group)
+
+        # Panel 1.5: Global Hotkey Companion (Manual Trigger Focus)
+        hotkey_group = QGroupBox("⌨️ Global Hotkeys (Roblox Focused)")
+        hk_layout = QVBoxLayout(hotkey_group)
+        hk_layout.setSpacing(6)
+
+        status_row = QHBoxLayout()
+        self.hk_badge = QLabel("● ACTIVE (OS Level)")
+        if self.hotkey_manager.failed_actions:
+            self.hk_badge.setText("⚠️ HOTKEY CONFLICT")
+            self.hk_badge.setStyleSheet("background-color: #78350F; color: #FDE047; border-radius: 4px; padding: 2px 6px; font-weight: bold; font-size: 10px;")
+        else:
+            self.hk_badge.setStyleSheet("background-color: #14381C; color: #4ADE80; border-radius: 4px; padding: 2px 6px; font-weight: bold; font-size: 10px;")
+        status_row.addWidget(QLabel("<b>Status Global Hook:</b>"))
+        status_row.addWidget(self.hk_badge)
+        status_row.addStretch()
+        hk_layout.addLayout(status_row)
+
+        hk_map = self.config.manual.hotkeys
+        self.hk_info_label = QLabel(
+            f"• <b>Ability 1 (Leap):</b> <code>{hk_map.get('trigger_ability_1', 'Numpad1')}</code><br>"
+            f"• <b>Ability 2 (Mark):</b> <code>{hk_map.get('trigger_ability_2', 'Numpad2')}</code><br>"
+            f"• <b>Reset All:</b> <code>{hk_map.get('reset_all', 'Numpad0')}</code><br>"
+            f"• <b>Toggle Overlay:</b> <code>{hk_map.get('toggle_overlay', 'Numpad.')}</code>"
+        )
+        self.hk_info_label.setStyleSheet("background-color: #16161A; border: 1px solid #282830; border-radius: 4px; padding: 6px; font-size: 11px;")
+        hk_layout.addWidget(self.hk_info_label)
+
+        manual_btns_row = QHBoxLayout()
+        self.btn_manual_ab1 = QPushButton("⚡ Leap (Num1)")
+        self.btn_manual_ab1.setStyleSheet("background-color: #1E3A8A; color: #93C5FD; font-weight: bold;")
+        self.btn_manual_ab1.clicked.connect(lambda: self.on_global_hotkey_action("trigger_ability_1"))
+        manual_btns_row.addWidget(self.btn_manual_ab1)
+
+        self.btn_manual_ab2 = QPushButton("🎯 Mark (Num2)")
+        self.btn_manual_ab2.setStyleSheet("background-color: #701A75; color: #F0ABFC; font-weight: bold;")
+        self.btn_manual_ab2.clicked.connect(lambda: self.on_global_hotkey_action("trigger_ability_2"))
+        manual_btns_row.addWidget(self.btn_manual_ab2)
+
+        self.btn_manual_reset = QPushButton("🔄 Reset (Num0)")
+        self.btn_manual_reset.setStyleSheet("background-color: #4C1D24; color: #FCA5A5; font-weight: bold;")
+        self.btn_manual_reset.clicked.connect(lambda: self.on_global_hotkey_action("reset_all"))
+        manual_btns_row.addWidget(self.btn_manual_reset)
+        hk_layout.addLayout(manual_btns_row)
+
+        opt_layout = QHBoxLayout()
+        opt_layout.addWidget(QLabel("Offset:"))
+        self.spin_reaction_offset = QDoubleSpinBox()
+        self.spin_reaction_offset.setRange(0.0, 2.0)
+        self.spin_reaction_offset.setSingleStep(0.1)
+        self.spin_reaction_offset.setValue(self.config.manual.reaction_offset)
+        self.spin_reaction_offset.setSuffix("s")
+        self.spin_reaction_offset.setToolTip("Mengompensasi keterlambatan menekan tombol setelah melihat animasi skill (0.0 - 2.0s).")
+        self.spin_reaction_offset.valueChanged.connect(self.on_reaction_offset_changed)
+        opt_layout.addWidget(self.spin_reaction_offset)
+
+        self.check_sound_ready = QCheckBox("🔊 Beep Ready")
+        self.check_sound_ready.setChecked(self.config.manual.sound_on_ready)
+        self.check_sound_ready.toggled.connect(self.on_sound_on_ready_toggled)
+        opt_layout.addWidget(self.check_sound_ready)
+        hk_layout.addLayout(opt_layout)
+
+        right_col.addWidget(hotkey_group)
 
         # Panel 2: Overlay & Event Simulation Controls (Day 12 Integration)
         overlay_group = QGroupBox("Overlay & Event Simulation")
@@ -680,6 +756,54 @@ class CapturePreviewWindow(QMainWindow):
 
         self.abilities_container.setText("<br>".join(ability_lines))
 
+    def on_reaction_offset_changed(self, value: float) -> None:
+        """Menyimpan perubahan offset reaksi dari GUI."""
+        self.config.manual.reaction_offset = float(value)
+        self.settings_manager.save(self.config)
+        logger.debug("Manual reaction offset set to: %.2fs", value)
+
+    def on_sound_on_ready_toggled(self, checked: bool) -> None:
+        """Mengatur preferensi notifikasi audio saat cooldown siap."""
+        self.config.manual.sound_on_ready = bool(checked)
+        self.overlay_controller.set_sound_on_ready(checked)
+        self.settings_manager.save(self.config)
+        logger.debug("Sound on ready toggled: %s", checked)
+
+    def on_global_hotkey_action(self, action: str) -> None:
+        """Handler pemicuan aksi dari GlobalHotkeyManager (Win32 OS-level hotkey).
+        
+        Bekerja saat Roblox sedang fokus maupun saat jendela aplikasi aktif.
+        """
+        logger.info("Handling global hotkey action: '%s'", action)
+        offset = self.config.manual.reaction_offset
+        restart = self.config.manual.restart_on_repeat
+
+        killer = self.database.get_killer(self.config.active_killer_id) if self.database else None
+        if not killer:
+            logger.warning("Action '%s' ignored: No active killer loaded.", action)
+            return
+
+        if action == "trigger_ability_1":
+            if len(killer.abilities) >= 1:
+                ab_id = killer.abilities[0].id
+                self.cooldown_bank.trigger(ab_id, offset=offset, source="hotkey", restart_on_repeat=restart)
+        elif action == "trigger_ability_2":
+            if len(killer.abilities) >= 2:
+                ab_id = killer.abilities[1].id
+                self.cooldown_bank.trigger(ab_id, offset=offset, source="hotkey", restart_on_repeat=restart)
+        elif action == "trigger_ability_3":
+            if len(killer.abilities) >= 3:
+                ab_id = killer.abilities[2].id
+                self.cooldown_bank.trigger(ab_id, offset=offset, source="hotkey", restart_on_repeat=restart)
+        elif action == "reset_all":
+            self.cooldown_bank.reset()
+        elif action == "toggle_overlay":
+            is_visible = self.overlay_controller.toggle_overlay()
+            if hasattr(self, "check_overlay_visible"):
+                self.check_overlay_visible.blockSignals(True)
+                self.check_overlay_visible.setChecked(is_visible)
+                self.check_overlay_visible.blockSignals(False)
+
     def on_killer_selection_changed(self, index: int) -> None:
         """Event listener saat pengguna mengganti killer aktif di GUI."""
         killer_id = self.combo_killer.currentData()
@@ -688,6 +812,8 @@ class CapturePreviewWindow(QMainWindow):
             self.settings_manager.save(self.config)
             logger.info("Active killer changed to '%s'. Updated app config.", killer_id)
 
+        self.cooldown_bank.load_killer(self.config.active_killer_id, db_manager=self.db_manager)
+        self.overlay_controller.update_widget()
         self._update_killer_display()
         self._populate_ability_combobox()
         self.combo_killer.clearFocus()
@@ -740,6 +866,7 @@ class CapturePreviewWindow(QMainWindow):
         )
         logger.info("Simulating '%s' event from source '%s': %s/%s", event.event_type, source, killer_id, ability_id)
         self.cooldown_manager.handle_event(event)
+        self.cooldown_bank.handle_event(event)
 
     def simulate_release(self, source: str = "manual") -> None:
         """Memicu simulasi event release untuk kemampuan aktif."""
@@ -759,11 +886,13 @@ class CapturePreviewWindow(QMainWindow):
         )
         logger.info("Simulating '%s' event from source '%s': %s/%s", event.event_type, source, killer_id, ability_id)
         self.cooldown_manager.handle_event(event)
+        self.cooldown_bank.handle_event(event)
 
     def reset_cooldown(self) -> None:
         """Mereset status cooldown kemampuan aktif kembali ke READY."""
         logger.info("Resetting cooldown timer back to READY.")
         self.cooldown_manager.reset()
+        self.cooldown_bank.reset()
 
     def on_toggle_auto_detection(self, checked: bool) -> None:
         """Mengaktifkan atau menonaktifkan proses inferensi detektor background."""
@@ -867,21 +996,21 @@ class CapturePreviewWindow(QMainWindow):
         logger.error("Detector worker error: %s", err_msg)
 
     def _handle_hotkey(self, key: int) -> bool:
-        """Menangani aksi hotkey F1-F4 secara terpusat.
+        """Menangani aksi hotkey F1-F4 secara terpusat saat jendela aplikasi sedang fokus.
 
         Returns:
             bool: True jika tombol dikenali dan ditangani, False jika tidak.
         """
-        if key == Qt.Key.Key_F1 or key == Qt.Key_F1:
+        if key == Qt.Key.Key_F1:
             self.simulate_cast_start(source="hotkey")
             return True
-        elif key == Qt.Key.Key_F2 or key == Qt.Key_F2:
+        elif key == Qt.Key.Key_F2:
             self.simulate_release(source="hotkey")
             return True
-        elif key == Qt.Key.Key_F3 or key == Qt.Key_F3:
+        elif key == Qt.Key.Key_F3:
             self.reset_cooldown()
             return True
-        elif key == Qt.Key.Key_F4 or key == Qt.Key_F4:
+        elif key == Qt.Key.Key_F4:
             is_visible = self.overlay_controller.toggle_overlay()
             self.check_overlay_visible.blockSignals(True)
             self.check_overlay_visible.setChecked(is_visible)
@@ -1180,6 +1309,9 @@ class CapturePreviewWindow(QMainWindow):
             logger.warning("Could not persist overlay settings on exit: %s", exc)
 
         self.render_timer.stop()
+        if hasattr(self, "hotkey_manager") and self.hotkey_manager is not None:
+            self.hotkey_manager.unregister_all()
+            self.hotkey_manager.remove_event_filter()
         if hasattr(self, "audio_monitor"):
             self.audio_monitor.stop()
         if hasattr(self, "detection_worker") and self.detection_worker.isRunning():

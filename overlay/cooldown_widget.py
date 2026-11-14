@@ -1,163 +1,227 @@
-"""Circular Cooldown Indicator Widget for Transparent Overlay.
+"""Multi-Ability Cooldown Indicator Widget for Transparent Overlay.
 
-Week 2 — Day 11 (Cooldown Widget)
-Renders a smooth circular/radial progress ring, formatted remaining seconds,
-ability identity, and READY transition using PySide6 QPainter.
-Lightweight 2D graphics with zero capture/CV overhead in paintEvent.
+Violence District Cooldown Tracker — Week 2 / Manual Milestone (Phase M4)
+Renders smooth visual indicators (stacked rows for multi-ability, or circular ring for single ability)
+with dynamic state colors (Emerald Green, Amber Yellow warning for <5s, Coral Red for active CD),
+completion blink animations, and optional audio beeps on ready.
 """
 
 from __future__ import annotations
 
-from typing import Optional
+import sys
+import time
+from typing import Dict, List, Optional, Union
 
-from PySide6.QtCore import Qt, QRectF
-from PySide6.QtGui import QPainter, QColor, QPen, QFont
+from PySide6.QtCore import QPointF, QRectF, Qt
+from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen
 from PySide6.QtWidgets import QWidget
 
-from cooldown.cooldown_state import CooldownSnapshot, CooldownState
 from app.logger import get_logger
+from cooldown.cooldown_state import CooldownSnapshot, CooldownState
 
 logger = get_logger("overlay.widget")
 
+try:
+    import winsound
+except ImportError:
+    winsound = None
+
 
 class CooldownWidget(QWidget):
-    """Custom Widget PySide6 untuk indikator radial circular cooldown."""
+    """Custom PySide6 Widget for multi-ability stacked cooldown display."""
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
-        self._snapshot: Optional[CooldownSnapshot] = None
+        self._snapshots: List[CooldownSnapshot] = []
+        self._prev_states: Dict[str, CooldownState] = {}
+        self._blink_until: Dict[str, float] = {}
+        self.sound_on_ready: bool = False
+
         self.setMinimumSize(120, 120)
 
-        # Palet Warna Visual
-        self.COLOR_BG = QColor(14, 14, 18, 200)             # Latar belakang piringan gelap semi-transparan
-        self.COLOR_TRACK = QColor(40, 40, 50, 160)          # Jalur cincin kosong
-        self.COLOR_READY = QColor(16, 185, 129, 240)        # Emerald / Neon Green saat READY
-        self.COLOR_COOLDOWN = QColor(239, 68, 68, 240)      # Coral Red saat Cooldown aktif
-        self.COLOR_AIMING = QColor(245, 158, 11, 240)       # Amber / Emas saat Waiting for Release
-        self.COLOR_DISABLED = QColor(100, 116, 139, 180)    # Muted Slate saat Disabled
-        self.COLOR_TEXT_MAIN = QColor(248, 250, 252, 255)   # Putih bersih untuk teks angka
-        self.COLOR_TEXT_SUB = QColor(148, 163, 184, 230)    # Abu-abu kebiruan untuk nama kemampuan
-        self.COLOR_UNVERIFIED = QColor(251, 191, 36, 230)   # Kuning peringatan unverified
+        # Visual Palette
+        self.COLOR_BG = QColor(14, 14, 18, 210)             # Semi-transparent dark card
+        self.COLOR_BORDER = QColor(46, 46, 56, 180)         # Border outline
+        self.COLOR_TRACK = QColor(36, 36, 46, 180)          # Progress track
+        self.COLOR_READY = QColor(16, 185, 129, 255)        # Emerald Neon Green
+        self.COLOR_COOLDOWN = QColor(239, 68, 68, 255)      # Coral Red
+        self.COLOR_WARNING = QColor(245, 158, 11, 255)      # Amber Yellow (< 5s warning)
+        self.COLOR_AIMING = QColor(245, 158, 11, 240)       # Amber Waiting for Release
+        self.COLOR_DISABLED = QColor(100, 116, 139, 180)    # Muted Slate
+        self.COLOR_TEXT_MAIN = QColor(248, 250, 252, 255)   # Crisp White
+        self.COLOR_TEXT_SUB = QColor(148, 163, 184, 230)    # Slate Muted
+        self.COLOR_BADGE_BG = QColor(30, 30, 40, 220)       # Badge background
+
+    def set_sound_on_ready(self, enabled: bool) -> None:
+        """Enables or disables audio notification when an ability becomes ready."""
+        self.sound_on_ready = bool(enabled)
 
     def update_snapshot(self, snapshot: CooldownSnapshot) -> None:
-        """Memperbarui data snapshot status cooldown dan memicu repaint.
+        """Backward-compatible single snapshot updater."""
+        self.update_snapshots([snapshot])
 
-        Args:
-            snapshot: Objek CooldownSnapshot immutable terbaru dari CooldownManager.
-        """
-        self._snapshot = snapshot
+    def update_snapshots(
+        self,
+        snapshots: Union[Dict[str, CooldownSnapshot], List[CooldownSnapshot]],
+    ) -> None:
+        """Updates multiple ability snapshots and handles state transition triggers."""
+        if isinstance(snapshots, dict):
+            new_list = list(snapshots.values())
+        else:
+            new_list = list(snapshots)
+
+        now = time.monotonic()
+        for snap in new_list:
+            ab_id = snap.ability_id
+            old_state = self._prev_states.get(ab_id)
+
+            # Check transition from COOLDOWN -> READY
+            if old_state == CooldownState.COOLDOWN and snap.state == CooldownState.READY:
+                self._blink_until[ab_id] = now + 0.4
+                if self.sound_on_ready:
+                    self._play_ready_sound()
+
+            self._prev_states[ab_id] = snap.state
+
+        self._snapshots = new_list
         self.update()
+
+    def _play_ready_sound(self) -> None:
+        """Plays a gentle ready notification beep without external dependencies."""
+        try:
+            if winsound is not None and sys.platform == "win32":
+                winsound.Beep(1200, 120)  # 1200 Hz for 120 ms
+            else:
+                from PySide6.QtWidgets import QApplication
+                QApplication.beep()
+        except Exception as exc:
+            logger.debug("Failed to play sound: %s", exc)
 
     @property
     def snapshot(self) -> Optional[CooldownSnapshot]:
-        return self._snapshot
+        """Backward-compatible single snapshot property."""
+        return self._snapshots[0] if self._snapshots else None
+
+    @property
+    def snapshots(self) -> List[CooldownSnapshot]:
+        return list(self._snapshots)
 
     def paintEvent(self, event) -> None:
-        """Rendering grafis 2D indikator cooldown radial.
-
-        Sangat ringan: hanya menggunakan operasi geometris QPainter sederhana.
-        Dilarang memuat I/O, capture, atau kalkulasi CV di metode ini.
-        """
+        """Lightweight 2D graphics rendering for multi-ability cooldowns."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        w = self.width()
-        h = self.height()
-        size = min(w, h)
-        center_x = w / 2.0
-        center_y = h / 2.0
+        w = float(self.width())
+        h = float(self.height())
+        now = time.monotonic()
 
-        # Margin dan radius
-        padding = 10.0
-        radius = (size / 2.0) - padding
-        ring_thickness = max(4.0, size * 0.055)
-
-        # 1. Gambar Piringan Latar Belakang (Dark Disc)
-        painter.setPen(Qt.NoPen)
+        # 1. Background Card
+        card_rect = QRectF(2.0, 2.0, w - 4.0, h - 4.0)
+        painter.setPen(QPen(self.COLOR_BORDER, 1.2))
         painter.setBrush(self.COLOR_BG)
-        painter.drawEllipse(QRectF(center_x - radius, center_y - radius, radius * 2, radius * 2))
+        painter.drawRoundedRect(card_rect, 10.0, 10.0)
 
-        # 2. Gambar Jalur Cincin Kosong (Background Ring Track)
-        ring_rect = QRectF(
-            center_x - radius + (ring_thickness / 2.0),
-            center_y - radius + (ring_thickness / 2.0),
-            (radius * 2) - ring_thickness,
-            (radius * 2) - ring_thickness,
-        )
-        track_pen = QPen(self.COLOR_TRACK, ring_thickness, Qt.SolidLine, Qt.RoundCap)
-        painter.setPen(track_pen)
-        painter.setBrush(Qt.NoBrush)
-        painter.drawEllipse(ring_rect)
-
-        # Status & Parameter Kemampuan
-        state = self._snapshot.state if self._snapshot else CooldownState.READY
-        progress = self._snapshot.progress if self._snapshot else 0.0
-        ability_name = self._snapshot.ability_name if self._snapshot else "NO ABILITY"
-        formatted_time = self._snapshot.formatted_remaining if self._snapshot else "READY"
-        is_verified = self._snapshot.verified if self._snapshot else False
-
-        # 3. Gambar Busur Progress Radial Berwarna (Active Progress Arc)
-        # 12 o'clock = 90 derajat. Di Qt: 1 derajat = 16 unit sudut.
-        start_angle = 90 * 16
-
-        if state == CooldownState.READY:
-            # Lingkaran penuh 360 derajat warna hijau neon
-            arc_pen = QPen(self.COLOR_READY, ring_thickness, Qt.SolidLine, Qt.RoundCap)
-            painter.setPen(arc_pen)
-            painter.drawArc(ring_rect, start_angle, -360 * 16)
-
-        elif state == CooldownState.COOLDOWN:
-            # Busur berputar mundur searah jarum jam proporsional terhadap sisa waktu
-            span_angle = -int(progress * 360.0 * 16.0)
-            arc_pen = QPen(self.COLOR_COOLDOWN, ring_thickness, Qt.SolidLine, Qt.RoundCap)
-            painter.setPen(arc_pen)
-            painter.drawArc(ring_rect, start_angle, span_angle)
-
-        elif state == CooldownState.WAITING_FOR_RELEASE:
-            # Lingkaran penuh berkedip/warna amber menandakan fase ancang-ancang
-            arc_pen = QPen(self.COLOR_AIMING, ring_thickness, Qt.SolidLine, Qt.RoundCap)
-            painter.setPen(arc_pen)
-            painter.drawArc(ring_rect, start_angle, -360 * 16)
-
-        elif state == CooldownState.DISABLED:
-            arc_pen = QPen(self.COLOR_DISABLED, ring_thickness, Qt.SolidLine, Qt.RoundCap)
-            painter.setPen(arc_pen)
-            painter.drawArc(ring_rect, start_angle, -360 * 16)
-
-        # 4. Gambar Teks Header: Nama Kemampuan (Atas)
-        name_font = QFont("Segoe UI", max(7, int(size * 0.055)), QFont.Bold)
-        painter.setFont(name_font)
-        painter.setPen(self.COLOR_TEXT_SUB)
-        top_rect = QRectF(center_x - radius, center_y - (radius * 0.65), radius * 2, radius * 0.4)
-        painter.drawText(top_rect, Qt.AlignCenter, ability_name.upper())
-
-        # 5. Gambar Teks Tengah: Hitungan Detik / Status READY
-        val_font_size = max(11, int(size * 0.13))
-        val_font = QFont("Segoe UI", val_font_size, QFont.Bold)
-        painter.setFont(val_font)
-
-        if state == CooldownState.READY:
-            painter.setPen(self.COLOR_READY)
-        elif state == CooldownState.WAITING_FOR_RELEASE:
-            painter.setPen(self.COLOR_AIMING)
-        else:
-            painter.setPen(self.COLOR_TEXT_MAIN)
-
-        center_rect = QRectF(center_x - radius, center_y - (radius * 0.25), radius * 2, radius * 0.5)
-        painter.drawText(center_rect, Qt.AlignCenter, formatted_time)
-
-        # 6. Gambar Footer: Status Verifikasi / Input Trigger (Bawah)
-        sub_font = QFont("Segoe UI", max(6, int(size * 0.045)))
-        painter.setFont(sub_font)
-        bot_rect = QRectF(center_x - radius, center_y + (radius * 0.28), radius * 2, radius * 0.35)
-
-        if not is_verified and state != CooldownState.DISABLED:
-            painter.setPen(self.COLOR_UNVERIFIED)
-            painter.drawText(bot_rect, Qt.AlignCenter, "⚠️ Unverified CD")
-        else:
+        if not self._snapshots:
             painter.setPen(self.COLOR_TEXT_SUB)
-            trigger_lbl = self._snapshot.interact_input if self._snapshot else ""
-            painter.drawText(bot_rect, Qt.AlignCenter, trigger_lbl)
+            painter.setFont(QFont("Segoe UI", 10, QFont.Bold))
+            painter.drawText(card_rect, Qt.AlignCenter, "NO ACTIVE ABILITIES")
+            painter.end()
+            return
+
+        # 2. Render Stacked Ability Rows
+        count = len(self._snapshots)
+        row_h = (h - 16.0) / float(count)
+
+        for i, snap in enumerate(self._snapshots):
+            row_y = 8.0 + (i * row_h)
+            self._draw_ability_row(painter, snap, row_y, row_h, w, now)
 
         painter.end()
+
+    def _draw_ability_row(
+        self,
+        painter: QPainter,
+        snap: CooldownSnapshot,
+        row_y: float,
+        row_h: float,
+        width: float,
+        now: float,
+    ) -> None:
+        """Renders one row containing ability name, remaining seconds, and progress bar."""
+        margin_x = 14.0
+        content_w = width - (margin_x * 2.0)
+
+        # State determination
+        state = snap.state
+        rem = snap.remaining_seconds
+        total = snap.total_cooldown_seconds
+        is_blinking = (now < self._blink_until.get(snap.ability_id, 0.0))
+
+        # Color evaluation
+        if state == CooldownState.READY:
+            accent_color = QColor(255, 255, 255) if is_blinking else self.COLOR_READY
+            time_text = "READY"
+        elif state == CooldownState.WAITING_FOR_RELEASE:
+            accent_color = self.COLOR_AIMING
+            time_text = "HOLD"
+        elif state == CooldownState.DISABLED:
+            accent_color = self.COLOR_DISABLED
+            time_text = "OFF"
+        else:
+            # Active cooldown
+            if rem <= 5.0:
+                accent_color = self.COLOR_WARNING  # Warning threshold < 5s
+            else:
+                accent_color = self.COLOR_COOLDOWN
+            time_text = f"{rem:.1f}s"
+
+        # Text sizes based on row height
+        title_font_size = max(8, int(row_h * 0.22))
+        time_font_size = max(11, int(row_h * 0.32))
+
+        # Top line: Ability Name (Left) and Remaining Time (Right)
+        text_top_y = row_y + (row_h * 0.08)
+        text_h = row_h * 0.45
+
+        # Ability Name & Input Tag
+        painter.setFont(QFont("Segoe UI", title_font_size, QFont.Bold))
+        painter.setPen(self.COLOR_TEXT_MAIN)
+        name_str = snap.ability_name.upper()
+        if snap.interact_input:
+            name_str = f"[{snap.interact_input}] {name_str}"
+        name_rect = QRectF(margin_x, text_top_y, content_w * 0.60, text_h)
+        painter.drawText(name_rect, Qt.AlignLeft | Qt.AlignVCenter, name_str)
+
+        # Remaining Time
+        painter.setFont(QFont("Segoe UI", time_font_size, QFont.Bold))
+        painter.setPen(accent_color)
+        time_rect = QRectF(margin_x + (content_w * 0.50), text_top_y, content_w * 0.50, text_h)
+        painter.drawText(time_rect, Qt.AlignRight | Qt.AlignVCenter, time_text)
+
+        # Bottom line: Progress Bar
+        bar_y = row_y + (row_h * 0.65)
+        bar_h = max(4.0, row_h * 0.16)
+        bar_rect = QRectF(margin_x, bar_y, content_w, bar_h)
+
+        # Track background
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(self.COLOR_TRACK)
+        painter.drawRoundedRect(bar_rect, bar_h / 2.0, bar_h / 2.0)
+
+        # Progress fill
+        if state == CooldownState.READY:
+            fill_w = content_w
+        elif state == CooldownState.COOLDOWN:
+            # Fraction elapsed or remaining
+            fraction = min(1.0, max(0.0, rem / total)) if total > 0 else 0.0
+            fill_w = content_w * fraction
+        elif state == CooldownState.WAITING_FOR_RELEASE:
+            fill_w = content_w
+        else:
+            fill_w = 0.0
+
+        if fill_w > 0:
+            fill_rect = QRectF(margin_x, bar_y, fill_w, bar_h)
+            painter.setBrush(accent_color)
+            painter.drawRoundedRect(fill_rect, bar_h / 2.0, bar_h / 2.0)

@@ -447,22 +447,22 @@
 - [x] **M2.3** Tulis automated tests di `tests/test_settings.py` untuk migrasi v1->v2 dan validasi.
 
 ## Phase M3 — Global Hotkeys via Win32 ctypes
-- [ ] **M3.1** Buat `app/global_hotkeys.py` dengan interface `HotkeyBackend`, `Win32HotkeyBackend` (`ctypes` + `user32.RegisterHotKey` dengan `MOD_NOREPEAT`), dan `FakeHotkeyBackend`.
-- [ ] **M3.2** Tangkap event OS `WM_HOTKEY` (0x0312) via `QAbstractNativeEventFilter` pada GUI thread Qt dan pancarkan signal trigger.
-- [ ] **M3.3** Implementasi parser kombinasi tombol string (`"Numpad1"`, `"Numpad2"`, `"Numpad0"`, `"Alt+1"`, dll.) ke virtual-key code Win32 dan deteksi duplikasi.
-- [ ] **M3.4** Tangani kegagalan registrasi hotkey dengan notifikasi ramah pengguna di UI tanpa crash.
-- [ ] **M3.5** Dukung dialog/flow rebind hotkey pada settings UI dengan tetap mempertahankan F1–F4 fallback.
-- [ ] **M3.6** Pastikan pelepasan hotkey bersih saat aplikasi ditutup (`UnregisterHotKey`) dan cegah registrasi ganda.
-- [ ] Automated tests di `tests/test_global_hotkeys.py`.
+- [x] **M3.1** Buat `app/global_hotkeys.py` dengan interface `HotkeyBackend`, `Win32HotkeyBackend` (`ctypes` + `user32.RegisterHotKey` dengan `MOD_NOREPEAT`), dan `FakeHotkeyBackend`.
+- [x] **M3.2** Tangkap event OS `WM_HOTKEY` (0x0312) via `QAbstractNativeEventFilter` pada GUI thread Qt dan pancarkan signal trigger.
+- [x] **M3.3** Implementasi parser kombinasi tombol string (`"Numpad1"`, `"Numpad2"`, `"Numpad0"`, `"Alt+1"`, dll.) ke virtual-key code Win32 dan deteksi duplikasi.
+- [x] **M3.4** Tangani kegagalan registrasi hotkey dengan notifikasi ramah pengguna di UI tanpa crash.
+- [x] **M3.5** Dukung dialog/flow rebind hotkey pada settings UI dengan tetap mempertahankan F1–F4 fallback.
+- [x] **M3.6** Pastikan pelepasan hotkey bersih saat aplikasi ditutup (`UnregisterHotKey`) dan cegah registrasi ganda.
+- [x] Automated tests di `tests/test_global_hotkeys.py` (7 tests lulus).
 🛑 **CHECKPOINT M3:** Pengujian manual pemicuan hotkey Numpad 1 (Leap), Numpad 2 (Mark), dan Numpad 0 (Reset) saat Roblox sedang aktif/fokus.
 
 ## Phase M4 — Overlay v2 Multi-Ability
-- [ ] **M4.1** Perluas `overlay/cooldown_widget.py` dan `overlay/overlay_controller.py` untuk merender seluruh ability aktif killer terpilih secara stacked.
-- [ ] **M4.2** Visualisasi status warna: Siap (hijau), Cooldown (merah/aksen), Peringatan < 5 detik (kuning), dan animasi kedip saat selesai.
-- [ ] **M4.3** Bunyi notifikasi audio opsional saat cooldown siap (`winsound.Beep` atau `QApplication.beep`) berdasarkan setting `sound_on_ready`.
-- [ ] **M4.4** Verifikasi flag jendela transparent, click-through, dan non-activating (`WS_EX_NOACTIVATE`) agar Roblox tidak pernah kehilangan fokus.
-- [ ] **M4.5** Pastikan posisi dan skala overlay tersimpan dengan benar pada multi-monitor / DPI scaling.
-- [ ] **M4.6** Perbarui `tests/demo_overlay.py` dan tambahkan automated tests visual snapshot.
+- [x] **M4.1** Perluas `overlay/cooldown_widget.py` dan `overlay/overlay_controller.py` untuk merender seluruh ability aktif killer terpilih secara stacked.
+- [x] **M4.2** Visualisasi status warna: Siap (hijau), Cooldown (merah/aksen), Peringatan < 5 detik (kuning), dan animasi kedip saat selesai.
+- [x] **M4.3** Bunyi notifikasi audio opsional saat cooldown siap (`winsound.Beep` atau `QApplication.beep`) berdasarkan setting `sound_on_ready`.
+- [x] **M4.4** Verifikasi flag jendela transparent, click-through, dan non-activating (`WS_EX_NOACTIVATE`) agar Roblox tidak pernah kehilangan fokus.
+- [x] **M4.5** Pastikan posisi dan skala overlay tersimpan dengan benar pada multi-monitor / DPI scaling.
+- [x] **M4.6** Perbarui `tests/demo_overlay.py` dan tambahkan automated tests visual snapshot.
 
 ## Phase M5 — Integrasi Mode Manual sebagai Default
 - [ ] **M5.1** Pastikan start aplikasi tidak memicu screen capture atau modul heavy CV (`capture.enabled_on_start: false`).
