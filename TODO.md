@@ -456,13 +456,15 @@
 - [x] Automated tests di `tests/test_global_hotkeys.py` (7 tests lulus).
 🛑 **CHECKPOINT M3:** Pengujian manual pemicuan hotkey Numpad 1 (Leap), Numpad 2 (Mark), dan Numpad 0 (Reset) saat Roblox sedang aktif/fokus.
 
-## Phase M4 — Overlay v2 Multi-Ability
-- [x] **M4.1** Perluas `overlay/cooldown_widget.py` dan `overlay/overlay_controller.py` untuk merender seluruh ability aktif killer terpilih secara stacked.
+## Phase M4 — Overlay v2 Multi-Ability & In-Game Card Picker
+- [x] **M4.1** Perluas `overlay/cooldown_widget.py` dan `overlay/overlay_controller.py` untuk merender seluruh ability aktif killer terpilih secara stacked dan popup banner dinamis.
 - [x] **M4.2** Visualisasi status warna: Siap (hijau), Cooldown (merah/aksen), Peringatan < 5 detik (kuning), dan animasi kedip saat selesai.
 - [x] **M4.3** Bunyi notifikasi audio opsional saat cooldown siap (`winsound.Beep` atau `QApplication.beep`) berdasarkan setting `sound_on_ready`.
 - [x] **M4.4** Verifikasi flag jendela transparent, click-through, dan non-activating (`WS_EX_NOACTIVATE`) agar Roblox tidak pernah kehilangan fokus.
 - [x] **M4.5** Pastikan posisi dan skala overlay tersimpan dengan benar pada multi-monitor / DPI scaling.
 - [x] **M4.6** Perbarui `tests/demo_overlay.py` dan tambahkan automated tests visual snapshot.
+- [x] **M4.7** Implementasi `overlay/card_picker_overlay.py`: Carousel kartu killer in-game di atas tengah layar (hotkey `Insert`, navigasi panah `←`/`→`, konfirmasi `Enter`, animasi album slide).
+- [x] **M4.8** Presisi titik koordinat angka countdown di dalam ruang hitam template banner (`X = 81.1%, Y = 81.8%`) dan penonaktifan affinity capture agar overlay dapat di-screenshot (`WDA_NONE`).
 
 ## Phase M5 — Integrasi Mode Manual sebagai Default
 - [x] **M5.1** Pastikan start aplikasi tidak memicu screen capture atau modul heavy CV (`capture.enabled_on_start: false`, auto-detection disabled by default).
