@@ -61,11 +61,17 @@ class TestCardPickerOverlay(unittest.TestCase):
         self.assertIn("the_slasher", CARD_FILE_MAP)
         self.assertIn("the_butcher", CARD_FILE_MAP)
         self.assertIn("the_stalker", CARD_FILE_MAP)
+        self.assertIn("the_masked", CARD_FILE_MAP)
+        self.assertIn("the_killer", CARD_FILE_MAP)
 
         # Cek pixmap ter-cache
         self.assertIn("the_hidden", self.picker._card_pixmaps)
         hidden_pix = self.picker._card_pixmaps["the_hidden"]
         self.assertFalse(hidden_pix.isNull())
+
+        self.assertIn("the_killer", self.picker._card_pixmaps)
+        killer_pix = self.picker._card_pixmaps["the_killer"]
+        self.assertFalse(killer_pix.isNull())
 
     def test_navigation_next_and_prev(self) -> None:
         """Memastikan navigasi next dan prev mengubah target index dan membungkus (wrap-around)."""

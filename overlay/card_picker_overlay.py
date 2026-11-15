@@ -55,6 +55,7 @@ CARD_FILE_MAP: Dict[str, str] = {
     "the_butcher": "BUTCHER CARD.png",
     "the_stalker": "MYERS CARD.png",
     "the_masked": "MASK CARD.png",
+    "the_killer": "KILLER CARD.png",
 }
 
 

@@ -51,6 +51,7 @@ BANNER_FILE_MAP: Dict[Tuple[str, str], str] = {
     ("veil", "through_the_veil"): "veil_throughtheveil.png",
     ("the_masked", "mask_duration"): "mask_maskup.png",
     ("the_masked", "mask_swap"): "mask_maskswap.png",
+    ("the_killer", "frenzy"): "thekiller_frenzy.png",
 }
 
 # Keyword fallbacks for partial matching
@@ -80,6 +81,9 @@ KEYWORD_BANNER_FALLBACKS = [
     ("swap_mask", "mask_maskswap.png"),
     ("change_mask", "mask_maskswap.png"),
     ("mask", "mask_maskup.png"),
+    ("frenzy", "thekiller_frenzy.png"),
+    ("thekiller", "thekiller_frenzy.png"),
+    ("jeff", "thekiller_frenzy.png"),
 ]
 
 
