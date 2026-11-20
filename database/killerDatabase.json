@@ -22,7 +22,7 @@
         {
           "id": "mark",
           "name": "Mark",
-          "cooldown_seconds": 30.0,
+          "cooldown_seconds": 17.0,
           "cooldown_verified": false,
           "enabled": true,
           "trigger_type": "on_cast_start",
@@ -58,7 +58,7 @@
         {
           "id": "frenzy",
           "name": "Frenzy",
-          "cooldown_seconds": 15.0,
+          "cooldown_seconds": 24.0,
           "cooldown_verified": true,
           "enabled": true,
           "trigger_type": "on_cast_start",
@@ -76,7 +76,7 @@
         {
           "id": "evils_grasp",
           "name": "Evil's Grasp",
-          "cooldown_seconds": 40.0,
+          "cooldown_seconds": 70.0,
           "cooldown_verified": true,
           "enabled": true,
           "trigger_type": "on_cast_start",
@@ -94,7 +94,7 @@
         {
           "id": "dark_severance",
           "name": "Dark Severance",
-          "cooldown_seconds": 20.0,
+          "cooldown_seconds": 28.0,
           "cooldown_verified": false,
           "enabled": true,
           "trigger_type": "on_cast_start",
@@ -105,7 +105,7 @@
         {
           "id": "abyssal_burst",
           "name": "Abyssal Burst",
-          "cooldown_seconds": 30.0,
+          "cooldown_seconds": 26.0,
           "cooldown_verified": false,
           "enabled": true,
           "trigger_type": "on_cast_start",
@@ -123,7 +123,7 @@
         {
           "id": "mask_duration",
           "name": "Mask Up (Durasi)",
-          "cooldown_seconds": 60.0,
+          "cooldown_seconds": 90.0,
           "cooldown_verified": true,
           "enabled": true,
           "trigger_type": "on_cast_start",
@@ -152,7 +152,7 @@
         {
           "id": "lake_mist",
           "name": "Lake Mist",
-          "cooldown_seconds": 60.0,
+          "cooldown_seconds": 30.0,
           "cooldown_verified": true,
           "enabled": true,
           "trigger_type": "on_cast_start",
@@ -163,7 +163,7 @@
         {
           "id": "pursuit",
           "name": "Pursuit",
-          "cooldown_seconds": 60.0,
+          "cooldown_seconds": 80.0,
           "cooldown_verified": true,
           "enabled": true,
           "trigger_type": "on_cast_start",

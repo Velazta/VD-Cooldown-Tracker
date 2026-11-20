@@ -142,6 +142,24 @@ def test_hotkey_rebind_dialog_presets():
 
     dialog = HotkeyRebindDialog(win)
 
+    # Test Dual preset (Mouse + [ ])
+    dialog._apply_preset_dual()
+    assert dialog.input_ab1.text() == "[, Mouse4"
+    assert dialog.input_ab2.text() == "], Mouse5"
+    assert dialog.input_ab3.text() == "Numpad3"
+    assert dialog.input_reset.text() == "P, Mouse3"
+    assert dialog.input_overlay.text() == "'"
+    assert dialog.input_card_picker.text() == "="
+
+    # Test Mouse preset
+    dialog._apply_preset_mouse()
+    assert dialog.input_ab1.text() == "Mouse4"
+    assert dialog.input_ab2.text() == "Mouse5"
+    assert dialog.input_ab3.text() == "Mouse3"
+    assert dialog.input_reset.text() == "P"
+    assert dialog.input_overlay.text() == "'"
+    assert dialog.input_card_picker.text() == "="
+
     # Test Laptop preset
     dialog._apply_preset_laptop()
     assert dialog.input_ab1.text() == "Alt+1"
@@ -163,6 +181,10 @@ def test_hotkey_rebind_dialog_presets():
     assert dialog.input_ab2.text() == "Numpad2"
     assert dialog.input_reset.text() == "Numpad0"
     assert dialog.input_overlay.text() == "Numpad."
+
+    # Test Roblox focus filter checkbox
+    assert hasattr(dialog, "chk_roblox_only")
+    assert dialog.chk_roblox_only.isChecked() is False  # General by default
 
     dialog.close()
     win.close()
@@ -204,6 +226,10 @@ def test_win32_hook_hotkey_backend_pass_through_and_chat():
     triggered_ids = []
     backend = Win32HookHotkeyBackend(callback=lambda hid: triggered_ids.append(hid))
 
+    # General (non-Roblox restricted) by default
+    assert backend.require_foreground is False
+    assert backend._is_roblox_or_tracker_foreground() is True
+
     # Register P (0x50), [ (0xDB), and '=' (0xBB)
     assert backend.register_hotkey(1001, 0, 0x50) is True
     assert backend.register_hotkey(1002, 0, 0xDB) is True
@@ -244,4 +270,137 @@ def test_win32_hook_hotkey_backend_pass_through_and_chat():
     assert backend.unregister_hotkey(1003) is True
     backend.unregister_all()
     assert len(backend._registered_combos) == 0
+
+
+def test_parse_mouse_thumb_buttons_and_backend():
+    """Verify parsing and backend dispatch for mouse thumb buttons (Mouse4/Mouse5)."""
+    import ctypes
+    from app.global_hotkeys import (
+        MSLLHOOKSTRUCT,
+        WM_XBUTTONDOWN,
+        Win32HookHotkeyBackend,
+        parse_hotkey_string,
+    )
+
+    # 1. Test key parsing aliases
+    m4_mod, m4_vk = parse_hotkey_string("Mouse4")
+    assert (m4_mod & ~MOD_NOREPEAT) == 0 and m4_vk == 0x05
+
+    t1_mod, t1_vk = parse_hotkey_string("Thumb1")
+    assert (t1_mod & ~MOD_NOREPEAT) == 0 and t1_vk == 0x05
+
+    m5_mod, m5_vk = parse_hotkey_string("Mouse5")
+    assert (m5_mod & ~MOD_NOREPEAT) == 0 and m5_vk == 0x06
+
+    t2_mod, t2_vk = parse_hotkey_string("Thumb2")
+    assert (t2_mod & ~MOD_NOREPEAT) == 0 and t2_vk == 0x06
+
+    m3_mod, m3_vk = parse_hotkey_string("Mouse3")
+    assert (m3_mod & ~MOD_NOREPEAT) == 0 and m3_vk == 0x04
+
+    alt_m4_mod, alt_m4_vk = parse_hotkey_string("Alt+Mouse4")
+    assert (alt_m4_mod & MOD_ALT) != 0 and alt_m4_vk == 0x05
+
+    # 2. Test Win32HookHotkeyBackend mouse proc dispatch
+    triggered = []
+    backend = Win32HookHotkeyBackend(callback=lambda hid: triggered.append(hid))
+
+    # Register Mouse4 (0x05) -> hid 2001, Mouse5 (0x06) -> hid 2002
+    backend.register_hotkey(2001, 0, 0x05)
+    backend.register_hotkey(2002, 0, 0x06)
+
+    # Mock foreground check so it triggers in test environment
+    backend._is_roblox_or_tracker_foreground = lambda: True
+
+    # Simulate Mouse4 press: MSLLHOOKSTRUCT with mouseData = (1 << 16)
+    ms_struct1 = MSLLHOOKSTRUCT()
+    ms_struct1.mouseData = 1 << 16
+    ptr1 = ctypes.addressof(ms_struct1)
+
+    backend._low_level_mouse_proc(0, WM_XBUTTONDOWN, ptr1)
+    assert 2001 in triggered
+
+    # Simulate Mouse5 press: MSLLHOOKSTRUCT with mouseData = (2 << 16)
+    ms_struct2 = MSLLHOOKSTRUCT()
+    ms_struct2.mouseData = 2 << 16
+    ptr2 = ctypes.addressof(ms_struct2)
+
+    backend._low_level_mouse_proc(0, WM_XBUTTONDOWN, ptr2)
+    assert 2002 in triggered
+
+    backend.unregister_all()
+    assert len(backend._registered_combos) == 0
+
+
+def test_split_hotkey_alternatives():
+    """Verify splitting of multiple hotkey alternatives across various formats."""
+    from app.global_hotkeys import split_hotkey_alternatives
+
+    assert split_hotkey_alternatives("[, Mouse4") == ["[", "Mouse4"]
+    assert split_hotkey_alternatives("Mouse5 [") == ["Mouse5", "["]
+    assert split_hotkey_alternatives("[ / Mouse4") == ["[", "Mouse4"]
+    assert split_hotkey_alternatives("[ | Mouse4") == ["[", "Mouse4"]
+    assert split_hotkey_alternatives("[ dan mouse4") == ["[", "mouse4"]
+    assert split_hotkey_alternatives("[ or mouse4") == ["[", "mouse4"]
+    assert split_hotkey_alternatives("[ atau mouse4") == ["[", "mouse4"]
+    assert split_hotkey_alternatives("Alt + 1, Mouse5") == ["Alt+1", "Mouse5"]
+    assert split_hotkey_alternatives("Numpad1") == ["Numpad1"]
+    assert split_hotkey_alternatives("") == []
+    # Deduplication within same string
+    assert split_hotkey_alternatives("Mouse4, mouse4") == ["Mouse4"]
+
+
+def test_multi_hotkey_registration_and_trigger():
+    """Verify GlobalHotkeyManager supports multiple alternative keys for a single action."""
+    backend = FakeHotkeyBackend()
+    manager = GlobalHotkeyManager(backend=backend)
+
+    triggered = []
+    manager.action_triggered.connect(lambda action: triggered.append(action))
+
+    # Register Ability 1 with BOTH '[' and 'Mouse4'
+    # Register Ability 2 with BOTH ']' and 'Mouse5'
+    config = {
+        "trigger_ability_1": "[, Mouse4",
+        "trigger_ability_2": "Mouse5 ]",  # space-separated
+        "reset_all": "P / Mouse3",
+    }
+    results = manager.register_actions(config)
+    assert all(results.values())
+    assert len(manager.failed_actions) == 0
+
+    # 4 distinct keys registered in backend: 2 for ab1, 2 for ab2, 2 for reset -> 6 total
+    assert len(backend.registered) == 6
+
+    # Verify both '[' and 'Mouse4' trigger ability 1
+    # Find hids for '[' (vk=0xDB) and 'Mouse4' (vk=0x05)
+    id_bracket = [hid for hid, (mod, vk) in backend.registered.items() if vk == 0xDB][0]
+    id_mouse4 = [hid for hid, (mod, vk) in backend.registered.items() if vk == 0x05][0]
+
+    manager._on_hotkey_id(id_bracket)
+    assert triggered == ["trigger_ability_1"]
+
+    manager._on_hotkey_id(id_mouse4)
+    assert triggered == ["trigger_ability_1", "trigger_ability_1"]
+
+    # Verify both ']' (vk=0xDD) and 'Mouse5' (vk=0x06) trigger ability 2
+    id_bracket2 = [hid for hid, (mod, vk) in backend.registered.items() if vk == 0xDD][0]
+    id_mouse5 = [hid for hid, (mod, vk) in backend.registered.items() if vk == 0x06][0]
+
+    manager._on_hotkey_id(id_bracket2)
+    manager._on_hotkey_id(id_mouse5)
+    assert triggered[-2:] == ["trigger_ability_2", "trigger_ability_2"]
+
+    # Verify conflict when a key is used across different actions
+    conflict_config = {
+        "trigger_ability_1": "[, Mouse4",
+        "trigger_ability_2": "Mouse4, ]",  # Mouse4 already taken by ab1!
+    }
+    res_conflict = manager.register_actions(conflict_config)
+    assert res_conflict["trigger_ability_1"] is True
+    assert res_conflict["trigger_ability_2"] is False
+    assert "Duplicate key 'Mouse4'" in manager.failed_actions["trigger_ability_2"]
+
+    manager.unregister_all()
+    assert len(backend.registered) == 0
 

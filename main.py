@@ -62,7 +62,7 @@ class HotkeyRebindDialog(QDialog):
         super().__init__(parent)
         self.parent_window = parent
         self.setWindowTitle("Pengaturan Tombol Hotkey Global")
-        self.setFixedWidth(380)
+        self.setFixedWidth(480)
         self.setStyleSheet(parent.styleSheet())
         self.setup_ui()
 
@@ -72,14 +72,29 @@ class HotkeyRebindDialog(QDialog):
 
         info = QLabel(
             "<b>Atur Tombol Pemicu Global (OS-Level)</b><br>"
-            "<small style='color: #94A3B8;'>Tombol ini bekerja saat Roblox sedang fokus.<br>"
-            "Format: <code>Numpad1</code>, <code>Alt+1</code>, <code>Ctrl+1</code>, <code>Numpad.</code>, dll.</small>"
+            "<small style='color: #94A3B8;'>Mendukung tombol alternatif (misal: <code>[ , Mouse4</code> atau <code>Mouse5 [</code>).<br>"
+            "Pemisah yang didukung: koma (<code>,</code>), garis miring (<code>/</code>), atau spasi.<br>"
+            "Bekerja secara general (bisa saat Alt-Tab ke Discord atau aplikasi lain).</small>"
         )
         info.setWordWrap(True)
         layout.addWidget(info)
 
         # Preset Buttons
+        preset_layout = QVBoxLayout()
+        preset_layout.setSpacing(6)
+
+        btn_preset_dual = QPushButton("⭐ Preset Dual: Mouse + [ ] (Dua Tombol Sekaligus)")
+        btn_preset_dual.setToolTip("Gunakan 2 tombol alternatif: [ atau Mouse4 untuk Ability 1, ] atau Mouse5 untuk Ability 2")
+        btn_preset_dual.setStyleSheet("background-color: #1E3A8A; color: #93C5FD; font-weight: bold; padding: 6px 12px;")
+        btn_preset_dual.clicked.connect(self._apply_preset_dual)
+        preset_layout.addWidget(btn_preset_dual)
+
         preset_row = QHBoxLayout()
+        btn_preset_mouse = QPushButton("Preset Mouse")
+        btn_preset_mouse.setToolTip("Gunakan tombol samping mouse Mouse4 (Ability 1) & Mouse5 (Ability 2)")
+        btn_preset_mouse.clicked.connect(self._apply_preset_mouse)
+        preset_row.addWidget(btn_preset_mouse)
+
         btn_preset_bracket = QPushButton("Preset [ ]")
         btn_preset_bracket.setToolTip("Gunakan tombol [ (Leap), ] (Mark), P (Reset), ' (Overlay)")
         btn_preset_bracket.clicked.connect(self._apply_preset_bracket)
@@ -92,7 +107,8 @@ class HotkeyRebindDialog(QDialog):
         btn_preset_laptop = QPushButton("Preset Laptop (Alt)")
         btn_preset_laptop.clicked.connect(self._apply_preset_laptop)
         preset_row.addWidget(btn_preset_laptop)
-        layout.addLayout(preset_row)
+        preset_layout.addLayout(preset_row)
+        layout.addLayout(preset_layout)
 
         form = QFormLayout()
         form.setLabelAlignment(Qt.AlignRight)
@@ -113,6 +129,16 @@ class HotkeyRebindDialog(QDialog):
         form.addRow("Card Pick Overlay:", self.input_card_picker)
         layout.addLayout(form)
 
+        # Checkbox foreground filter
+        self.chk_roblox_only = QCheckBox("Hanya aktif saat jendela Roblox fokus")
+        self.chk_roblox_only.setToolTip(
+            "Jika tidak dicentang (default), tombol trigger bekerja secara general bahkan saat Alt-Tab ke Discord atau aplikasi lain."
+        )
+        self.chk_roblox_only.setChecked(
+            getattr(self.parent_window.config.manual, "only_active_in_roblox", False)
+        )
+        layout.addWidget(self.chk_roblox_only)
+
         # Action Buttons
         btn_row = QHBoxLayout()
         btn_save = QPushButton("💾 Simpan & Terapkan")
@@ -124,6 +150,22 @@ class HotkeyRebindDialog(QDialog):
         btn_cancel.clicked.connect(self.reject)
         btn_row.addWidget(btn_cancel)
         layout.addLayout(btn_row)
+
+    def _apply_preset_dual(self) -> None:
+        self.input_ab1.setText("[, Mouse4")
+        self.input_ab2.setText("], Mouse5")
+        self.input_ab3.setText("Numpad3")
+        self.input_reset.setText("P, Mouse3")
+        self.input_overlay.setText("'")
+        self.input_card_picker.setText("=")
+
+    def _apply_preset_mouse(self) -> None:
+        self.input_ab1.setText("Mouse4")
+        self.input_ab2.setText("Mouse5")
+        self.input_ab3.setText("Mouse3")
+        self.input_reset.setText("P")
+        self.input_overlay.setText("'")
+        self.input_card_picker.setText("=")
 
     def _apply_preset_bracket(self) -> None:
         self.input_ab1.setText("[")
@@ -150,7 +192,7 @@ class HotkeyRebindDialog(QDialog):
         self.input_card_picker.setText("=")
 
     def _save_and_apply(self) -> None:
-        new_map = {
+        raw_map = {
             "trigger_ability_1": self.input_ab1.text().strip(),
             "trigger_ability_2": self.input_ab2.text().strip(),
             "trigger_ability_3": self.input_ab3.text().strip(),
@@ -159,28 +201,46 @@ class HotkeyRebindDialog(QDialog):
             "toggle_card_picker": self.input_card_picker.text().strip(),
         }
 
-        from app.global_hotkeys import parse_hotkey_string
-        for action, key_str in new_map.items():
-            if not key_str:
+        from app.global_hotkeys import parse_hotkey_string, split_hotkey_alternatives, MOD_NOREPEAT
+
+        new_map: Dict[str, str] = {}
+        seen_combos: Dict[Tuple[int, int], Tuple[str, str]] = {}
+
+        for action, raw_text in raw_map.items():
+            keys = split_hotkey_alternatives(raw_text)
+            if not keys:
                 QMessageBox.warning(self, "Input Kosong", f"Tombol untuk '{action}' tidak boleh kosong.")
                 return
-            try:
-                parse_hotkey_string(key_str)
-            except ValueError as err:
-                QMessageBox.warning(self, "Tombol Tidak Valid", f"Kombinasi '{key_str}' tidak valid:\n{err}")
-                return
 
-        seen = {}
-        for action, key_str in new_map.items():
-            norm = key_str.lower()
-            if norm in seen:
-                QMessageBox.warning(
-                    self,
-                    "Tombol Bentrok",
-                    f"Tombol '{key_str}' dipakai lebih dari satu aksi ('{seen[norm]}' dan '{action}')."
-                )
-                return
-            seen[norm] = action
+            parsed_clean = []
+            for key_str in keys:
+                try:
+                    mod, vk = parse_hotkey_string(key_str)
+                except ValueError as err:
+                    QMessageBox.warning(self, "Tombol Tidak Valid", f"Kombinasi '{key_str}' pada '{action}' tidak valid:\n{err}")
+                    return
+
+                combo = (mod & ~MOD_NOREPEAT, vk)
+                if combo in seen_combos:
+                    other_action, other_key = seen_combos[combo]
+                    if other_action != action:
+                        QMessageBox.warning(
+                            self,
+                            "Tombol Bentrok",
+                            f"Tombol '{key_str}' dipakai lebih dari satu aksi ('{other_action}' dan '{action}')."
+                        )
+                        return
+                    continue
+
+                seen_combos[combo] = (action, key_str)
+                parsed_clean.append(key_str)
+
+            new_map[action] = ", ".join(parsed_clean)
+
+        only_roblox = self.chk_roblox_only.isChecked()
+        self.parent_window.config.manual.only_active_in_roblox = only_roblox
+        if hasattr(self.parent_window.hotkey_manager, "require_foreground"):
+            self.parent_window.hotkey_manager.require_foreground = only_roblox
 
         self.parent_window.config.manual.hotkeys = new_map
         self.parent_window.settings_manager.save(self.parent_window.config)
@@ -257,7 +317,8 @@ class CapturePreviewWindow(QMainWindow):
         self.card_picker.killer_selected.connect(self.on_card_picker_killer_selected)
 
         # Global Hotkey Manager (Win32 ctypes + QAbstractNativeEventFilter)
-        self.hotkey_manager = GlobalHotkeyManager(parent=self)
+        only_roblox = getattr(self.config.manual, "only_active_in_roblox", False)
+        self.hotkey_manager = GlobalHotkeyManager(parent=self, require_foreground=only_roblox)
         self.hotkey_manager.action_triggered.connect(self.on_global_hotkey_action)
         self.hotkey_manager.install_event_filter()
         self.hotkey_results = self.hotkey_manager.register_actions(self.config.manual.hotkeys)

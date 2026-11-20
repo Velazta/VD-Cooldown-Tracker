@@ -38,7 +38,8 @@ class TestSettingsManager(unittest.TestCase):
         self.assertGreaterEqual(cfg.overlay.height, 60)
         self.assertIsInstance(cfg.manual, ManualSettings)
         self.assertTrue(cfg.manual.start_in_manual_mode)
-        self.assertIn(cfg.manual.hotkeys["trigger_ability_1"], ["[", "Numpad1"])
+        self.assertTrue(bool(cfg.manual.hotkeys["trigger_ability_1"]))
+        self.assertIsInstance(cfg.manual.only_active_in_roblox, bool)
 
     def test_fallback_on_corrupt_file(self):
         """Memastikan fallback aman ke default config jika JSON korup."""

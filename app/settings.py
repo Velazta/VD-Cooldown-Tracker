@@ -145,6 +145,7 @@ class ManualSettings:
     reaction_offset: float = 0.0          # 0.0 to 2.0s
     restart_on_repeat: bool = False       # Trigger saat cooldown aktif -> mulai ulang jika True
     sound_on_ready: bool = False          # Bunyi notifikasi saat cooldown selesai
+    only_active_in_roblox: bool = False   # Set True jika hanya ingin aktif di Roblox; False = global (bisa saat alt-tab ke Discord)
     hotkeys: Dict[str, str] = field(default_factory=lambda: {
         "trigger_ability_1": "Numpad1",
         "trigger_ability_2": "Numpad2",
@@ -160,6 +161,7 @@ class ManualSettings:
             "reaction_offset": round(float(self.reaction_offset), 2),
             "restart_on_repeat": bool(self.restart_on_repeat),
             "sound_on_ready": bool(self.sound_on_ready),
+            "only_active_in_roblox": bool(self.only_active_in_roblox),
             "hotkeys": dict(self.hotkeys),
         }
 
@@ -179,6 +181,7 @@ class ManualSettings:
             "trigger_ability_3": "Numpad3",
             "reset_all": "Numpad0",
             "toggle_overlay": "Numpad.",
+            "toggle_card_picker": "=",
         }
         raw_hotkeys = data.get("hotkeys", {})
         if isinstance(raw_hotkeys, dict):
@@ -191,6 +194,7 @@ class ManualSettings:
             reaction_offset=offset,
             restart_on_repeat=bool(data.get("restart_on_repeat", False)),
             sound_on_ready=bool(data.get("sound_on_ready", False)),
+            only_active_in_roblox=bool(data.get("only_active_in_roblox", False)),
             hotkeys=merged_hotkeys,
         )
 

@@ -10,9 +10,10 @@ from __future__ import annotations
 
 import ctypes
 from ctypes import wintypes
+import re
 import sys
 import time
-from typing import Callable, Dict, Optional, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 
 from PySide6.QtCore import QAbstractNativeEventFilter, QCoreApplication, QObject, Signal
 
@@ -115,6 +116,28 @@ VK_MAPPING: Dict[str, int] = {
     "backslash": 0xDC,
     "`": 0xC0,
     "backquote": 0xC0,
+    # Mouse Buttons (Thumb / Side & Middle)
+    "mouse4": 0x05,
+    "mouse_4": 0x05,
+    "m4": 0x05,
+    "xbutton1": 0x05,
+    "thumb1": 0x05,
+    "thumb_1": 0x05,
+    "mouseback": 0x05,
+    "mouse_back": 0x05,
+    "mouse5": 0x06,
+    "mouse_5": 0x06,
+    "m5": 0x06,
+    "xbutton2": 0x06,
+    "thumb2": 0x06,
+    "thumb_2": 0x06,
+    "mouseforward": 0x06,
+    "mouse_forward": 0x06,
+    "mouse3": 0x04,
+    "mouse_3": 0x04,
+    "m3": 0x04,
+    "middlemouse": 0x04,
+    "mouse_middle": 0x04,
 }
 
 # Add standard numbers '0'-'9' (0x30 - 0x39)
@@ -172,6 +195,33 @@ def parse_hotkey_string(hotkey_str: str) -> Tuple[int, int]:
     return modifiers, vk_code
 
 
+def split_hotkey_alternatives(hotkey_str: str) -> List[str]:
+    """Splits a string containing multiple alternative hotkeys into individual combo strings.
+
+    Supports separators:
+    - Comma: '[, Mouse4' -> ['[', 'Mouse4']
+    - Slash: '[ / Mouse4' -> ['[', 'Mouse4']
+    - Pipe: '[ | Mouse4' -> ['[', 'Mouse4']
+    - Semicolon: '[ ; Mouse4' -> ['[', 'Mouse4']
+    - Words 'or', 'dan', 'atau': '[ dan Mouse4' -> ['[', 'Mouse4']
+    - Whitespace: 'Mouse5 [' -> ['Mouse5', '[']
+    """
+    if not hotkey_str or not hotkey_str.strip():
+        return []
+    # Normalize spaces around '+' (e.g. 'Ctrl + 1' -> 'Ctrl+1') so we do not split modifier combinations
+    cleaned = re.sub(r"\s*\+\s*", "+", hotkey_str.strip())
+    # Split on commas, slashes, pipes, semicolons, words 'or'/'dan'/'atau', or whitespace
+    tokens = re.split(r"[,;/|]|\b(?:or|dan|atau)\b|\s+", cleaned, flags=re.IGNORECASE)
+    result: List[str] = []
+    seen: Set[str] = set()
+    for tok in tokens:
+        item = tok.strip()
+        if item and item.lower() not in seen:
+            seen.add(item.lower())
+            result.append(item)
+    return result
+
+
 class HotkeyBackend:
     """Abstract interface for hotkey registration backend."""
 
@@ -186,14 +236,30 @@ class HotkeyBackend:
 
 
 WH_KEYBOARD_LL = 13
+WH_MOUSE_LL = 14
 WM_KEYDOWN = 0x0100
 WM_SYSKEYDOWN = 0x0104
+WM_LBUTTONDOWN = 0x0201
+WM_RBUTTONDOWN = 0x0204
+WM_MBUTTONDOWN = 0x0207
+WM_XBUTTONDOWN = 0x020B
+WM_NCXBUTTONDOWN = 0x00AB
 
 
 class KBDLLHOOKSTRUCT(ctypes.Structure):
     _fields_ = [
         ("vkCode", wintypes.DWORD),
         ("scanCode", wintypes.DWORD),
+        ("flags", wintypes.DWORD),
+        ("time", wintypes.DWORD),
+        ("dwExtraInfo", ctypes.c_ulonglong),
+    ]
+
+
+class MSLLHOOKSTRUCT(ctypes.Structure):
+    _fields_ = [
+        ("pt", wintypes.POINT),
+        ("mouseData", wintypes.DWORD),
         ("flags", wintypes.DWORD),
         ("time", wintypes.DWORD),
         ("dwExtraInfo", ctypes.c_ulonglong),
@@ -209,22 +275,30 @@ HOOKPROC = ctypes.WINFUNCTYPE(
 
 
 class Win32HookHotkeyBackend(HotkeyBackend):
-    """Pass-through Win32 hotkey backend using WH_KEYBOARD_LL.
+    """Pass-through Win32 hotkey backend using WH_KEYBOARD_LL and WH_MOUSE_LL.
 
     Crucial advantages over RegisterHotKey:
     - Never locks or swallows keystrokes from Roblox (no key hijacking).
-    - Keystrokes ('P', '[', ']', etc.) are passed through to the game and chat normally.
+    - Keystrokes ('P', '[', ']', Mouse4, Mouse5, etc.) are passed through to the game and chat normally.
+    - Full support for Mouse 4 & Mouse 5 (Thumb buttons / XButtons) and Mouse 3 (Middle click).
     - Smart chat detection: pauses companion triggers while typing in Roblox chat (/ key).
     - Foreground filter: only triggers hotkeys when Roblox or the tracker is in the foreground.
     """
 
-    def __init__(self, callback: Optional[Callable[[int], None]] = None) -> None:
+    def __init__(
+        self,
+        callback: Optional[Callable[[int], None]] = None,
+        require_foreground: bool = False,
+    ) -> None:
         self.callback = callback
+        self.require_foreground = require_foreground
         self._registered_combos: Dict[Tuple[int, int], int] = {}  # (mod, vk) -> hotkey_id
         self._last_trigger_times: Dict[int, float] = {}
         self.unrestricted_hids: Set[int] = set()
         self._hook = None
         self._hook_proc_ref = None
+        self._mouse_hook = None
+        self._mouse_hook_proc_ref = None
         self._user32 = ctypes.windll.user32 if sys.platform == "win32" else None
         self._is_chat_focused: bool = False
         self._chat_focused_time: float = 0.0
@@ -232,7 +306,7 @@ class Win32HookHotkeyBackend(HotkeyBackend):
             self._install_hook()
 
     def _install_hook(self) -> None:
-        if self._hook is None and self._user32 is not None:
+        if self._user32 is not None:
             # Explicitly configure 64-bit argument and return types to prevent
             # "OverflowError: int too long to convert" when passing 64-bit lParam/WPARAM
             self._user32.CallNextHookEx.argtypes = [
@@ -254,16 +328,28 @@ class Win32HookHotkeyBackend(HotkeyBackend):
             self._user32.UnhookWindowsHookEx.argtypes = [wintypes.HHOOK]
             self._user32.UnhookWindowsHookEx.restype = wintypes.BOOL
 
-            self._hook_proc_ref = HOOKPROC(self._low_level_proc)
-            self._hook = self._user32.SetWindowsHookExW(WH_KEYBOARD_LL, self._hook_proc_ref, None, 0)
-            if self._hook:
-                logger.info("Win32 pass-through keyboard hook installed successfully.")
-            else:
-                err = ctypes.windll.kernel32.GetLastError()
-                logger.warning("Failed to install Win32 keyboard hook (GetLastError=%d)", err)
+            if self._hook is None:
+                self._hook_proc_ref = HOOKPROC(self._low_level_proc)
+                self._hook = self._user32.SetWindowsHookExW(WH_KEYBOARD_LL, self._hook_proc_ref, None, 0)
+                if self._hook:
+                    logger.info("Win32 pass-through keyboard hook installed successfully.")
+                else:
+                    err = ctypes.windll.kernel32.GetLastError()
+                    logger.warning("Failed to install Win32 keyboard hook (GetLastError=%d)", err)
+
+            if self._mouse_hook is None:
+                self._mouse_hook_proc_ref = HOOKPROC(self._low_level_mouse_proc)
+                self._mouse_hook = self._user32.SetWindowsHookExW(WH_MOUSE_LL, self._mouse_hook_proc_ref, None, 0)
+                if self._mouse_hook:
+                    logger.info("Win32 pass-through mouse hook (Mouse4/Mouse5) installed successfully.")
+                else:
+                    err = ctypes.windll.kernel32.GetLastError()
+                    logger.warning("Failed to install Win32 mouse hook (GetLastError=%d)", err)
 
     def _is_roblox_or_tracker_foreground(self) -> bool:
         """Checks if Roblox or tracker application is the focused window."""
+        if not self.require_foreground:
+            return True
         if self._user32 is None:
             return True
         hwnd = self._user32.GetForegroundWindow()
@@ -344,8 +430,12 @@ class Win32HookHotkeyBackend(HotkeyBackend):
                         # VK_OEM_PLUS (0xBB = '=') and VK_INSERT (0x2D) are card picker toggles:
                         # ALWAYS allow without being gated by chat mode or foreground quirks!
                         is_picker_toggle = (hid in self.unrestricted_hids) or (vk in (0xBB, 0x2D))
-                        if is_picker_toggle or (not self._is_chat_focused and self._is_roblox_or_tracker_foreground()):
-                            if is_picker_toggle:
+                        allow_trigger = is_picker_toggle or (
+                            not (self.require_foreground and self._is_chat_focused)
+                            and self._is_roblox_or_tracker_foreground()
+                        )
+                        if allow_trigger:
+                            if is_picker_toggle or not self.require_foreground:
                                 self._is_chat_focused = False
                             self._last_trigger_times[hid] = now
                             if self.callback:
@@ -361,10 +451,57 @@ class Win32HookHotkeyBackend(HotkeyBackend):
                 logger.debug("Exception in CallNextHookEx: %s", exc)
         return 0
 
+    def _low_level_mouse_proc(self, nCode: int, wParam: int, lParam: int) -> int:
+        try:
+            if nCode == 0:
+                # Any mouse button click naturally unfocuses Roblox chat
+                if wParam in (WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_MBUTTONDOWN, WM_XBUTTONDOWN, WM_NCXBUTTONDOWN):
+                    self._is_chat_focused = False
+
+                vk = 0
+                if wParam in (WM_XBUTTONDOWN, WM_NCXBUTTONDOWN):
+                    ms = MSLLHOOKSTRUCT.from_address(lParam)
+                    xbtn = (ms.mouseData >> 16) & 0xFFFF
+                    if xbtn == 1:
+                        vk = 0x05  # VK_XBUTTON1 (Mouse 4 / Thumb 1 / Back)
+                    elif xbtn == 2:
+                        vk = 0x06  # VK_XBUTTON2 (Mouse 5 / Thumb 2 / Forward)
+                elif wParam == WM_MBUTTONDOWN:
+                    vk = 0x04  # VK_MBUTTON (Mouse 3 / Middle click)
+
+                if vk != 0:
+                    mods = self._get_current_modifiers()
+                    hid = self._registered_combos.get((mods, vk))
+                    if hid is not None:
+                        now = time.monotonic()
+                        last_t = self._last_trigger_times.get(hid, 0.0)
+                        if (now - last_t) >= 0.35:
+                            is_picker_toggle = (hid in self.unrestricted_hids) or (vk in (0xBB, 0x2D))
+                            allow_trigger = is_picker_toggle or (
+                                not (self.require_foreground and self._is_chat_focused)
+                                and self._is_roblox_or_tracker_foreground()
+                            )
+                            if allow_trigger:
+                                if is_picker_toggle or not self.require_foreground:
+                                    self._is_chat_focused = False
+                                self._last_trigger_times[hid] = now
+                                if self.callback:
+                                    self.callback(hid)
+        except Exception as exc:
+            logger.debug("Exception in _low_level_mouse_proc: %s", exc)
+
+        # ALWAYS pass through mouse actions so game actions (aiming, attacking, interacting) are never blocked!
+        if self._user32 is not None:
+            try:
+                return self._user32.CallNextHookEx(None, nCode, wParam, lParam)
+            except Exception as exc:
+                logger.debug("Exception in mouse CallNextHookEx: %s", exc)
+        return 0
+
     def register_hotkey(self, hotkey_id: int, modifiers: int, vk: int) -> bool:
         norm_mod = modifiers & ~MOD_NOREPEAT
         self._registered_combos[(norm_mod, vk)] = hotkey_id
-        if self._hook is None and sys.platform == "win32":
+        if (self._hook is None or self._mouse_hook is None) and sys.platform == "win32":
             self._install_hook()
         return True
 
@@ -383,6 +520,11 @@ class Win32HookHotkeyBackend(HotkeyBackend):
             self._hook = None
             self._hook_proc_ref = None
             logger.debug("Win32 pass-through keyboard hook unhooked.")
+        if self._mouse_hook and self._user32 is not None:
+            self._user32.UnhookWindowsHookEx(self._mouse_hook)
+            self._mouse_hook = None
+            self._mouse_hook_proc_ref = None
+            logger.debug("Win32 pass-through mouse hook unhooked.")
 
 
 # Use Win32HookHotkeyBackend as the default Win32 backend
@@ -484,12 +626,16 @@ class GlobalHotkeyManager(QObject):
         self,
         backend: Optional[HotkeyBackend] = None,
         parent: Optional[QObject] = None,
+        require_foreground: bool = False,
     ) -> None:
         super().__init__(parent)
         if backend is not None:
             self.backend = backend
         elif sys.platform == "win32":
-            self.backend = Win32HotkeyBackend(callback=self._on_hotkey_id)
+            self.backend = Win32HotkeyBackend(
+                callback=self._on_hotkey_id,
+                require_foreground=require_foreground,
+            )
         else:
             self.backend = FakeHotkeyBackend()
 
@@ -502,6 +648,17 @@ class GlobalHotkeyManager(QObject):
         self._failed_actions: Dict[str, str] = {}
 
         self._native_filter: Optional[HotkeyNativeEventFilter] = None
+
+    @property
+    def require_foreground(self) -> bool:
+        """Returns whether hotkeys are restricted to Roblox/tracker foreground window."""
+        return getattr(self.backend, "require_foreground", False)
+
+    @require_foreground.setter
+    def require_foreground(self, value: bool) -> None:
+        """Dynamically enables or disables foreground window check."""
+        if hasattr(self.backend, "require_foreground"):
+            setattr(self.backend, "require_foreground", bool(value))
 
     @property
     def failed_actions(self) -> Dict[str, str]:
@@ -525,8 +682,9 @@ class GlobalHotkeyManager(QObject):
             self._native_filter = None
             logger.info("Removed HotkeyNativeEventFilter from Qt application.")
 
-    def register_actions(self, hotkeys_config: Dict[str, str]) -> Dict[str, bool]:
+    def register_actions(self, hotkeys_config: Dict[str, Union[str, List[str]]]) -> Dict[str, bool]:
         """Registers a full map of actions to hotkey strings (e.g. settings.manual.hotkeys).
+        Supports multiple alternative hotkeys per action (e.g. '[ , Mouse4' or ['[', 'Mouse4']).
         
         Returns:
             Dict[str, bool]: Success status per action.
@@ -535,44 +693,79 @@ class GlobalHotkeyManager(QObject):
         self._failed_actions.clear()
         results: Dict[str, bool] = {}
 
-        # 1. Check for duplicates in configuration
-        seen_keys: Dict[str, str] = {}
-        for action, key_str in hotkeys_config.items():
-            norm_key = key_str.strip().lower()
-            if norm_key in seen_keys:
-                err_msg = f"Duplicate key '{key_str}' conflicts with action '{seen_keys[norm_key]}'"
+        # 1. Parse and validate all alternatives for each action
+        action_combos: Dict[str, List[Tuple[str, int, int]]] = {}
+        seen_combos: Dict[Tuple[int, int], Tuple[str, str]] = {}
+
+        for action, raw_val in hotkeys_config.items():
+            if isinstance(raw_val, list):
+                key_list: List[str] = []
+                for item in raw_val:
+                    key_list.extend(split_hotkey_alternatives(str(item)))
+            else:
+                key_list = split_hotkey_alternatives(str(raw_val))
+
+            if not key_list:
+                err_msg = f"No hotkey specified for '{action}'"
                 self._failed_actions[action] = err_msg
                 results[action] = False
                 logger.warning("Hotkey config error: %s", err_msg)
                 continue
-            seen_keys[norm_key] = action
 
-            # 2. Parse key string
-            try:
-                mod, vk = parse_hotkey_string(key_str)
-            except ValueError as val_err:
-                self._failed_actions[action] = str(val_err)
-                results[action] = False
-                logger.warning("Failed to parse hotkey for '%s': %s", action, val_err)
+            parsed_list: List[Tuple[str, int, int]] = []
+            parse_error = False
+
+            for single_key in key_list:
+                try:
+                    mod, vk = parse_hotkey_string(single_key)
+                except ValueError as val_err:
+                    self._failed_actions[action] = str(val_err)
+                    results[action] = False
+                    logger.warning("Failed to parse hotkey '%s' for '%s': %s", single_key, action, val_err)
+                    parse_error = True
+                    break
+
+                combo = (mod & ~MOD_NOREPEAT, vk)
+                if combo in seen_combos:
+                    other_action, other_key = seen_combos[combo]
+                    if other_action != action:
+                        err_msg = f"Duplicate key '{single_key}' conflicts with action '{other_action}' ('{other_key}')"
+                        self._failed_actions[action] = err_msg
+                        results[action] = False
+                        logger.warning("Hotkey conflict: %s", err_msg)
+                        parse_error = True
+                        break
+                    continue
+
+                seen_combos[combo] = (action, single_key)
+                parsed_list.append((single_key, mod, vk))
+
+            if parse_error:
                 continue
 
-            # 3. Register hotkey with OS backend
-            hid = self._id_counter
-            self._id_counter += 1
+            action_combos[action] = parsed_list
 
-            success = self.backend.register_hotkey(hid, mod, vk)
-            if success:
-                self._action_to_id[action] = hid
-                self._id_to_action[hid] = action
-                if action == "toggle_card_picker" and hasattr(self.backend, "unrestricted_hids"):
-                    self.backend.unrestricted_hids.add(hid)
-                results[action] = True
-                logger.info("Registered global hotkey '%s' -> '%s' (id=%d)", action, key_str, hid)
-            else:
-                err_msg = f"System registration failed for '{key_str}' (possibly in use by another app)"
-                self._failed_actions[action] = err_msg
-                results[action] = False
-                logger.warning("Global hotkey registration failed for '%s' -> '%s'", action, key_str)
+        # 2. Register all parsed combinations
+        for action, combos in action_combos.items():
+            action_success = True
+            for single_key, mod, vk in combos:
+                hid = self._id_counter
+                self._id_counter += 1
+
+                success = self.backend.register_hotkey(hid, mod, vk)
+                if success:
+                    self._action_to_id[action] = hid
+                    self._id_to_action[hid] = action
+                    if action == "toggle_card_picker" and hasattr(self.backend, "unrestricted_hids"):
+                        self.backend.unrestricted_hids.add(hid)
+                    logger.info("Registered global hotkey '%s' -> '%s' (id=%d)", action, single_key, hid)
+                else:
+                    action_success = False
+                    err_msg = f"System registration failed for '{single_key}' (possibly in use by another app)"
+                    self._failed_actions[action] = err_msg
+                    logger.warning("Global hotkey registration failed for '%s' -> '%s'", action, single_key)
+
+            results[action] = action_success
 
         return results
 
