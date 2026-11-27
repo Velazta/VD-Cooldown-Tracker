@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "game": "Violence District",
+  "last_updated": "2026-11-14",
+  "killers": [
+    {
+      "id": "the_hidden",
+      "name": "The Hidden",
+      "description": "Killer bertipe stalker/stealth dengan mobilitas lompatan cepat dan serangan tusukan mendadak.",
+      "abilities": [
+        {
+          "id": "leap",
+          "name": "Leap",
+          "cooldown_seconds": 25.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "E Button",
+          "detection_method": "pose_sequence",
+          "description": "Melompat tinggi ke atas dan ke depan. Cooldown langsung berjalan saat animasi lompat dimulai."
+        },
+        {
+          "id": "mark",
+          "name": "Mark",
+          "cooldown_seconds": 17.0,
+          "cooldown_verified": false,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Right Click Mouse",
+          "detection_method": "pose_sequence",
+          "description": "Menusuk ke arah depan. Cooldown langsung dihitung mundur saat animasi berjalan tanpa menunggu selesai."
+        }
+      ]
+    },
+    {
+      "id": "veil",
+      "name": "Veil",
+      "description": "Killer proyektil/jarak menengah yang mengandalkan lemparan tombak beraura gelap.",
+      "abilities": [
+        {
+          "id": "through_the_veil",
+          "name": "Through The Veil",
+          "cooldown_seconds": 40.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_release",
+          "interact_input": "Aim & Throw Spear",
+          "detection_method": "pose_release",
+          "description": "Mengangkat tombak dengan aura halus. Cooldown 40 detik berjalan setelah tombak dilepaskan/dilempar."
+        }
+      ]
+    },
+    {
+      "id": "the_killer",
+      "name": "The Killer",
+      "description": "Killer agresif amatir berkecepatan tinggi terinspirasi urban legend (Kai Cenat Fanum Tax). Mengandalkan Frenzy Buff untuk vault pallet dan chain hits.",
+      "abilities": [
+        {
+          "id": "frenzy",
+          "name": "Frenzy",
+          "cooldown_seconds": 24.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Frenzy Activation",
+          "detection_method": "pose_sequence",
+          "description": "15 detik cooldown setelah mode Frenzy selesai. Memberikan kemampuan vault pallet dan chain hit."
+        }
+      ]
+    },
+    {
+      "id": "the_stalker",
+      "name": "The Stalker",
+      "description": "Killer pengintai tak terdeteksi. Mengumpulkan 5 charge Stalk untuk melancarkan Evil's Grasp lalu masuk ke Hunter Mode.",
+      "abilities": [
+        {
+          "id": "evils_grasp",
+          "name": "Evil's Grasp",
+          "cooldown_seconds": 70.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Grab (5 Stalk Charges)",
+          "detection_method": "pose_sequence",
+          "description": "Menerjang 34 studs mencekik survivor dan memberi efek Anti-Heal 40 detik saat bertransisi ke Hunter Mode."
+        }
+      ]
+    },
+    {
+      "id": "the_abysswalker",
+      "name": "The Abysswalker",
+      "description": "Mantan ksatria berpedang besar yang bertarung melawan makhluk abyss (Block Parry Dodge).",
+      "abilities": [
+        {
+          "id": "dark_severance",
+          "name": "Dark Severance",
+          "cooldown_seconds": 28.0,
+          "cooldown_verified": false,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Charge Horizontal Slash",
+          "detection_method": "pose_sequence",
+          "description": "Tebasan horizontal berkecepatan tinggi yang dapat dihindari survivor dengan menunduk (crouch) atau menghancurkan pallet."
+        },
+        {
+          "id": "abyssal_burst",
+          "name": "Abyssal Burst",
+          "cooldown_seconds": 26.0,
+          "cooldown_verified": false,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Swing Windup Burst",
+          "detection_method": "pose_sequence",
+          "description": "Ledakan korupsi menembus seluruh map; survivor yang terkena di-highlight dan slow 40% selama 5 detik."
+        }
+      ]
+    },
+    {
+      "id": "the_masked",
+      "name": "The Masked",
+      "description": "Killer bersenjata topeng terinspirasi 50 Blessings Miami. Berganti topeng unik yang mengubah kemampuan dan gaya bermain.",
+      "abilities": [
+        {
+          "id": "mask_duration",
+          "name": "Mask Up (Durasi)",
+          "cooldown_seconds": 90.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Mask Mode On",
+          "detection_method": "pose_sequence",
+          "description": "Durasi aktif mode topeng selama 1 menit (60 detik) penuh setelah diaktifkan."
+        },
+        {
+          "id": "mask_swap",
+          "name": "Mask Swap",
+          "cooldown_seconds": 30.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Swap Mask",
+          "detection_method": "pose_sequence",
+          "description": "Cooldown interval 30 detik untuk dapat mengganti variasi topeng acak baru (harimau, panther, dll.)."
+        }
+      ]
+    },
+    {
+      "id": "the_slasher",
+      "name": "The Slasher",
+      "description": "Kekuatan pembunuh tanpa ampun bertopeng hoki (m1 x4 bushogama) dengan kemampuan Lake Mist dan Pursuit.",
+      "abilities": [
+        {
+          "id": "lake_mist",
+          "name": "Lake Mist",
+          "cooldown_seconds": 30.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Ambush Invisibility",
+          "detection_method": "pose_sequence",
+          "description": "Menghilang dalam kabut dan tidak terdeteksi untuk penyergapan. Cooldown 60 detik setelah aktivasi/deaktivasi."
+        },
+        {
+          "id": "pursuit",
+          "name": "Pursuit",
+          "cooldown_seconds": 80.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Fury Walk Through Obstacles",
+          "detection_method": "pose_sequence",
+          "description": "Kecepatan bertambah selama 22 detik dan dapat menembus rintangan. Memicu cooldown 60 detik."
+        }
+      ]
+    },
+    {
+      "id": "the_butcher",
+      "name": "The Butcher",
+      "description": "Killer pengendali jarak menengah dari tempat penjagalan tua (Revenge Never Tasted This Sweet). Menggunakan rantai kait untuk Silence & menarik survivor, serta memasang perangkap baja.",
+      "abilities": [
+        {
+          "id": "your_heart_is_mine",
+          "name": "Your Heart Is Mine",
+          "cooldown_seconds": 15.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Windup & Cast Chain (50 studs)",
+          "detection_method": "pose_sequence",
+          "description": "Melempar rantai berkait sejauh 50 studs mengait survivor. Memberikan efek Silence, membatasi pergerakan survivor, dan bisa ditarik ulang. Cooldown 15 detik."
+        },
+        {
+          "id": "tendons",
+          "name": "Tendons (Steel Trap)",
+          "cooldown_seconds": 45.0,
+          "cooldown_verified": true,
+          "enabled": true,
+          "trigger_type": "on_cast_start",
+          "interact_input": "Place Steel Trap",
+          "detection_method": "pose_sequence",
+          "description": "Memasang perangkap jebakan baja di lantai yang melumpuhkan dan mengungkap survivor. Cooldown 45 detik untuk meregenerasi trap."
+        }
+      ]
+    }
+  ]
+}

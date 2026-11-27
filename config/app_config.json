@@ -19,7 +19,7 @@
     "enabled_on_start": false
   },
   "overlay": {
-    "x": -9,
+    "x": 0,
     "y": 402,
     "width": 360,
     "height": 358,
@@ -29,7 +29,7 @@
     "click_through": true,
     "fps_display": true,
     "position": {
-      "x": -9,
+      "x": 0,
       "y": 402
     }
   },

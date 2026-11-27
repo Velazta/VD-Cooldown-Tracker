@@ -1,20 +1,6 @@
-"""Main Application Entry Point — Day 12 Integrated Application & Manual Events.
-
-Violence District Cooldown Tracker
-Integrates:
-- Logging: Structured dual console + file logging (logs/app.log)
-- SettingsManager: Runtime application configuration (config/app_config.json)
-- DatabaseManager: Strongly-typed killer & ability database (database/killerDatabase.json)
-- CooldownManager: Deterministic monotonic cooldown state machine (cooldown/)
-- OverlayController: Frameless always-on-top transparent cooldown ring overlay (overlay/)
-- MSSWindowsCapture: Background producer thread screen capture
-- ROIProcessor: Centered gameplay viewport cropping and coordinate clamping
-- ImagePreprocessor: OpenCV computer vision filters (Raw, Gray, CLAHE, Threshold, Canny)
-- PerformanceMonitor: Non-blocking resource and latency telemetry
-"""
-
 from __future__ import annotations
 
+import os
 import sys
 import time
 from pathlib import Path
@@ -53,6 +39,12 @@ from detection.detection_worker import DetectionWorker
 from detection.audio_monitor import AudioMonitor
 
 logger = get_logger("gui")
+
+if getattr(sys, "frozen", False):
+    APP_ROOT = Path(sys.executable).resolve().parent
+else:
+    APP_ROOT = Path(__file__).resolve().parent
+os.chdir(APP_ROOT)
 
 
 class HotkeyRebindDialog(QDialog):

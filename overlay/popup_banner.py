@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
 from typing import Dict, Optional, Tuple
 
 from PySide6.QtCore import (
@@ -35,9 +36,9 @@ from cooldown.cooldown_state import CooldownSnapshot, CooldownState
 
 logger = get_logger("overlay.banner")
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
 OVERLAY_UI_DIR = PROJECT_ROOT / "OVERLAY UI"
-
+    
 # Explicit mapping from (killer_id, ability_id) to PNG filename in OVERLAY UI/
 BANNER_FILE_MAP: Dict[Tuple[str, str], str] = {
     ("the_hidden", "leap"): "hidden_leap.png",

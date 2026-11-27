@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "app": {
+    "name": "Violence District Cooldown Tracker",
+    "version": "0.2.0-manual",
+    "debug_mode": true
+  },
+  "capture": {
+    "target_title": "Roblox",
+    "backend": "windows_capture",
+    "target_fps": 30,
+    "roi": {
+      "x": 320,
+      "y": 150,
+      "width": 1280,
+      "height": 780,
+      "enabled": true
+    },
+    "enabled_on_start": false
+  },
+  "overlay": {
+    "x": 61,
+    "y": 509,
+    "width": 360,
+    "height": 358,
+    "opacity": 0.95,
+    "visible": true,
+    "always_on_top": true,
+    "click_through": true,
+    "fps_display": true,
+    "position": {
+      "x": 61,
+      "y": 509
+    }
+  },
+  "manual": {
+    "start_in_manual_mode": true,
+    "reaction_offset": 0.0,
+    "restart_on_repeat": false,
+    "sound_on_ready": false,
+    "only_active_in_roblox": false,
+    "hotkeys": {
+      "trigger_ability_1": "[, Mouse4",
+      "trigger_ability_2": "], Mouse5",
+      "trigger_ability_3": "Numpad3",
+      "reset_all": "P, Mouse3",
+      "toggle_overlay": "'",
+      "toggle_card_picker": "="
+    }
+  },
+  "active_killer_id": "the_abysswalker"
+}
